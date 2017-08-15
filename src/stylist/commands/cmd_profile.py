@@ -1,0 +1,121 @@
+import os
+import sys
+from os import listdir, readlink
+from os.path import isdir, islink, join
+
+import click
+import yaml
+
+from stylist.cli import pass_context, logger, GroupWithCommandOptions
+from stylist.commands import ensure_project_directory, NotProjectDirectoryException, global_options
+from stylist.provider import get
+
+
+def colourize(name):
+    if name in ["prod", "production"]:
+        return click.style(name, fg="red")
+    elif name in ["staging", "preprod"]:
+        return click.style(name, fg="yellow")
+    else:
+        return name
+
+
+def selected_env_name(ctx):
+    return readlink(join(ctx.config_dir, "selected"))
+
+
+@click.group(cls=GroupWithCommandOptions, short_help='Manage project environments')
+@global_options
+@pass_context
+def cli(ctx, working_dir):
+    if working_dir is not None:
+        try:
+            ensure_project_directory(working_dir)
+            ctx.working_dir = working_dir
+        except NotProjectDirectoryException as e:
+            logger.error(e.message)
+            sys.exit(1)
+
+
+@cli.command(help="Show active environment for current working directory")
+@pass_context
+def selected(ctx):
+    """
+    @type ctx: stylist.cli.Context
+    """
+    click.secho(
+        colourize(selected_env_name(ctx))
+    )
+
+
+@cli.command(help="Activate named profile")
+@click.argument("name")
+@pass_context
+def select(ctx, name):
+    """
+    @type ctx: stylist.cli.Context
+    """
+    profile_path = join(ctx.config_dir, name)
+    if not isdir(profile_path):
+        logger.error("Unable to locate '{}' environment".format(name))
+        sys.exit(1)
+
+    selected_path = join(ctx.config_dir, "selected")
+    if islink(selected_path):
+        os.remove(selected_path)
+
+    os.symlink(name, selected_path)
+    click.secho(click.style("All done.", fg="green"))
+
+
+@cli.command(help="Create deployment profile")
+@click.argument("name")
+@click.option("--provider", default="aws")
+@pass_context
+def create(ctx, name, provider):
+    """
+    @type ctx: stylist.cli.Context
+    """
+    if not isdir(ctx.config_dir):
+        os.mkdir(ctx.config_dir)
+
+    profile_path = join(ctx.config_dir, name)
+    if isdir(profile_path):
+        logger.error("Profile '{}' already exists".format(name))
+        sys.exit(1)
+
+    provider = get(provider)
+
+    values = {}
+    for arg_name, parameter in provider.get_params().iteritems():
+        desc, kwargs = parameter
+        values[arg_name] = click.prompt(desc, **kwargs)
+
+    os.mkdir(profile_path)
+
+    with open(join(profile_path, "config"), "w+") as f:
+        yaml.dump({
+            "provider": values
+        }, f)
+
+
+@cli.command(help="List all available profiles")
+@pass_context
+def list(ctx):
+    """
+    @type ctx: stylist.cli.Context
+    """
+    click.echo("All defined environments:")
+
+    selected = selected_env_name(ctx)
+
+    for f in filter(lambda x: not islink(join(ctx.config_dir, x)), listdir(ctx.config_dir)):
+        click.secho(
+            " " + colourize(f) + ("*" if f == selected else "")
+        )
+
+
+@cli.command()
+@pass_context
+def prompt(ctx):
+    pass
