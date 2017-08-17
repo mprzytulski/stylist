@@ -7,14 +7,13 @@ import tempfile
 from os.path import join, isfile, isdir, dirname, realpath
 
 import click
-from pygments import highlight, lexers, formatters
 from tabulate import tabulate
 
 from stylist import Env
 from stylist.cli import Context, GroupWithCommandOptions, pass_context, logger
 from stylist.commands import global_options, ensure_project_directory, NotProjectDirectoryException
 from stylist.lib.serverless import Serverless, FunctionNotFoundException
-from stylist.lib.utils import colourize
+from stylist.lib.utils import colourize, highlight_json
 from stylist.lib.wrapper.pip import install_dependencies
 from stylist.lib.wrapper.virtualenv import create_env
 
@@ -132,16 +131,10 @@ def invoke(ctx, function_name, source, mode, force, event, shutill=None, cleanup
             event_source = source.read()
 
             if event:
-                formatted_json = json.dumps(json.load(event_source), sort_keys=True, indent=4)
-
-                colorful_json = highlight(
-                    unicode(formatted_json, 'UTF-8'),
-                    lexers.JsonLexer(),
-                    formatters.TerminalFormatter()
-                )
-
                 click.secho("EVENT: ", fg="blue")
-                click.echo(colorful_json)
+                click.echo(highlight_json(
+                    json.dumps(json.load(event_source), sort_keys=True, indent=4)
+                ))
 
             click.echo("=" * click.get_terminal_size()[0] + "\n")
 
@@ -163,12 +156,8 @@ def invoke(ctx, function_name, source, mode, force, event, shutill=None, cleanup
             try:
                 output = json.loads(stdout)
 
-                formatted_json = json.dumps(output["result"], sort_keys=True, indent=4)
-
-                colorful_json = highlight(
-                    unicode(formatted_json, 'UTF-8'),
-                    lexers.JsonLexer(),
-                    formatters.TerminalFormatter()
+                colorful_json = highlight_json(
+                    json.dumps(output["result"], sort_keys=True, indent=4)
                 )
 
                 click.secho(colorful_json)
@@ -179,7 +168,7 @@ def invoke(ctx, function_name, source, mode, force, event, shutill=None, cleanup
                 for module, functions in output["events"].items():
                     for function, calls in functions.items():
                         for call in calls:
-                            rows.append((module, function, json.dumps(call)))
+                            rows.append((module, function, highlight_json(json.dumps(call))))
 
                 click.echo(
                     tabulate(
