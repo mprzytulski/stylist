@@ -51,7 +51,7 @@ def invoke(ctx, function_name, source, mode, force, event, shutill=None, cleanup
     if not isfile(sls_config):
         logger.error("Unable to locate serverless config file: {}".format(click.format_filename(sls_config)))
 
-    sls = Serverless(sls_config)
+    sls = Serverless(sls_config, ctx)
 
     try:
         sls.ensure_function(function_name)
@@ -160,9 +160,9 @@ def invoke(ctx, function_name, source, mode, force, event, shutill=None, cleanup
 
             click.secho("FUNCTION EXECUTION OUTPUT: ", fg="blue")
 
-            output = json.loads(stdout)
-
             try:
+                output = json.loads(stdout)
+
                 formatted_json = json.dumps(output["result"], sort_keys=True, indent=4)
 
                 colorful_json = highlight(
@@ -172,6 +172,29 @@ def invoke(ctx, function_name, source, mode, force, event, shutill=None, cleanup
                 )
 
                 click.secho(colorful_json)
+
+                click.secho("COLLECTED EVENTS: ", fg="blue")
+
+                rows = []
+                for module, functions in output["events"].items():
+                    for function, calls in functions.items():
+                        for call in calls:
+                            rows.append((module, function, json.dumps(call)))
+
+                click.echo(
+                    tabulate(
+                        rows,
+                        headers=("module", "function", "args")
+                    ) + "\n"
+                )
+
+                click.secho("METRICS: ", fg="blue")
+                click.echo(
+                    tabulate(
+                        [(k.upper(), v) for k, v in output["stats"].items()],
+                        headers=["Name", "Value"]
+                    )
+                )
             except Exception as e:
                 print e.message
                 click.secho(stdout, fg="yellow")
@@ -180,31 +203,8 @@ def invoke(ctx, function_name, source, mode, force, event, shutill=None, cleanup
                 click.secho("FUNCTION ERROR OUTPUT: ", fg="red")
                 click.secho(stderr, fg="red")
 
-            click.secho("COLLECTED EVENTS: ", fg="blue")
-
-            rows = []
-            for module, functions in output["events"].items():
-                for function, calls in functions.items():
-                    for call in calls:
-                        rows.append((module, function, json.dumps(call)))
-
-            click.echo(
-                tabulate(
-                    rows,
-                    headers=("module", "function", "args")
-                ) + "\n"
-            )
-
-            click.secho("METRICS: ", fg="blue")
-            click.echo(
-                tabulate(
-                    [(k.upper(), v) for k, v in output["stats"].items()],
-                    headers=["Name", "Value"]
-                )
-            )
-
         finally:
-            if os.path.exists(env_dir) and cleanup:
+            if env_dir and os.path.exists(env_dir) and cleanup:
                 shutil.rmtree(env_dir)
     except FunctionNotFoundException as e:
         logger.error(e.message)
