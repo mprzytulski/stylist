@@ -87,7 +87,7 @@ def create(ctx, name, provider):
             "provider": values
         }, f)
 
-    selected_name = selected_env_name(ctx)
+    selected_name = ctx.environment
 
     if not selected_name:
         click.get_current_context().invoke(select, name=name)
