@@ -8,20 +8,8 @@ import yaml
 
 from stylist.cli import pass_context, logger, GroupWithCommandOptions
 from stylist.commands import ensure_project_directory, NotProjectDirectoryException, global_options
+from stylist.lib.utils import colourize
 from stylist.provider import get
-
-
-def colourize(name):
-    if name in ["prod", "production"]:
-        return click.style(name, fg="red")
-    elif name in ["staging", "preprod"]:
-        return click.style(name, fg="yellow")
-    else:
-        return name
-
-
-def selected_env_name(ctx):
-    return readlink(join(ctx.config_dir, "selected"))
 
 
 @click.group(cls=GroupWithCommandOptions, short_help='Manage project environments')
@@ -30,7 +18,8 @@ def selected_env_name(ctx):
 def cli(ctx, working_dir):
     if working_dir is not None:
         try:
-            ensure_project_directory(working_dir)
+            if click.get_current_context().invoked_subcommand != 'create':
+                ensure_project_directory(working_dir)
             ctx.working_dir = working_dir
         except NotProjectDirectoryException as e:
             logger.error(e.message)
@@ -44,14 +33,14 @@ def selected(ctx):
     @type ctx: stylist.cli.Context
     """
     click.secho(
-        colourize(selected_env_name(ctx))
+        colourize(ctx.environment)
     )
 
 
 @cli.command(help="Activate named profile")
 @click.argument("name")
 @pass_context
-def select(ctx, name):
+def select(ctx, name, working_dir=None):
     """
     @type ctx: stylist.cli.Context
     """
@@ -98,6 +87,11 @@ def create(ctx, name, provider):
             "provider": values
         }, f)
 
+    selected_name = selected_env_name(ctx)
+
+    if not selected_name:
+        click.get_current_context().invoke(select, name=name)
+
 
 @cli.command(help="List all available profiles")
 @pass_context
@@ -107,11 +101,11 @@ def list(ctx):
     """
     click.echo("All defined environments:")
 
-    selected = selected_env_name(ctx)
+    selected_env = selected_env_name(ctx)
 
     for f in filter(lambda x: not islink(join(ctx.config_dir, x)), listdir(ctx.config_dir)):
         click.secho(
-            " " + colourize(f) + ("*" if f == selected else "")
+            ("-> " if f == selected_env else "   ") + colourize(f)
         )
 
 

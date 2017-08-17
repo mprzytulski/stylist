@@ -4,6 +4,9 @@ import click
 import click_log
 import logging
 
+from os import readlink
+from os.path import join
+
 logger = logging.getLogger(__name__)
 
 CONTEXT_SETTINGS = dict(auto_envvar_prefix='STYLIST')
@@ -12,6 +15,13 @@ CONTEXT_SETTINGS = dict(auto_envvar_prefix='STYLIST')
 class Context(object):
     def __init__(self):
         self.working_dir = os.getcwd()
+
+    @property
+    def environment(self):
+        try:
+            return readlink(join(self.config_dir, "selected"))
+        except OSError:
+            return None
 
     @property
     def config_dir(self):
