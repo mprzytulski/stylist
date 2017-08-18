@@ -2,21 +2,14 @@ import sys
 from os.path import join, isfile
 
 import click
-from terminaltables import AsciiTable, SingleTable
 
-from stylist import Env
-from stylist.cli import Context, GroupWithCommandOptions, pass_context, logger
+from stylist.cli import GroupWithCommandOptions, pass_context, logger
 from stylist.commands import global_options, ensure_project_directory, NotProjectDirectoryException
 from stylist.lib.click.types import EventAwareFile
 from stylist.lib.emulator import ExecutionContext
 from stylist.lib.serverless import Serverless, FunctionNotFoundException
-from stylist.lib.utils import highlight_json, tabulate_dict, display_section, table
+from stylist.lib.utils import highlight_json, display_section, table
 from stylist.lib.virtualenv import Virtualenv
-
-
-class LambdaFunction(Env, Context):
-    def __init__(self, name):
-        super(LambdaFunction, self).__init__(name)
 
 
 @click.group(cls=GroupWithCommandOptions, short_help='Manage serverless lambda functions')
