@@ -5,7 +5,15 @@ from datetime import datetime
 
 from memory_profiler import memory_usage
 
-from stylist.lib.aws import TrackerContext
+from stylist.lib.wrapper.tracker import TrackerContext
+from stylist.lib.wrapper.tracker.aws import ClientTracker, SNSTracker
+from stylist.lib.wrapper.tracker.lambda_utils import LambdaUtilsTracker
+from stylist.lib.wrapper.tracker.requests import RequestsTracker
+
+TrackerContext.registry(RequestsTracker())
+TrackerContext.registry(SNSTracker())
+TrackerContext.registry(ClientTracker())
+TrackerContext.registry(LambdaUtilsTracker())
 
 
 def execute(get_handler, event, ctx):
@@ -35,6 +43,3 @@ def execute(get_handler, event, ctx):
             "time": str(execution_time.microseconds / 1000) + " ms"
         }
     }))
-
-
-

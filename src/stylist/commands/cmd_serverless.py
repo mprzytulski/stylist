@@ -6,7 +6,7 @@ import click
 from stylist.cli import GroupWithCommandOptions, pass_context, logger
 from stylist.commands import global_options, ensure_project_directory, NotProjectDirectoryException
 from stylist.lib.click.types import EventAwareFile
-from stylist.lib.emulator import ExecutionContext
+from stylist.lib.emulator import ExecutionContext, Emulator
 from stylist.lib.serverless import Serverless, FunctionNotFoundException
 from stylist.lib.utils import highlight_json, display_section, table
 from stylist.lib.virtualenv import Virtualenv
@@ -26,7 +26,7 @@ def cli(ctx, working_dir):
 
 
 @cli.command(help="Invoke serverless lambda function with predefined event")
-@click.option("--mode", "-m", type=click.Choice(['sns', 'api-gw', 'direct', 'server', "auto", "aws"]), default="auto",
+@click.option("--mode", "-m", type=click.Choice(['sns', 'api-gw', 'direct', "auto"]), default="auto",
               help="Execution mode")
 @click.option("--cleanup", default=False, flag_value='cleanup', help="Remove virtualenv after execution")
 @click.option("--force", default=False, flag_value='force', help="Force dependency installation")
@@ -68,14 +68,14 @@ def invoke(ctx, function_name, source, mode, force, event, cleanup=False):
 
             )
 
-            event_data = source.read()
+            emulator = Emulator(mode, source.read(), lambda_function)
 
             if event or True:
-                display_section("EVENT", highlight_json(event_data))
+                display_section("EVENT", highlight_json(emulator.emulate()))
 
             click.echo("=" * click.get_terminal_size()[0] + "\n")
 
-            result = context.execute(event_data)
+            result = context.execute(emulator.emulate())
 
             display_section("FUNCTION EXECUTION OUTPUT", highlight_json(result.stdout))
 

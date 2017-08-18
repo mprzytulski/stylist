@@ -1,9 +1,10 @@
 import json
+import subprocess
 from os.path import join, realpath, dirname
 
 import click
-import subprocess
 
+from stylist.lib.emulator.aws import Emulator
 from stylist.lib.utils import colourize, highlight_json
 
 
@@ -67,12 +68,12 @@ class ExecutionResult(object):
 
         try:
             self.obj = json.loads(self._stdout)
-        except:
-            pass
+        except ValueError:
+            self.obj = {}
 
     @property
     def stdout(self):
-        return self.obj.get("result")
+        return self.obj.get("result", "")
 
     @property
     def events(self):
@@ -87,7 +88,7 @@ class ExecutionResult(object):
 
     @property
     def stats(self):
-        return self.obj.get("stats")
+        return self.obj.get("stats", {})
 
 
 WRAPPER_TEMPLATE = """
