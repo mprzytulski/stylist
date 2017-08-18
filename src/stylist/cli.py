@@ -47,9 +47,9 @@ class ComplexCLI(click.MultiCommand):
             if sys.version_info[0] == 2:
                 name = name.encode('ascii', 'replace')
             mod = __import__('stylist.commands.cmd_' + name, None, None, ['cli'])
-        except ImportError:
-            return
-        return mod.cli
+            return mod.cli
+        except ImportError as e:
+            raise e
 
 
 class GroupWithCommandOptions(click.Group):
