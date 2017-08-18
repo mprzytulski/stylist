@@ -1,16 +1,13 @@
 from __future__ import print_function
 
 import json
-
 from datetime import datetime
-from moto import mock_sns, mock_s3
+
 from memory_profiler import memory_usage
 
 from stylist.lib.aws import TrackerContext
 
 
-# @mock_s3
-# @mock_sns
 def execute(get_handler, event, ctx):
     def mocked_kms_decrypt(value):
         return value
