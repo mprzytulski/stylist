@@ -4,7 +4,6 @@ from textwrap import wrap
 
 import click
 from pygments import highlight, lexers, formatters
-from tabulate import tabulate
 from terminaltables import SingleTable
 
 
@@ -31,13 +30,6 @@ def highlight_json(text, format=False):
         unicode(text, 'UTF-8'),
         lexers.JsonLexer(),
         formatters.TerminalFormatter()
-    )
-
-
-def tabulate_dict(items, headers):
-    return tabulate(
-        [(key, val) for key, val in items.items()],
-        headers=headers
     )
 
 

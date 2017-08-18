@@ -1,6 +1,6 @@
 import os
 import sys
-from os import listdir, readlink
+from os import listdir
 from os.path import isdir, islink, join
 
 import click
