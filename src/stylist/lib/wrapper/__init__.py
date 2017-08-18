@@ -31,7 +31,7 @@ def execute(get_handler, event, ctx):
         "result": result,
         "events": events,
         "stats": {
-            # "memory": str(max(mem)) + " MB",
+            "memory": str(max(mem)) + " MB",
             "time": str(execution_time.microseconds / 1000) + " ms"
         }
     }))
