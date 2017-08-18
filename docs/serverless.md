@@ -17,7 +17,7 @@ stylist serverless invoke slack_notify /tmp/event.json
 ```
 
 3. Execute lambda locally with named event file
-Stylist will look for event files in function subdirectory called `.events' and will try to find file named `<event_name>.json`
+Stylist will look for event files in function subdirectory called `.events` and will try to find file named `<event_name>.json`
 
 
 ```bash
