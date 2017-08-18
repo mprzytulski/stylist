@@ -16,13 +16,13 @@ from stylist.lib.virtualenv import Virtualenv
 @global_options
 @pass_context
 def cli(ctx, working_dir):
-    if working_dir is not None:
-        try:
-            ensure_project_directory(working_dir)
-            ctx.working_dir = working_dir
-        except NotProjectDirectoryException as e:
-            logger.error(e.message)
-            sys.exit(1)
+    working_dir = working_dir or ctx.working_dir
+    try:
+        ensure_project_directory(working_dir)
+        ctx.working_dir = working_dir
+    except NotProjectDirectoryException as e:
+        logger.error(e.message)
+        sys.exit(1)
 
 
 @cli.command(help="Invoke serverless lambda function with predefined event")

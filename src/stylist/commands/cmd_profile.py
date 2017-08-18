@@ -16,14 +16,14 @@ from stylist.provider import get
 @global_options
 @pass_context
 def cli(ctx, working_dir):
-    if working_dir is not None:
-        try:
-            if click.get_current_context().invoked_subcommand != 'create':
-                ensure_project_directory(working_dir)
-            ctx.working_dir = working_dir
-        except NotProjectDirectoryException as e:
-            logger.error(e.message)
-            sys.exit(1)
+    working_dir = working_dir or ctx.working_dir
+    try:
+        if click.get_current_context().invoked_subcommand not in ('create', None):
+            ensure_project_directory(working_dir)
+        ctx.working_dir = working_dir
+    except NotProjectDirectoryException as e:
+        logger.error(e.message)
+        sys.exit(1)
 
 
 @cli.command(help="Show active environment for current working directory")
