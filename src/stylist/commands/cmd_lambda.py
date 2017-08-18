@@ -1,21 +1,17 @@
-import json
-import os
-import shutil
-import subprocess
 import sys
-import tempfile
-from os.path import join, isfile, isdir, dirname, realpath
+from os.path import join, isfile
 
 import click
-from tabulate import tabulate
+from terminaltables import AsciiTable, SingleTable
 
 from stylist import Env
 from stylist.cli import Context, GroupWithCommandOptions, pass_context, logger
 from stylist.commands import global_options, ensure_project_directory, NotProjectDirectoryException
+from stylist.lib.click.types import EventAwareFile
+from stylist.lib.emulator import ExecutionContext
 from stylist.lib.serverless import Serverless, FunctionNotFoundException
-from stylist.lib.utils import colourize, highlight_json
-from stylist.lib.wrapper.pip import install_dependencies
-from stylist.lib.wrapper.virtualenv import create_env
+from stylist.lib.utils import highlight_json, tabulate_dict, display_section, table
+from stylist.lib.virtualenv import Virtualenv
 
 
 class LambdaFunction(Env, Context):
@@ -43,9 +39,9 @@ def cli(ctx, working_dir):
 @click.option("--force", default=False, flag_value='force', help="Force dependency installation")
 @click.option("--event", default=False, flag_value='event', help="Display event details (may increase outout size)")
 @click.argument("function_name")
-@click.argument("source", type=click.File(mode="r"))
+@click.argument("source", type=EventAwareFile(mode="r"))
 @pass_context
-def invoke(ctx, function_name, source, mode, force, event, shutill=None, cleanup=False):
+def invoke(ctx, function_name, source, mode, force, event, cleanup=False):
     sls_config = join(ctx.working_dir, "serverless.yml")
     if not isfile(sls_config):
         logger.error("Unable to locate serverless config file: {}".format(click.format_filename(sls_config)))
@@ -54,172 +50,54 @@ def invoke(ctx, function_name, source, mode, force, event, shutill=None, cleanup
 
     try:
         sls.ensure_function(function_name)
+        lambda_function = sls.get_function(function_name)
 
-        env_dir = None
-        try:
-            lambda_function = sls.get_function(function_name)
-
-            env_dir = join(tempfile.gettempdir(), "venv-{service}-{function}".format(
-                service=sls.name,
-                function=lambda_function.name
-            ))
-
-            require_dependency_installation = True
-            venv_created = False
-            if not isdir(env_dir):
-                venv_created = True
-                click.secho("Creating temporary virtualenv: {}".format(click.format_filename(env_dir)), fg="green")
-                create_env(env_dir, lambda_function.get_runtime())
-            else:
-                require_dependency_installation = False
-                click.secho("Using existing virtualenv", fg="blue")
-
-            bin_dir = join(env_dir, "bin")
-
-            dependencies = lambda_function.get_dependencies(True)
-            if require_dependency_installation or force:
-                click.secho("Installing dependencies", fg="green")
-                install_dependencies(
-                    bin_dir,
-                    dependencies,
-                    click
+        with Virtualenv(lambda_function.global_id, lambda_function.get_runtime(), cleanup) as venv:
+            if venv.created or force:
+                venv.pip.install_dependencies(
+                    lambda_function.get_dependencies(True)
                 )
+                venv.pip.install_dependencies(["memory-profiler==0.47"])
 
-                install_dependencies(
-                    bin_dir,
-                    ["memory-profiler==0.47"],
-                    click,
-                    True
-                )
+            context = ExecutionContext(venv, ctx.environment, lambda_function)
 
-            click.secho("Creating execution wrapper")
+            click.secho(
+                click.style('Execution details for ', fg='green') +
+                click.style(lambda_function.name, fg='red')
+            )
 
-            handler_module, handler_function = lambda_function.handler.split(".")
+            click.secho(
+                table("EXECUTION CONTEXT", context.details).table
+            )
 
-            with open(join(env_dir, "wrapper.py"), "w+") as wrapper:
-                wrapper.write(WRAPPER_TEMPLATE.format(
-                    module=handler_module,
-                    handler=handler_function,
-                    function_dir=lambda_function.function_dir,
-                    stylist_lib_dir=realpath(join(dirname(__file__), "../../"))
-                ))
+            click.secho(
+                table("ENVIRONMENT VARIABLES", context.environment_variables).table
 
-            env = lambda_function.get_environment()
-            env["SENTRY_ENABLED"] = "false"
+            )
 
-            click.echo(click.style('Execution details for ', fg='green') + click.style(lambda_function.name, fg='red'))
-            click.echo()
+            event_data = source.read()
 
-            click.secho("EXECUTION CONTEXT: ", fg="blue")
-            click.echo(tabulate(
-                [
-                    ("ENVIRONMENT", colourize(ctx.environment)),
-                    ("VIRTUALENV", env_dir),
-                    ("NEW VIRUTALENV", venv_created),
-                    ("DEPENDENCIES", ", ".join(dependencies)),
-                    ("RUNTIME", lambda_function.get_runtime()),
-                ],
-                headers=["Name", "Value"]
-            ) + "\n")
-
-            click.secho("ENVIRONMENT VARIABLES: ", fg="blue")
-            click.echo(tabulate(
-                [(key, val) for key, val in env.items()],
-                headers=["Name", "Value"]
-            ) + "\n")
-
-            event_source = source.read()
-
-            if event:
-                click.secho("EVENT: ", fg="blue")
-                click.echo(highlight_json(
-                    json.dumps(json.load(event_source), sort_keys=True, indent=4)
-                ))
+            if event or True:
+                display_section("EVENT", highlight_json(event_data))
 
             click.echo("=" * click.get_terminal_size()[0] + "\n")
 
-            p = subprocess.Popen(
-                [join(bin_dir, "python"), "wrapper.py"],
-                stderr=subprocess.PIPE,
-                stdout=subprocess.PIPE,
-                stdin=subprocess.PIPE,
-                cwd=env_dir,
-                env=env
+            result = context.execute(event_data)
+
+            display_section("FUNCTION EXECUTION OUTPUT", highlight_json(result.stdout))
+
+            click.secho(
+                table("COLLECTED EVENTS", result.events, ["module", "function", "args"], wraped_col=2).table
             )
 
-            p.stdin.write(event_source)
+            click.secho(
+                table("METRICS", result.stats).table
+            )
 
-            stdout, stderr = p.communicate()
-
-            click.secho("FUNCTION EXECUTION OUTPUT: ", fg="blue")
-
-            try:
-                output = json.loads(stdout)
-
-                colorful_json = highlight_json(
-                    json.dumps(output["result"], sort_keys=True, indent=4)
+            if result.stderr:
+                display_section(
+                    "FUNCTION ERROR OUTPUT", result.stderr, "red", "red"
                 )
-
-                click.secho(colorful_json)
-
-                click.secho("COLLECTED EVENTS: ", fg="blue")
-
-                rows = []
-                for module, functions in output["events"].items():
-                    for function, calls in functions.items():
-                        for call in calls:
-                            rows.append((module, function, highlight_json(json.dumps(call))))
-
-                click.echo(
-                    tabulate(
-                        rows,
-                        headers=("module", "function", "args")
-                    ) + "\n"
-                )
-
-                click.secho("METRICS: ", fg="blue")
-                click.echo(
-                    tabulate(
-                        [(k.upper(), v) for k, v in output["stats"].items()],
-                        headers=["Name", "Value"]
-                    )
-                )
-            except Exception as e:
-                print e.message
-                click.secho(stdout, fg="yellow")
-
-            if stderr:
-                click.secho("FUNCTION ERROR OUTPUT: ", fg="red")
-                click.secho(stderr, fg="red")
-
-        finally:
-            if env_dir and os.path.exists(env_dir) and cleanup:
-                shutil.rmtree(env_dir)
     except FunctionNotFoundException as e:
         logger.error(e.message)
         sys.exit(1)
-
-
-WRAPPER_TEMPLATE = """
-# vim:fileencoding=utf-8
-# This file is generated on the fly
-import os
-import sys
-import json
-
-root = os.path.abspath(os.path.join(os.path.dirname(__file__)))
-sys.path[0:0] = ["{function_dir}"]
-sys.path.append("{stylist_lib_dir}")
-
-from stylist.lib.wrapper import execute
-
-raw_event = json.load(sys.stdin)
-
-def get_handler():
-    import {module}
-    from {module} import {handler} as real_handler
-
-    return real_handler, {module}
-
-execute(get_handler, raw_event, {{}})
-"""
