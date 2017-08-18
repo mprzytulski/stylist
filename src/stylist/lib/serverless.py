@@ -10,6 +10,10 @@ class FunctionNotFoundException(Exception):
         self.message = "Function '{}' was not found in current configuration context.".format(function_name)
 
 
+class InvalidContextException(Exception):
+    pass
+
+
 class LambdaFunction(object):
     def __init__(self, name, config, parent, ctx):
         """
@@ -113,6 +117,14 @@ class Serverless(object):
             ]
 
         return [path for path in check if isfile(path)]
+
+    @staticmethod
+    def from_context(ctx):
+        sls_config = join(ctx.working_dir, "serverless.yml")
+        if not isfile(sls_config):
+            raise InvalidContextException()
+
+        return Serverless(sls_config, ctx)
 
 
 class VariableResolver(object):

@@ -1,5 +1,6 @@
 import sys
-from os.path import join, isfile
+from glob import glob
+from os.path import join, basename
 
 import click
 
@@ -7,7 +8,7 @@ from stylist.cli import GroupWithCommandOptions, pass_context, logger
 from stylist.commands import global_options, ensure_project_directory, NotProjectDirectoryException
 from stylist.lib.click.types import EventAwareFile
 from stylist.lib.emulator import ExecutionContext, Emulator
-from stylist.lib.serverless import Serverless, FunctionNotFoundException
+from stylist.lib.serverless import Serverless, FunctionNotFoundException, InvalidContextException
 from stylist.lib.utils import highlight_json, display_section, table
 from stylist.lib.virtualenv import Virtualenv
 
@@ -35,13 +36,8 @@ def cli(ctx, working_dir):
 @click.argument("source", type=EventAwareFile(mode="r"))
 @pass_context
 def invoke(ctx, function_name, source, mode, force, event, cleanup=False):
-    sls_config = join(ctx.working_dir, "serverless.yml")
-    if not isfile(sls_config):
-        logger.error("Unable to locate serverless config file: {}".format(click.format_filename(sls_config)))
-
-    sls = Serverless(sls_config, ctx)
-
     try:
+        sls = Serverless.from_context(ctx)
         sls.ensure_function(function_name)
         lambda_function = sls.get_function(function_name)
 
@@ -91,6 +87,29 @@ def invoke(ctx, function_name, source, mode, force, event, cleanup=False):
                 display_section(
                     "FUNCTION ERROR OUTPUT", result.stderr, "red", "red"
                 )
+    except InvalidContextException as e:
+        logger.error("Invalid context - check your serverless.yml file")
+        sys.exit(1)
     except FunctionNotFoundException as e:
         logger.error(e.message)
+        sys.exit(2)
+
+
+@cli.command(help="List all named events known for given function name")
+@click.argument("function_name")
+@pass_context
+def events(ctx, function_name):
+    try:
+        sls = Serverless.from_context(ctx)
+        sls.ensure_function(function_name)
+
+        lambda_function = sls.get_function(function_name)
+        for f in glob(join(lambda_function.function_dir, ".events", "*.json")):
+            click.echo("- " + basename(f).replace('.json', ''))
+
+    except InvalidContextException as e:
+        logger.error("Invalid context - check your serverless.yml file")
         sys.exit(1)
+    except FunctionNotFoundException as e:
+        logger.error(e.message)
+        sys.exit(2)
