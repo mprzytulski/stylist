@@ -3,7 +3,7 @@
 ## QuickStart
 
 ```
-pip install git+ssh://git@github.com:ThreadsStylingLtd/stylist.git
+pip install git+ssh://git@github.com/ThreadsStylingLtd/stylist.git
 ```
 
 
