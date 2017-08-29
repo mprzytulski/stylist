@@ -4,26 +4,16 @@ from os.path import join, basename
 
 import click
 
-from stylist.cli import GroupWithCommandOptions, pass_context, logger
-from stylist.commands import global_options, ensure_project_directory, NotProjectDirectoryException
+from stylist.cli import stylist_context, logger
+from stylist.commands import cli_prototype
 from stylist.lib.click.types import EventAwareFile
 from stylist.lib.emulator import ExecutionContext, Emulator
 from stylist.lib.serverless import Serverless, FunctionNotFoundException, InvalidContextException
 from stylist.lib.utils import highlight_json, display_section, table
 from stylist.lib.virtualenv import Virtualenv
 
-
-@click.group(cls=GroupWithCommandOptions, short_help='Manage serverless lambda functions')
-@global_options
-@pass_context
-def cli(ctx, working_dir):
-    working_dir = working_dir or ctx.working_dir
-    try:
-        ensure_project_directory(working_dir)
-        ctx.working_dir = working_dir
-    except NotProjectDirectoryException as e:
-        logger.error(e.message)
-        sys.exit(1)
+cli = cli_prototype
+cli.short_help = "Manage serverless functions"
 
 
 @cli.command(help="Invoke serverless lambda function with predefined event")
@@ -34,7 +24,7 @@ def cli(ctx, working_dir):
 @click.option("--event", default=False, flag_value='event', help="Display event details (may increase outout size)")
 @click.argument("function_name")
 @click.argument("source", type=EventAwareFile(mode="r"))
-@pass_context
+@stylist_context
 def invoke(ctx, function_name, source, mode, force, event, cleanup=False):
     try:
         sls = Serverless.from_context(ctx)
@@ -97,7 +87,7 @@ def invoke(ctx, function_name, source, mode, force, event, cleanup=False):
 
 @cli.command(help="List all named events known for given function name")
 @click.argument("function_name")
-@pass_context
+@stylist_context
 def events(ctx, function_name):
     try:
         sls = Serverless.from_context(ctx)

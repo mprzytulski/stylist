@@ -4,30 +4,17 @@ from os import listdir
 from os.path import isdir, islink, join
 
 import click
-import yaml
 
-from stylist.cli import pass_context, logger, GroupWithCommandOptions
-from stylist.commands import ensure_project_directory, NotProjectDirectoryException, global_options
-from stylist.lib.utils import colourize
-from stylist.provider import get
+from stylist.cli import stylist_context, logger
+from stylist.commands import cli_prototype
+from stylist.lib.utils import colourize, get_provider
 
-
-@click.group(cls=GroupWithCommandOptions, short_help='Manage project environments')
-@global_options
-@pass_context
-def cli(ctx, working_dir):
-    working_dir = working_dir or ctx.working_dir
-    try:
-        if click.get_current_context().invoked_subcommand not in ('create', None):
-            ensure_project_directory(working_dir)
-        ctx.working_dir = working_dir
-    except NotProjectDirectoryException as e:
-        logger.error(e.message)
-        sys.exit(1)
+cli = cli_prototype
+cli.short_help = 'Manage project environments'
 
 
 @cli.command(help="Show active environment for current working directory")
-@pass_context
+@stylist_context
 def selected(ctx):
     """
     @type ctx: stylist.cli.Context
@@ -39,8 +26,8 @@ def selected(ctx):
 
 @cli.command(help="Activate named profile")
 @click.argument("name")
-@pass_context
-def select(ctx, name, working_dir=None):
+@stylist_context
+def select(ctx, name):
     """
     @type ctx: stylist.cli.Context
     """
@@ -60,7 +47,7 @@ def select(ctx, name, working_dir=None):
 @cli.command(help="Create deployment profile")
 @click.argument("name")
 @click.option("--provider", default="aws")
-@pass_context
+@stylist_context
 def create(ctx, name, provider):
     """
     @type ctx: stylist.cli.Context
@@ -73,43 +60,34 @@ def create(ctx, name, provider):
         logger.error("Profile '{}' already exists".format(name))
         sys.exit(1)
 
-    provider = get(provider)
+    provider = get_provider(provider)()
 
     values = {}
-    for arg_name, parameter in provider.get_params().iteritems():
+    for arg_name, parameter in provider.known_params.items():
         desc, kwargs = parameter
         values[arg_name] = click.prompt(desc, **kwargs)
 
-    os.mkdir(profile_path)
+    provider.dump(values)
 
-    with open(join(profile_path, "config"), "w+") as f:
-        yaml.dump({
-            "provider": values
-        }, f)
-
-    selected_name = ctx.environment
-
-    if not selected_name:
+    if not ctx.environment:
         click.get_current_context().invoke(select, name=name)
 
 
 @cli.command(help="List all available profiles")
-@pass_context
+@stylist_context
 def list(ctx):
     """
     @type ctx: stylist.cli.Context
     """
     click.echo("All defined environments:")
 
-    selected_env = selected_env_name(ctx)
-
     for f in filter(lambda x: not islink(join(ctx.config_dir, x)), listdir(ctx.config_dir)):
         click.secho(
-            ("-> " if f == selected_env else "   ") + colourize(f)
+            ("-> " if f == ctx.environment else "   ") + colourize(f)
         )
 
 
 @cli.command()
-@pass_context
+@stylist_context
 def prompt(ctx):
     pass

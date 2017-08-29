@@ -1,11 +1,14 @@
+import logging
 import os
 import sys
+from glob import glob
+from os import readlink
+from os.path import join, basename
+
 import click
 import click_log
-import logging
 
-from os import readlink
-from os.path import join
+from stylist.lib.utils import get_provider
 
 logger = logging.getLogger(__name__)
 
@@ -15,20 +18,39 @@ CONTEXT_SETTINGS = dict(auto_envvar_prefix='STYLIST')
 class Context(object):
     def __init__(self):
         self.working_dir = os.getcwd()
+        self.environment = None
+        self.config_dir = ""
+        self.profile_dir = ""
+        self.loaded = False
 
-    @property
-    def environment(self):
+    def load(self, profile):
+        if self.loaded:
+            return
+
+        self.config_dir = join(self.working_dir, ".stylist")
+        self.environment = profile or self._active_environment()
+        self.profile_dir = join(self.config_dir, self.environment)
+        self._load_provider()
+        self.loaded = True
+
+    def _load_provider(self):
+        configs = glob(join(self.profile_dir, "config.*"))
+        if not configs:
+            return
+
+        config_path = configs[0]
+        provider_type = basename(config_path).split(".")[1]
+        self.provider = get_provider(provider_type)(self)
+        self.provider.load(config_path)
+
+    def _active_environment(self):
         try:
             return readlink(join(self.config_dir, "selected"))
         except OSError:
             return None
 
-    @property
-    def config_dir(self):
-        return os.path.join(self.working_dir, '.stylist')
 
-
-pass_context = click.make_pass_decorator(Context, ensure=True)
+stylist_context = click.make_pass_decorator(Context, ensure=True)
 cmd_folder = os.path.abspath(os.path.join(os.path.dirname(__file__), 'commands'))
 
 

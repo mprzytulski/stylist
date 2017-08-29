@@ -1,10 +1,13 @@
 from __future__ import absolute_import
+
 import json
 from textwrap import wrap
 
 import click
 from pygments import highlight, lexers, formatters
 from terminaltables import SingleTable
+
+from stylist.lib.provider.aws import AWSProvider
 
 
 def colourize(name):
@@ -62,3 +65,10 @@ def display_section(title, data, title_fg="blue", body_fg="white"):
     click.secho(title.upper() + ": ", fg=title_fg)
 
     click.secho(data + "\n", fg=body_fg)
+
+
+def get_provider(name):
+    if name == "aws":
+        return AWSProvider
+
+    return None
