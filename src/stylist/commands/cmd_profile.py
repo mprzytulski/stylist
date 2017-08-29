@@ -7,7 +7,7 @@ import click
 
 from stylist.cli import stylist_context, logger
 from stylist.commands import cli_prototype
-from stylist.lib.utils import colourize, get_provider
+from stylist.lib.utils import colourize, get_provider, table
 
 cli = cli_prototype
 cli.short_help = 'Manage project environments'
@@ -85,6 +85,15 @@ def list(ctx):
         click.secho(
             ("-> " if f == ctx.environment else "   ") + colourize(f)
         )
+
+
+@cli.command()
+@click.argument("name")
+@stylist_context
+def settings(ctx, name):
+    click.secho(
+        table("PROFILE SETTINGS", ctx.provider.values, ["name", "value"]).table
+    )
 
 
 @cli.command()
