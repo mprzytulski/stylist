@@ -1,12 +1,12 @@
 import click
 import sys
+import os
 
 from stylist.cli import logger
 from stylist.lib.utils import table
 
 
 def which(program):
-    import os
     def is_exe(fpath):
         return os.path.isfile(fpath) and os.access(fpath, os.X_OK)
 
@@ -38,7 +38,7 @@ def cli():
     for tool in tools:
         path = which(tool)
         c = "white"
-        if path is None:
+        if not path:
             has_errors = True
             c = "red"
 
