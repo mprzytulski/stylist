@@ -1,11 +1,12 @@
 import click
 import sys
+import os
 
 from stylist.cli import logger
+from stylist.lib.utils import table
 
 
 def which(program):
-    import os
     def is_exe(fpath):
         return os.path.isfile(fpath) and os.access(fpath, os.X_OK)
 
@@ -31,10 +32,20 @@ def cli():
     """
     tools = ("aws", "terraform", "serverless", "virtualenv", "pip")
 
+    software = []
+
     has_errors = False
     for tool in tools:
-        if which(tool) is None:
-            logger.error("Missing executable for: {}".format(tool))
+        path = which(tool)
+        c = "white"
+        if not path:
             has_errors = True
+            c = "red"
+
+        software.append([click.style(tool, fg=c), click.style(path or "-", fg=c)])
+
+    click.secho(
+        table("SYSTEM CHECK", software, ["TOOL", "STATUS"]).table
+    )
 
     sys.exit(0 if not has_errors else 1)
