@@ -27,7 +27,7 @@ def selected(ctx):
 @cli.command(help="Activate named profile")
 @click.argument("name")
 @stylist_context
-def select(ctx, name):
+def select(ctx, name, profile=None, working_dir=None):
     """
     @type ctx: stylist.cli.Context
     """
@@ -55,22 +55,22 @@ def create(ctx, name, provider):
     if not isdir(ctx.config_dir):
         os.mkdir(ctx.config_dir)
 
-    profile_path = join(ctx.config_dir, name)
-    if isdir(profile_path):
+    ctx.environment = name
+
+    if isdir(ctx.profile_dir):
         logger.error("Profile '{}' already exists".format(name))
         sys.exit(1)
 
-    provider = get_provider(provider)()
+    provider = get_provider(provider)(ctx)
 
     values = {}
     for arg_name, parameter in provider.known_params.items():
         desc, kwargs = parameter
-        values[arg_name] = click.prompt(desc, **kwargs)
+        values[arg_name] = str(click.prompt(desc, **kwargs))
 
     provider.dump(values)
 
-    if not ctx.environment:
-        click.get_current_context().invoke(select, name=name)
+    click.get_current_context().invoke(select, name=name)
 
 
 @cli.command(help="List all available profiles")
@@ -94,9 +94,3 @@ def settings(ctx, name):
     click.secho(
         table("PROFILE SETTINGS", ctx.provider.values, ["name", "value"]).table
     )
-
-
-@cli.command()
-@stylist_context
-def prompt(ctx):
-    pass
