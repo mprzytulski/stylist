@@ -50,6 +50,7 @@ def select(ctx, name, profile=None, working_dir=None):
 @stylist_context
 def create(ctx, name, provider):
     """
+    @@ignore_check@@
     @type ctx: stylist.cli.Context
     """
     if not isdir(ctx.config_dir):
