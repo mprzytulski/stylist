@@ -4,7 +4,7 @@ import click
 
 from stylist.cli import stylist_context
 from stylist.commands import cli_prototype
-from stylist.lib.utils import colourize
+from stylist.lib.utils import line_prefix
 
 cli = cli_prototype
 cli.short_help = "AWS KMS encryption helper"
@@ -28,8 +28,7 @@ def encrypt(ctx, plain_text, plain):
         click.echo(encrypted)
     else:
         click.secho(
-            "[" + colourize(ctx.environment) + "@" + ctx.provider.profile + "] Decrypted: " +
-            encrypted
+            line_prefix(ctx) + encrypted
         )
 
 
@@ -48,6 +47,5 @@ def decrypt(ctx, encrypted, plain):
         click.echo(decrypted)
     else:
         click.secho(
-            "[" + colourize(ctx.environment) + "@" + ctx.provider.profile + "] Decrypted: " +
-            decrypted
+            line_prefix(ctx) + decrypted
         )
