@@ -3,7 +3,8 @@ import os
 
 import sys
 
-from stylist.cli import GroupWithCommandOptions, stylist_context, logger
+from stylist.cli import stylist_context, logger
+from stylist.lib.cli import GroupWithCommandOptions
 
 _global_options = [
     click.option('--working-dir', type=click.Path(exists=True, file_okay=False, resolve_path=True),

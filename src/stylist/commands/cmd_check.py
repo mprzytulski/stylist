@@ -1,8 +1,8 @@
-import click
-import sys
 import os
+import sys
 
-from stylist.cli import logger
+import click
+
 from stylist.lib.utils import table
 
 
