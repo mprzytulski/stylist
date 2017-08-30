@@ -3,12 +3,12 @@ import os
 import sys
 from glob import glob
 from os import readlink
-from os.path import join, basename
+from os.path import join, basename, dirname
 
 import click
 import click_log
 
-from stylist.lib.utils import get_provider
+from stylist.lib.utils import get_provider, find_dotenv
 
 logger = logging.getLogger(__name__)
 
@@ -18,18 +18,32 @@ CONTEXT_SETTINGS = dict(auto_envvar_prefix='STYLIST')
 class Context(object):
     def __init__(self):
         self.working_dir = os.getcwd()
-        self.environment = None
-        self.config_dir = ""
-        self.profile_dir = ""
+        self.environment = ""
         self.loaded = False
+
+        path = None
+        for p in [".stylist", ".git"]:
+            path = find_dotenv(filename=p, path=self.working_dir)
+            if path:
+                break
+
+        if path:
+            self.working_dir = dirname(path)
+
+    @property
+    def profile_dir(self):
+        return join(self.config_dir, self.environment)
+
+    @property
+    def config_dir(self):
+        return join(self.working_dir, ".stylist")
 
     def load(self, profile):
         if self.loaded:
             return
 
-        self.config_dir = join(self.working_dir, ".stylist")
-        self.environment = profile or self._active_environment()
-        self.profile_dir = join(self.config_dir, self.environment)
+        self.environment = profile or self._active_environment() or ""
+
         self._load_provider()
         self.loaded = True
 
