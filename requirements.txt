@@ -5,6 +5,8 @@ python-dotenv==0.6.4
 memory-profiler==0.47
 terminaltables==3.1.0
 colorama==0.3.9
+Jinja2==2.9.6
 GitPython==2.1.5
+pyhcl==0.3.8
 PyYAML==3.12
 virtualenv==15.1.0

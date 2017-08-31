@@ -1,6 +1,7 @@
+from distutils.util import strtobool
 from os.path import join, isfile
 
-from click import File
+from click import File, ParamType
 
 
 class EventAwareFile(File):
@@ -20,3 +21,8 @@ class EventAwareFile(File):
             return super(EventAwareFile, self).convert(event_path, param, ctx)
 
         return super(EventAwareFile, self).convert(value, param, ctx)
+
+
+class Boolean(ParamType):
+    def convert(self, value, param, ctx):
+        return bool(strtobool(value))
