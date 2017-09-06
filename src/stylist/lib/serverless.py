@@ -1,3 +1,4 @@
+import os
 import re
 from os.path import dirname, isfile, join, realpath
 
@@ -95,6 +96,10 @@ class Serverless(object):
 
         return True
 
+    @property
+    def functions(self):
+        return self.config.get("functions", {})
+
     def get_runtime(self):
         return self.config["provider"]["runtime"]
 
@@ -120,11 +125,15 @@ class Serverless(object):
 
     @staticmethod
     def from_context(ctx):
-        sls_config = join(ctx.working_dir, "serverless.yml")
-        if not isfile(sls_config):
+        configs = filter(
+            lambda x: isfile(x),
+            [join(ctx.working_dir, "serverless.yml"), join(os.getcwd(), "serverless.yml")]
+        )
+
+        if not len(configs):
             raise InvalidContextException()
 
-        return Serverless(sls_config, ctx)
+        return Serverless(configs.pop(), ctx)
 
 
 class VariableResolver(object):
