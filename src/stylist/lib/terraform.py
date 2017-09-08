@@ -2,6 +2,7 @@ from __future__ import absolute_import
 
 import json
 import subprocess
+import tempfile
 
 from os.path import isfile, join, isdir
 
@@ -25,15 +26,30 @@ class Terraform(object):
     def terraform_dir(self):
         return join(self.ctx.working_dir, "terraform")
 
-    def plan(self):
-        self._ensure_env()
+    def plan(self, save=False):
+        vars_file = self._ensure_env()
 
-        vars_file = 'env.{env}.tfvars'.format(env=self.ctx.environment)
+        args = ['plan', '-var-file', vars_file]
 
-        if not isfile(vars_file):
-            raise TerraformException("Missing vars file: " + vars_file)
+        output = None
+        if save:
+            f = tempfile.NamedTemporaryFile(prefix="tf-plan.", delete=False)
+            f.close()
 
-        self._exec(['plan', '-var-file', vars_file])
+            args += ['-out=' + f.name]
+
+            output = f.name
+
+        self._exec(args)
+
+        return output
+
+    def apply(self, plan):
+        vars_file = self._ensure_env(get=False)
+
+        args = ['apply', plan]
+
+        self._exec(args)
 
     def sync_vars(self, source_profile, destination_profile):
         source_file = join(self.terraform_dir, 'env.{}.tfvars'.format(source_profile))
@@ -92,7 +108,12 @@ class Terraform(object):
         except Exception:
             return {}
 
-    def _ensure_env(self):
+    def _ensure_env(self, get=True):
+        vars_file = join(self.terraform_dir, 'env.{env}.tfvars'.format(env=self.ctx.environment))
+
+        if not isfile(vars_file):
+            raise TerraformException("Missing vars file: " + vars_file)
+
         if self.ctx.environment == 'local':
             raise TerraformException("You can't use terraform on local env")
 
@@ -101,9 +122,13 @@ class Terraform(object):
 
         self._exec(['env', 'select', self.ctx.environment])
 
+        if get:
+            self._exec(['get'])
+
+        return vars_file
+
     def _exec(self, args):
         p = subprocess.Popen([self.cmd] + args, cwd=self.terraform_dir,
                              stdout=click.get_text_stream("stdout"),
                              stderr=click.get_text_stream("stderr"))
         return p.communicate()
-

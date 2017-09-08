@@ -15,10 +15,12 @@ from stylist.lib.provider.aws import AWSProvider
 def colourize(name):
     if name in ["prod", "production"]:
         return click.style(name, fg="red")
-    elif name in ["staging", "preprod"]:
+    elif name in ["uat", "preprod"]:
         return click.style(name, fg="yellow")
-    else:
+    elif name in ["staging"]:
         return name
+    else:
+        return click.style(name, fg="green")
 
 
 def highlight_json(text, format=False):
