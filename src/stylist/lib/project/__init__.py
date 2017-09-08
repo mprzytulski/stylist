@@ -10,8 +10,9 @@ class Templates(object):
 
     def __init__(self, version):
         self.version = version
-        self.destination = join(tempfile.gettempdir(), "stylist-templates")
-        self._init_repository()
+        self.destination = '/Users/me/projects/threads/templates'
+        # self.destination = join(tempfile.gettempdir(), "stylist-templates")
+        # self._init_repository()
 
     def _init_repository(self):
         if not exists(self.destination):

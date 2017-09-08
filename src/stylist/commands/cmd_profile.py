@@ -48,7 +48,7 @@ def select(ctx, name, profile=None, working_dir=None):
 @click.argument("name")
 @click.option("--provider", default="aws")
 @stylist_context
-def create(ctx, name, provider):
+def create(ctx, name, provider, profile=None, working_dir=None):
     """
     @@ignore_check@@
     @type ctx: stylist.cli.Context

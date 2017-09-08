@@ -8,7 +8,7 @@ class AWSProvider(Provider):
 
     known_params = {
         "profile": ("AWS cli profile name", {"type": str, "default": "default"}),
-        "kms_key": ("KMS Encryption key id", {"type": str, "default": None}),
+        # "kms_key": ("KMS Encryption key id", {"type": str, "default": None}),
     }
 
     @property
