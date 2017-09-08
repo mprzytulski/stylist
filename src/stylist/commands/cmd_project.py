@@ -63,9 +63,3 @@ def add_feature(ctx, feature, templates_version):
 
     f = get_feature(feature)
     f.setup(ctx, templates)
-
-
-@cli.command(name="update", help="Update project")
-@stylist_context
-def update(ctx):
-    pass

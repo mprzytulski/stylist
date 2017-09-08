@@ -7,10 +7,15 @@ import click
 
 from stylist.cli import stylist_context, logger
 from stylist.commands import cli_prototype
+from stylist.lib.terraform import Terraform, TerraformException
 from stylist.lib.utils import colourize, get_provider, table
 
 cli = cli_prototype
 cli.short_help = 'Manage project environments'
+
+
+def _list_profiles(ctx):
+    return filter(lambda x: not islink(join(ctx.config_dir, x)), listdir(ctx.config_dir))
 
 
 @cli.command(help="Show active environment for current working directory")
@@ -82,7 +87,7 @@ def list(ctx):
     """
     click.echo("All defined environments:")
 
-    for f in filter(lambda x: not islink(join(ctx.config_dir, x)), listdir(ctx.config_dir)):
+    for f in _list_profiles(ctx):
         click.secho(
             ("-> " if f == ctx.environment else "   ") + colourize(f)
         )
@@ -95,3 +100,24 @@ def settings(ctx, name):
     click.secho(
         table("PROFILE SETTINGS", ctx.provider.values, ["name", "value"]).table
     )
+
+
+@cli.command(name="sync-vars", help="Synchronise configuration variables between profiles")
+@click.argument("source_profile")
+@click.argument("destination_profile")
+@stylist_context
+def sync_vars(ctx, source_profile, destination_profile):
+    try:
+        profiles = _list_profiles(ctx)
+
+        if source_profile not in profiles:
+            raise Exception('Source profile "{}" is missing'.format(source_profile))
+
+        if destination_profile not in profiles:
+            raise Exception('Destination profile "{}" is missing'.format(destination_profile))
+
+        terraform = Terraform(ctx)
+        terraform.sync_vars(source_profile, destination_profile)
+    except Exception as e:
+        logger.error(e.message)
+
