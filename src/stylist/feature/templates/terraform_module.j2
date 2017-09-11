@@ -1,6 +1,0 @@
-module "{{ module_name }}" {
-  source = "{{ source }}"
-  {% for name, value in vars.items() %}
-  {{ name }}  = "{{ value }}"
-  {% endfor %}
-}

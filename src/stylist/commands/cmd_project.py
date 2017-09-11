@@ -9,7 +9,6 @@ from click import Path
 
 from stylist.cli import stylist_context, logger
 from stylist.commands import cli_prototype
-from stylist.feature import Templates
 from stylist.feature import get_feature, FEATURES
 
 cli = copy(cli_prototype)
@@ -57,7 +56,5 @@ def init(ctx, git_repository, path, templates_version='master'):
               help="Git branch / tag of templates repository which should be used for init")
 @stylist_context
 def add_feature(ctx, feature, templates_version):
-    templates = Templates(templates_version)
-
-    f = get_feature(feature)
-    f.setup(ctx, templates)
+    f = get_feature(feature, templates_version)
+    f.setup(ctx)

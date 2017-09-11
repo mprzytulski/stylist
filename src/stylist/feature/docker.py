@@ -2,22 +2,15 @@ from os.path import join, isfile
 
 import click
 from click import style
-from jinja2 import Environment, FileSystemLoader
 
 from stylist.click.types import Boolean
 from stylist.feature import Feature
+from stylist.wrapper.terraform import Terraform
 
 
 class DockerFeature(Feature):
-    def setup(self, ctx, templates):
-        self.templates = Environment(loader=FileSystemLoader(templates.destination))
-
+    def setup(self, ctx):
         _docker = style('Docker', fg='blue')
-
-        terraform_support = click.prompt(
-            _docker + ' | Enable terraform support?',
-            type=Boolean(), default='yes'
-        )
 
         prompts = {
             "base_image": {"text": "Docker base image", "default": "python:3-stretch"},
@@ -46,9 +39,10 @@ class DockerFeature(Feature):
             with open(dst_path, 'w+') as f:
                 f.write(template.render(**values))
 
-        if terraform_support:
-            self.enable_terraform(ctx)
+        if click.prompt(_docker + ' | Enable terraform ecs_service support?', type=Boolean(), default='yes'):
+            alias = ctx.name
 
-    def enable_terraform(self, ctx):
-        self.enable_terraform(ctx)
-        self.terraform_install_module(ctx, 'ecs_service')
+            if dockerfile != 'Dockerfile':
+                alias += '-' + dockerfile.replace('Dockerfile.', '')
+
+            self.enable_terraform(ctx, 'ecs_service', alias)

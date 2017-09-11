@@ -1,11 +1,11 @@
 from __future__ import absolute_import
 
 import json
+import shutil
 import subprocess
 import tempfile
 from glob import glob
-
-from os.path import isfile, join, isdir
+from os.path import isfile, join, isdir, exists
 
 import click
 import hcl
@@ -20,13 +20,20 @@ class TerraformException(Exception):
 
 
 class Terraform(object):
-    def __init__(self, ctx):
+    STYLIST_VAR_NAMES = ('aws_region', 'aws_account_id', 'environment')
+
+    def __init__(self, ctx, templates):
         self.ctx = ctx
         self.cmd = which('terraform')
+        self.templates = templates
 
     @property
     def terraform_dir(self):
         return join(self.ctx.working_dir, "terraform")
+
+    def setup(self):
+        if not exists(self.terraform_dir):
+            shutil.copytree(join(self.templates.destination, 'terraform'), self.terraform_dir)
 
     def plan(self, save=False):
         vars_file = self._ensure_env()
@@ -136,28 +143,43 @@ class Terraform(object):
         return p.communicate()
 
     def configure_module(self, module_name, alias):
+        maped_values = {
+            'name': alias
+        }
         values = {}
-        template = self.templates.get_template('terraform_module.j2')
+        template = self.templates.get_template('internal/terraform/module.jinja2')
         for tf_file in glob(join(self.templates.destination, 'terraform_modules', module_name, '*.variables.tf')):
             try:
                 with open(tf_file, 'r') as f:
                     variables = hcl.load(f).get("variable")
 
                 for name, config in variables.items():
-                    prefix = "{feature}({module}) Enter value for: {variable}".format(
-                        feature=style("Terraform", fg="blue"),
-                        module=style(module_name, fg="green"),
-                        variable=name
-                    )
-                    values[name] = prompt(prefix, default=config.get("default"))
+                    if name in Terraform.STYLIST_VAR_NAMES:
+                        continue
+
+                    if name in maped_values:
+                        values[name] = maped_values.get(name)
+                    else:
+                        prefix = "{feature}({module}) Enter value for: {variable}".format(
+                            feature=style("Terraform", fg="blue"),
+                            module=style(module_name, fg="green"),
+                            variable=name
+                        )
+
+                        _val = prompt(prefix, default=config.get("default"))
+
+                        if _val and _val != config.get("default"):
+                            values[name] = _val
 
                 rendered = template.render(
                     module_name=module_name,
                     vars=values,
-                    source=join(self.templates.destination, 'terraform_modules', module_name)
+                    internal=Terraform.STYLIST_VAR_NAMES,
+                    source=join(self.templates.destination, 'terraform_modules', module_name),
+                    alias=alias
                 )
 
-                with open(join(ctx.working_dir, 'terraform', 'module.' + module_name + '.tf'), 'w+') as f:
+                with open(join(self.terraform_dir, 'module.' + module_name + '_' + alias + '.tf'), 'w+') as f:
                     f.write(rendered)
             except Exception as e:
                 raise e
