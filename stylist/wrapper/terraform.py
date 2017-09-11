@@ -9,8 +9,12 @@ from os.path import isfile, join, isdir, exists
 
 import re
 
+import sys
+
 import click
 import hcl
+
+from stylist.cli import logger
 from click import style, prompt
 
 from stylist.commands.cmd_check import which
@@ -153,6 +157,12 @@ class Terraform(object):
         current_vars = {}
         template = self.templates.get_template('internal/terraform/module.jinja2')
 
+        module_dir = join(self.templates.destination, 'terraform_modules', module_name)
+
+        if not isdir(module_dir):
+            logger.error("Unable to locate '{}' module definition".format(module_name))
+            sys.exit(1)
+
         module_file = join(self.terraform_dir, 'module.' + module_name + '_' + alias + '.tf')
         if exists(module_file):
             regexp = ur'^\s*(?P<name>\w+)\s*=\s*"?(?P<value>.*?)"?$'
@@ -163,7 +173,7 @@ class Terraform(object):
             except Exception:
                 pass
 
-        for tf_file in glob(join(self.templates.destination, 'terraform_modules', module_name, '*.tf')):
+        for tf_file in glob(join(module_dir, '*.tf')):
             try:
                 with open(tf_file, 'r') as f:
                     variables = hcl.load(f).get("variable")
