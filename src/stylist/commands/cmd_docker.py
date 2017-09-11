@@ -32,7 +32,7 @@ def build(ctx, no_tag):
         if not no_tag:
             click.secho("Container tagged: {}".format(build_tag), fg="green")
 
-    except NotADockerProjectException as e:
+    except NotADockerProjectException:
         sys.exit(1)
 
 
@@ -48,7 +48,7 @@ def push(ctx, build_tag):
         remote = docker.push(build_tag)
 
         click.secho("Image ready: {remote}".format(remote=remote), fg="green")
-    except NotADockerProjectException as e:
+    except NotADockerProjectException:
         sys.exit(1)
     except DockerException as e:
         click.echo(
@@ -69,5 +69,5 @@ def images(ctx):
     try:
         docker = Docker(ctx)
         docker.images()
-    except NotADockerProjectException as e:
+    except NotADockerProjectException:
         sys.exit(1)
