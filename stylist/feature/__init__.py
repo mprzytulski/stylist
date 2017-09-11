@@ -1,8 +1,9 @@
 import importlib
 import os
 import pkgutil
+import tempfile
 from os import mkdir
-from os.path import exists
+from os.path import exists, join
 
 import click
 from click import style
@@ -17,11 +18,12 @@ class Templates(object):
 
     def __init__(self, version='master'):
         self.version = version
-        self.destination = '/Users/me/projects/threads/templates'
+
+        # self.destination = '/Users/me/projects/threads/templates'
+        self.destination = join(tempfile.gettempdir(), "stylist-templates")
 
         self.env = Environment(loader=FileSystemLoader(self.destination))
-        # self.destination = join(tempfile.gettempdir(), "stylist-templates")
-        # self._init_repository()
+        self._init_repository()
 
     def _init_repository(self):
         if not exists(self.destination):

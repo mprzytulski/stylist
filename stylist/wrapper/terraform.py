@@ -1,22 +1,19 @@
 from __future__ import absolute_import
 
 import json
+import re
 import shutil
 import subprocess
+import sys
 import tempfile
 from glob import glob
 from os.path import isfile, join, isdir, exists
 
-import re
-
-import sys
-
-import click
 import hcl
 
-from stylist.cli import logger
+import click
 from click import style, prompt
-
+from stylist.cli import logger
 from stylist.commands.cmd_check import which
 
 
@@ -169,7 +166,13 @@ class Terraform(object):
 
             try:
                 with open(module_file, 'r') as f:
-                    current_vars = {v.group('name'): v.group('value') for k, v in enumerate(re.finditer(regexp, f.read(), re.MULTILINE))}
+                    current_vars = {v.group('name'): v.group('value') for k, v in
+                                    enumerate(re.finditer(regexp, f.read(), re.MULTILINE))}
+
+                click.secho("Using existing definition from: '{}'\n".format(
+                    module_file.replace(self.terraform_dir + '/', '')
+                ), fg='blue')
+
             except Exception:
                 pass
 
@@ -212,3 +215,7 @@ class Terraform(object):
 
         with open(module_file, 'w+') as f:
             f.write(rendered)
+
+        click.secho("All done, module file updated: '{}'".format(
+            module_file.replace(self.terraform_dir + '/', '')
+        ), fg='green')
