@@ -5,7 +5,7 @@ import logging
 import click
 import click_log
 
-from stylist.click import ComplexCLI, CONTEXT_SETTINGS, Context
+from stylist.click import CONTEXT_SETTINGS, ComplexCLI, Context
 
 logger = logging.getLogger(__name__)
 

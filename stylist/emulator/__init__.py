@@ -4,7 +4,6 @@ from os.path import join, realpath, dirname
 
 import click
 
-from stylist.emulator.aws import Emulator
 from stylist.utils import colourize, highlight_json
 
 

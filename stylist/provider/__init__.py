@@ -1,8 +1,8 @@
 import os
-from abc import ABCMeta, abstractmethod
+from abc import ABCMeta
+from os.path import join
 
 import yaml
-from os.path import join
 
 
 class Provider(object):

@@ -60,7 +60,7 @@ class Terraform(object):
         return output
 
     def apply(self, plan):
-        vars_file = self._ensure_env(get=False)
+        self._ensure_env(get=False)
 
         args = ['apply', plan]
 

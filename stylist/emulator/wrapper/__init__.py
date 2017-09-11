@@ -29,7 +29,7 @@ def execute(get_handler, event, ctx):
     fn, module = get_handler()
 
     events = {}
-    with TrackerContext(module, events) as tracker:
+    with TrackerContext(module, events):
         startTime = datetime.now()
         # result = fn(event, ctx)
         mem, result = memory_usage((fn, (event, ctx),), retval=True, interval=1e-6)

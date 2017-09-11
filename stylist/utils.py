@@ -4,8 +4,8 @@ import json
 import os
 from textwrap import wrap
 
-import click
 import sys
+import click
 from pygments import highlight, lexers, formatters
 from terminaltables import SingleTable
 
