@@ -6,11 +6,11 @@ import click
 
 from stylist.cli import stylist_context, logger
 from stylist.commands import cli_prototype
-from stylist.lib.click.types import EventAwareFile
-from stylist.lib.emulator import ExecutionContext, Emulator
-from stylist.lib.serverless import Serverless, FunctionNotFoundException, InvalidContextException
-from stylist.lib.utils import highlight_json, display_section, table
-from stylist.lib.virtualenv import Virtualenv
+from stylist.click.types import EventAwareFile
+from stylist.emulator import ExecutionContext, Emulator
+from stylist.wrapper.serverless import Serverless, FunctionNotFoundException, InvalidContextException
+from stylist.utils import highlight_json, display_section, table
+from stylist.wrapper.virtualenv import Virtualenv
 
 cli = cli_prototype
 cli.short_help = "Manage serverless functions"

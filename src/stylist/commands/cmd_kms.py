@@ -4,7 +4,7 @@ import click
 
 from stylist.cli import stylist_context
 from stylist.commands import cli_prototype
-from stylist.lib.utils import line_prefix
+from stylist.utils import line_prefix
 
 cli = cli_prototype
 cli.short_help = "AWS KMS encryption helper"

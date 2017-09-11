@@ -9,7 +9,7 @@ import sys
 from pygments import highlight, lexers, formatters
 from terminaltables import SingleTable
 
-from stylist.lib.provider.aws import AWSProvider
+from stylist.provider.aws import AWSProvider
 
 
 def colourize(name):

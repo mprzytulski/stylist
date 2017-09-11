@@ -1,19 +1,16 @@
 import os
-
-import click
+import sys
 from os.path import join
 
+import click
 import git
-import sys
-
 from click import Path
 
 from stylist.cli import stylist_context, logger
 from stylist.commands import cli_prototype
 from stylist.commands.cmd_profile import create
-from stylist.lib.click.types import Boolean
-from stylist.lib.project import Templates
-from stylist.lib.project.feature import get_feature, FEATURES
+from stylist.feature import Templates
+from stylist.feature import get_feature, FEATURES
 
 cli = cli_prototype
 cli.short_help = "Stylist project helper"

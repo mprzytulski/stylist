@@ -5,10 +5,10 @@ from datetime import datetime
 
 from memory_profiler import memory_usage
 
-from stylist.lib.wrapper.tracker import TrackerContext
-from stylist.lib.wrapper.tracker.aws import ClientTracker, SNSTracker
-from stylist.lib.wrapper.tracker.lambda_utils import LambdaUtilsTracker
-from stylist.lib.wrapper.tracker.requests import RequestsTracker
+from stylist.emulator.tracker import TrackerContext
+from stylist.emulator.tracker.aws import ClientTracker, SNSTracker
+from stylist.emulator.tracker.lambda_utils import LambdaUtilsTracker
+from stylist.emulator.tracker.requests import RequestsTracker
 
 TrackerContext.registry(RequestsTracker())
 TrackerContext.registry(SNSTracker())

@@ -4,8 +4,8 @@ from os.path import join, realpath, dirname
 
 import click
 
-from stylist.lib.emulator.aws import Emulator
-from stylist.lib.utils import colourize, highlight_json
+from stylist.emulator.aws import Emulator
+from stylist.utils import colourize, highlight_json
 
 
 class ExecutionContext(object):

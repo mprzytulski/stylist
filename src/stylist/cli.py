@@ -1,9 +1,11 @@
+from __future__ import absolute_import
+
 import logging
 
 import click
 import click_log
 
-from stylist.lib.click import ComplexCLI, CONTEXT_SETTINGS, Context
+from stylist.click import ComplexCLI, CONTEXT_SETTINGS, Context
 
 logger = logging.getLogger(__name__)
 

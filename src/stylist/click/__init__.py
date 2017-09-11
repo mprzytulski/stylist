@@ -6,8 +6,9 @@ from glob import glob
 from os.path import dirname, join, basename, abspath
 
 from click import MultiCommand, Group
+from git import Repo
 
-from stylist.lib.utils import find_dotenv, get_provider
+from stylist.utils import find_dotenv, get_provider
 
 CONTEXT_SETTINGS = dict(auto_envvar_prefix='STYLIST')
 
@@ -17,6 +18,7 @@ class Context(object):
         self.working_dir = os.getcwd()
         self.environment = ""
         self.loaded = False
+        self.name = None
 
         path = None
         for p in [".stylist", ".git"]:
@@ -40,6 +42,7 @@ class Context(object):
             return
 
         self.environment = profile or self._active_environment() or ""
+        self.name = Repo(self.working_dir).remote('origin').url.split('/')[-1].replace(".git", '')
 
         self._load_provider()
         self.loaded = True
@@ -64,9 +67,10 @@ class Context(object):
 class ComplexCLI(MultiCommand):
     def list_commands(self, ctx):
         rv = []
-        for filename in os.listdir(abspath(join(os.path.dirname(__file__), '..', '..', 'commands'))):
+        for filename in os.listdir(abspath(join(os.path.dirname(__file__), '..', 'commands'))):
             if filename.endswith('.py') and filename.startswith('cmd_'):
-                rv.append(filename[4:-3])
+                name = filename[4:-3]
+                rv.append(name)
         rv.sort()
 
         return rv

@@ -3,7 +3,7 @@ import sys
 
 import click
 
-from stylist.lib.utils import table
+from stylist.utils import table
 
 
 def which(program):

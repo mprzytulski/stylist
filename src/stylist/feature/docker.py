@@ -4,8 +4,8 @@ import click
 from click import style
 from jinja2 import Environment, FileSystemLoader
 
-from stylist.lib.click.types import Boolean
-from stylist.lib.project.feature import Feature
+from stylist.click.types import Boolean
+from stylist.feature import Feature
 
 
 class DockerFeature(Feature):
@@ -34,8 +34,7 @@ class DockerFeature(Feature):
             values[name] = click.prompt(**params)
 
         templates = {
-            'docker/Dockerfile.jinja2': dockerfile,
-            'docker/entrypoint.sh': 'entrypoint.sh'
+            'docker/Dockerfile.jinja2': dockerfile
         }
 
         for src, dst in templates.items():

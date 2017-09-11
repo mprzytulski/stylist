@@ -7,9 +7,9 @@ from click import style
 from os.path import isdir, join
 
 from stylist.cli import stylist_context
-from stylist.lib.click.types import Boolean
-from stylist.lib.serverless import Serverless, InvalidContextException
-from stylist.lib.utils import colourize
+from stylist.click.types import Boolean
+from stylist.wrapper.serverless import Serverless, InvalidContextException
+from stylist.utils import colourize
 
 
 @click.command(help="Deploy project")

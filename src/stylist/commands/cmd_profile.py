@@ -7,8 +7,8 @@ import click
 
 from stylist.cli import stylist_context, logger
 from stylist.commands import cli_prototype
-from stylist.lib.terraform import Terraform, TerraformException
-from stylist.lib.utils import colourize, get_provider, table
+from stylist.wrapper.terraform import Terraform, TerraformException
+from stylist.utils import colourize, get_provider, table
 
 cli = cli_prototype
 cli.short_help = 'Manage project environments'

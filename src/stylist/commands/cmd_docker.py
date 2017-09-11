@@ -5,7 +5,7 @@ import click
 
 from stylist.cli import stylist_context
 from stylist.commands import cli_prototype
-from stylist.lib.docker import Docker, NotADockerProjectException, DockerException
+from stylist.wrapper.docker import Docker, NotADockerProjectException, DockerException
 
 cli = cli_prototype
 cli.short_help = 'Docker image helper'

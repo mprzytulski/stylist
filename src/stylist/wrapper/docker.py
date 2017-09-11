@@ -8,7 +8,7 @@ import click
 from git import Repo
 
 from stylist.cli import logger
-from stylist.lib.utils import find_dotenv
+from stylist.utils import find_dotenv
 
 
 class NotADockerProjectException(Exception):

@@ -6,8 +6,8 @@ import click
 from stylist.cli import stylist_context, logger
 from stylist.commands import cli_prototype
 from stylist.commands.cmd_check import which
-from stylist.lib.click.types import Boolean
-from stylist.lib.terraform import Terraform, TerraformException
+from stylist.click.types import Boolean
+from stylist.wrapper.terraform import Terraform, TerraformException
 
 cli = cli_prototype
 cli.short_help = 'Wrapper around terraform'
@@ -52,3 +52,12 @@ def apply(ctx):
     finally:
         if plan_path:
             os.remove(plan_path)
+
+
+@cli.command(name="configure-module", help="Configure terraform module")
+@click.option("--alias")
+@click.argument("module_name")
+@stylist_context
+def configure_module(ctx, module_name, alias):
+    terraform = Terraform(ctx)
+    terraform.configure_module(module_name, alias)

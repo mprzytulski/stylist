@@ -4,7 +4,7 @@ import sys
 import click
 
 from stylist.cli import stylist_context, logger
-from stylist.lib.click import GroupWithCommandOptions
+from stylist.click import GroupWithCommandOptions
 
 _global_options = [
     click.option('--working-dir', type=click.Path(exists=True, file_okay=False, resolve_path=True),

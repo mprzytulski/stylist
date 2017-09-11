@@ -3,11 +3,13 @@ from __future__ import absolute_import
 import json
 import subprocess
 import tempfile
+from glob import glob
 
 from os.path import isfile, join, isdir
 
 import click
 import hcl
+from click import style, prompt
 
 from stylist.commands.cmd_check import which
 
@@ -132,3 +134,31 @@ class Terraform(object):
                              stdout=click.get_text_stream("stdout"),
                              stderr=click.get_text_stream("stderr"))
         return p.communicate()
+
+    def configure_module(self, module_name, alias):
+        values = {}
+        template = self.templates.get_template('terraform_module.j2')
+        for tf_file in glob(join(self.templates.destination, 'terraform_modules', module_name, '*.variables.tf')):
+            try:
+                with open(tf_file, 'r') as f:
+                    variables = hcl.load(f).get("variable")
+
+                for name, config in variables.items():
+                    prefix = "{feature}({module}) Enter value for: {variable}".format(
+                        feature=style("Terraform", fg="blue"),
+                        module=style(module_name, fg="green"),
+                        variable=name
+                    )
+                    values[name] = prompt(prefix, default=config.get("default"))
+
+                rendered = template.render(
+                    module_name=module_name,
+                    vars=values,
+                    source=join(self.templates.destination, 'terraform_modules', module_name)
+                )
+
+                with open(join(ctx.working_dir, 'terraform', 'module.' + module_name + '.tf'), 'w+') as f:
+                    f.write(rendered)
+            except Exception as e:
+                raise e
+                pass

@@ -8,7 +8,7 @@ from os.path import join, isdir, exists
 
 import click
 
-from stylist.lib.pip import Pip
+from stylist.wrapper.pip import Pip
 
 
 class VirtualenvException(Exception):

@@ -1,6 +1,6 @@
 import boto3
 
-from stylist.lib.provider import Provider
+from stylist.provider import Provider
 
 
 class AWSProvider(Provider):

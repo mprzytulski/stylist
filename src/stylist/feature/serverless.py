@@ -1,4 +1,4 @@
-from stylist.lib.project.feature import Feature
+from stylist.feature import Feature
 
 
 class ServerlessFeature(Feature):
