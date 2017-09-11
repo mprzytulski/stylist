@@ -8,6 +8,7 @@ from stylist.click.types import Boolean
 from stylist.commands import cli_prototype
 from stylist.feature import Templates
 from stylist.wrapper.terraform import Terraform, TerraformException
+from stylist.utils import colourize
 
 cli = copy(cli_prototype)
 cli.short_help = 'Wrapper around terraform'
@@ -38,7 +39,7 @@ def apply(ctx):
         plan_path = terraform.plan(True)
 
         _apply = click.prompt(
-            style("Apply saved plan? ", fg="green"),
+            style('Apply saved plan to "{}"? '.format(colourize(ctx.environment)), fg="green"),
             type=Boolean(),
             default=True
         )
