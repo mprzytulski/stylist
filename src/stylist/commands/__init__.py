@@ -11,7 +11,7 @@ _global_options = [
                  help='Changes the folder to operate on.'),
     click.option('--profile', help='Temporary change active profile for given command')
 ]
-ENVIRONMENTS = ('local', 'test', 'staging', 'uat', 'prod')
+ENVIRONMENTS = ('test', 'staging', 'uat', 'prod', 'local')
 
 
 def global_options(func):
