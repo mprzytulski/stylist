@@ -38,19 +38,20 @@ class Docker(object):
         self.repositories = Docker.Repositories(self.ecr)
         self.project_name = self._get_project_name()
 
-    def build(self, dockerfile_path, tag=None):
+    def build(self, dockerfile_path, tag):
         dockerfile_base_path, dockerfile = os.path.split(dockerfile_path)
-        repository_name = '{}/{}{}'.format(self.ctx.environment,
-                                           self.ctx.name,
-                                           dockerfile.replace('Dockerfile', '').replace('.', '/'))
-        repository_tag = ':{}'.format(tag) if tag else ''
-
+        repository_name = '{}/{}{}:{}'.format(self.ctx.environment,
+                                              self.ctx.name,
+                                              dockerfile.replace('Dockerfile', '').replace('.', '/'),
+                                              tag)
         args = ['build']
         args += ['-f', dockerfile_path]
-        args += ['-t', '{}{}'.format(repository_name, repository_tag)]
+        args += ['-t', repository_name]
         args.append(self.ctx.working_dir)
 
         self.__run_docker(args)
+
+        return repository_name
 
     def push(self, tag):
         repo = self.repositories.get_repository(self.project_name)

@@ -12,20 +12,19 @@ cli.short_help = 'Docker image helper'
 
 
 @cli.command(help='Build docker image using Dockerfile')
-@click.option('--no-tag', default=False, flag_value='no_tag', help='Do not tag build')
+@click.option('--tag', default=datetime.now().strftime('%Y%m%d_%H%M'))
 @click.option('--ask', is_flag=True, help='Ask which repository to build')
 @stylist_context
-def build(ctx, no_tag, ask):
+def build(ctx, tag, ask):
     """
     @type ctx: stylist.cli.Context
+    @type tag: string
+    @type ask: string
     """
     click.secho('Building docker container', fg='blue')
 
     docker_files = glob.glob('{}/Dockerfile*'.format(ctx.working_dir))
-
     try:
-        build_tag = datetime.now().strftime('%Y%m%d_%H%M') if not no_tag else None
-
         if ask:
             indexes = _ask_about_docker_files('Which docker file would you like to build?', docker_files)
         else:
@@ -34,14 +33,11 @@ def build(ctx, no_tag, ask):
         docker = Docker(ctx)
         for index in indexes:
             try:
-                docker.build(docker_files[index], build_tag)
-
-                click.secho('Container "{}" ready\n'.format(docker_files[index]), fg='green')
+                repository_name = docker.build(docker_files[index], tag)
+                click.secho('Container "{}" built from dockerfile "{}"\n'.format(repository_name,
+                                                                                 docker_files[index]), fg='green')
             except IndexError:
                 pass
-
-        if not no_tag:
-            click.secho('Container tagged: {}'.format(build_tag), fg='green')
 
     except NotADockerProjectException:
         sys.exit(1)
