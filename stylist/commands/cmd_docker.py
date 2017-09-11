@@ -33,7 +33,7 @@ def build(ctx, no_tag):
             all_above = len(docker_files)+1
             click.secho('  [{}] All above.'.format(all_above), fg='blue')
 
-            docker_index = click.prompt('Build', default=all_above)
+            docker_index = click.prompt(click.style('Build', fg='blue'), default=all_above)
             if docker_index == all_above:
                 docker_files_indexes = tuple(range(0, len(docker_files)))
             else:
