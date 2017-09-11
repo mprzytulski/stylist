@@ -37,6 +37,9 @@ class Templates(object):
     def get_template(self, name):
         return self.env.get_template(name)
 
+    def get_module_source(self, module_name):
+        return Templates.REPOSITORY + "//terraform_modules/" + module_name
+
 
 class Feature(object):
     def __init__(self, version):

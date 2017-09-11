@@ -168,7 +168,9 @@ class Terraform(object):
             logger.error("Unable to locate '{}' module definition".format(module_name))
             sys.exit(1)
 
-        module_file = join(self.terraform_dir, 'module.' + module_name + '_' + alias + '.tf')
+        full_module_name = module_name + '_' + alias
+
+        module_file = join(self.terraform_dir, 'module.' + full_module_name + '.tf')
         if exists(module_file):
             regexp = ur'^\s*(?P<name>\w+)\s*=\s*"?(?P<value>.*?)"?$'
 
@@ -215,9 +217,10 @@ class Terraform(object):
 
         rendered = template.render(
             module_name=module_name,
+            full_module_name=full_module_name,
             vars=values,
             internal=Terraform.STYLIST_VAR_NAMES,
-            source=join(self.templates.destination, 'terraform_modules', module_name),
+            source=self.templates.get_module_source(module_name),
             alias=alias
         )
 
