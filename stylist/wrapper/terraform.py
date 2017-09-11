@@ -43,6 +43,12 @@ class Terraform(object):
 
         args = ['plan', '-var-file', vars_file]
 
+        aws_session = self.ctx.provider.session
+
+        args += ['-var', '{}={}'.format('aws_account_id', aws_session.client('sts').get_caller_identity()["Account"])]
+        args += ['-var', '{}={}'.format('aws_region', aws_session.region_name)]
+        args += ['-var', '{}={}'.format('environment', self.ctx.environment)]
+
         output = None
         if save:
             f = tempfile.NamedTemporaryFile(prefix="tf-plan.", delete=False)
@@ -130,16 +136,18 @@ class Terraform(object):
             raise TerraformException("You can't use terraform on local env")
 
         if not isdir(join(self.terraform_dir, 'terraform.tfstate.d', self.ctx.environment)):
-            self._exec(['env', 'new', self.ctx.environment])
+            self._exec(['workspace', 'new', self.ctx.environment])
 
-        self._exec(['env', 'select', self.ctx.environment])
+        self._exec(['workspace', 'select', self.ctx.environment])
 
         if get:
-            self._exec(['get'])
+            self._exec(['init'])
 
         return vars_file
 
     def _exec(self, args):
+        click.secho("Executing: " + " ".join([self.cmd] + args), fg="blue")
+
         p = subprocess.Popen([self.cmd] + args, cwd=self.terraform_dir,
                              stdout=click.get_text_stream("stdout"),
                              stderr=click.get_text_stream("stderr"))
