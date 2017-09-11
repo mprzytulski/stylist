@@ -2,13 +2,9 @@ from __future__ import absolute_import
 
 import base64
 import subprocess
-from os.path import isfile, dirname
 
 import click
 from git import Repo
-
-from stylist.cli import logger
-from stylist.utils import find_dotenv
 
 
 class NotADockerProjectException(Exception):
@@ -35,22 +31,23 @@ class Docker(object):
         def create_repository(self, name):
             return self.ecr.create_repository(repositoryName=name)
 
-    @property
-    def dockerfile_path(self):
-        return find_dotenv('Dockerfile', usecwd=True) or find_dotenv('Dockerfile', path=self.ctx.working_dir)
-
-    def __init__(self, ctx):
+    def __init__(self, dockerfile_path, ctx):
+        self.dockerfile_path = dockerfile_path
         self.ctx = ctx
         self.ecr = ctx.provider.session.client('ecr')
         self.repositories = Docker.Repositories(self.ecr)
         self.project_name = self._get_project_name()
 
-    def build(self, repository, tag=None, version='latest'):
-        self._ensure_is_docker()
+    def build(self, tag=None):
+        repository_name = '{}/{}{}'.format(self.ctx.environment,
+                                           self.ctx.name,
+                                           self.dockerfile_path.replace('Dockerfile', '').replace('.', ''))
+        repository_tag = ':{}'.format(tag) if tag else ''
 
         args = ['build']
-        args += ['-t', '{}:{}'.format(repository, tag)] if tag else []
-        args.append(dirname(self.dockerfile_path))
+        args += ['-f', '{}{}'.format(self.ctx.working_dir, self.dockerfile_path)]
+        args += ['-t', '{}{}'.format(repository_name, repository_tag)]
+        args.append(self.ctx.working_dir)
 
         self.__run_docker(args)
 
@@ -77,11 +74,6 @@ class Docker(object):
     def images(self):
         args = ['images', self.project_name]
         self.__run_docker(args)
-
-    def _ensure_is_docker(self):
-        if not isfile(self.dockerfile_path):
-            logger.error('Not a docker project')
-            raise NotADockerProjectException()
 
     def _get_project_name(self):
         repo = Repo(self.ctx.working_dir)
