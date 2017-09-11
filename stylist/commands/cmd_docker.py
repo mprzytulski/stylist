@@ -45,7 +45,7 @@ def build(ctx, no_tag):
             try:
                 docker.build(docker_files[index], build_tag)
 
-                click.secho('Container "{}" ready'.format(docker_files[index]), fg='green')
+                click.secho('Container "{}" ready\n'.format(docker_files[index]), fg='green')
             except IndexError:
                 pass
 
