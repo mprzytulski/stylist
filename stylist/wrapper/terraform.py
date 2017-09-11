@@ -1,16 +1,19 @@
 from __future__ import absolute_import
 
 import json
+import re
 import shutil
 import subprocess
+import sys
 import tempfile
 from glob import glob
 from os.path import isfile, join, isdir, exists
 
-import click
 import hcl
-from click import style, prompt
 
+import click
+from click import style, prompt
+from stylist.cli import logger
 from stylist.commands.cmd_check import which
 
 
@@ -39,6 +42,12 @@ class Terraform(object):
         vars_file = self._ensure_env()
 
         args = ['plan', '-var-file', vars_file]
+
+        aws_session = self.ctx.provider.session
+
+        args += ['-var', '{}={}'.format('aws_account_id', aws_session.client('sts').get_caller_identity()["Account"])]
+        args += ['-var', '{}={}'.format('aws_region', aws_session.region_name)]
+        args += ['-var', '{}={}'.format('environment', self.ctx.environment)]
 
         output = None
         if save:
@@ -127,16 +136,18 @@ class Terraform(object):
             raise TerraformException("You can't use terraform on local env")
 
         if not isdir(join(self.terraform_dir, 'terraform.tfstate.d', self.ctx.environment)):
-            self._exec(['env', 'new', self.ctx.environment])
+            self._exec(['workspace', 'new', self.ctx.environment])
 
-        self._exec(['env', 'select', self.ctx.environment])
+        self._exec(['workspace', 'select', self.ctx.environment])
 
         if get:
-            self._exec(['get'])
+            self._exec(['init'])
 
         return vars_file
 
     def _exec(self, args):
+        click.secho("Executing: " + " ".join([self.cmd] + args), fg="blue")
+
         p = subprocess.Popen([self.cmd] + args, cwd=self.terraform_dir,
                              stdout=click.get_text_stream("stdout"),
                              stderr=click.get_text_stream("stderr"))
@@ -146,12 +157,40 @@ class Terraform(object):
         maped_values = {
             'name': alias
         }
+
         values = {}
+        current_vars = {}
         template = self.templates.get_template('internal/terraform/module.jinja2')
-        for tf_file in glob(join(self.templates.destination, 'terraform_modules', module_name, '*.variables.tf')):
+
+        module_dir = join(self.templates.destination, 'terraform_modules', module_name)
+
+        if not isdir(module_dir):
+            logger.error("Unable to locate '{}' module definition".format(module_name))
+            sys.exit(1)
+
+        module_file = join(self.terraform_dir, 'module.' + module_name + '_' + alias + '.tf')
+        if exists(module_file):
+            regexp = ur'^\s*(?P<name>\w+)\s*=\s*"?(?P<value>.*?)"?$'
+
+            try:
+                with open(module_file, 'r') as f:
+                    current_vars = {v.group('name'): v.group('value') for k, v in
+                                    enumerate(re.finditer(regexp, f.read(), re.MULTILINE))}
+
+                click.secho("Using existing definition from: '{}'\n".format(
+                    module_file.replace(self.terraform_dir + '/', '')
+                ), fg='blue')
+
+            except Exception:
+                pass
+
+        for tf_file in glob(join(module_dir, '*.tf')):
             try:
                 with open(tf_file, 'r') as f:
                     variables = hcl.load(f).get("variable")
+
+                if not variables:
+                    continue
 
                 for name, config in variables.items():
                     if name in Terraform.STYLIST_VAR_NAMES:
@@ -166,21 +205,25 @@ class Terraform(object):
                             variable=name
                         )
 
-                        _val = prompt(prefix, default=config.get("default"))
+                        _val = prompt(prefix, default=current_vars.get(name, config.get("default")))
 
                         if _val and _val != config.get("default"):
                             values[name] = _val
 
-                rendered = template.render(
-                    module_name=module_name,
-                    vars=values,
-                    internal=Terraform.STYLIST_VAR_NAMES,
-                    source=join(self.templates.destination, 'terraform_modules', module_name),
-                    alias=alias
-                )
-
-                with open(join(self.terraform_dir, 'module.' + module_name + '_' + alias + '.tf'), 'w+') as f:
-                    f.write(rendered)
             except Exception as e:
-                raise e
                 pass
+
+        rendered = template.render(
+            module_name=module_name,
+            vars=values,
+            internal=Terraform.STYLIST_VAR_NAMES,
+            source=join(self.templates.destination, 'terraform_modules', module_name),
+            alias=alias
+        )
+
+        with open(module_file, 'w+') as f:
+            f.write(rendered)
+
+        click.secho("All done, module file updated: '{}'".format(
+            module_file.replace(self.terraform_dir + '/', '')
+        ), fg='green')
