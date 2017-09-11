@@ -1,5 +1,6 @@
 from __future__ import absolute_import
 
+import os
 import base64
 import subprocess
 
@@ -38,13 +39,14 @@ class Docker(object):
         self.project_name = self._get_project_name()
 
     def build(self, dockerfile_path, tag=None):
+        dockerfile_base_path, dockerfile = os.path.split(dockerfile_path)
         repository_name = '{}/{}{}'.format(self.ctx.environment,
                                            self.ctx.name,
-                                           dockerfile_path.replace('Dockerfile', '').replace('.', ''))
+                                           dockerfile.replace('Dockerfile', '').replace('.', '/'))
         repository_tag = ':{}'.format(tag) if tag else ''
 
         args = ['build']
-        args += ['-f', '{}{}'.format(self.ctx.working_dir, dockerfile_path)]
+        args += ['-f', dockerfile_path]
         args += ['-t', '{}{}'.format(repository_name, repository_tag)]
         args.append(self.ctx.working_dir)
 
