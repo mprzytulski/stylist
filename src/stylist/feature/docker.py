@@ -5,7 +5,6 @@ from click import style
 
 from stylist.click.types import Boolean
 from stylist.feature import Feature
-from stylist.wrapper.terraform import Terraform
 
 
 class DockerFeature(Feature):

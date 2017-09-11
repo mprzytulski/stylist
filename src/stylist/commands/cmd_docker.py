@@ -51,7 +51,7 @@ def push(ctx, build_tag):
     except NotADockerProjectException as e:
         sys.exit(1)
     except DockerException as e:
-        click.echo(
+        click.secho(
             'Failed to run docker command with message "{message}", exit code: {errno}'.format(
                 message=e.message,
                 errno=e.errno

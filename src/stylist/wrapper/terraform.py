@@ -22,7 +22,7 @@ class TerraformException(Exception):
 class Terraform(object):
     STYLIST_VAR_NAMES = ('aws_region', 'aws_account_id', 'environment')
 
-    def __init__(self, ctx, templates):
+    def __init__(self, ctx, templates=None):
         self.ctx = ctx
         self.cmd = which('terraform')
         self.templates = templates

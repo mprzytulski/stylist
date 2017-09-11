@@ -8,7 +8,8 @@ import git
 from click import Path
 
 from stylist.cli import stylist_context, logger
-from stylist.commands import cli_prototype, ENVIRONMENTSsfrom stylist.feature import get_feature, FEATURES
+from stylist.commands import cli_prototype, ENVIRONMENTS
+from stylist.feature import get_feature, FEATURES
 
 cli = copy(cli_prototype)
 cli.short_help = "Stylist project helper"
