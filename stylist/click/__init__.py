@@ -5,9 +5,9 @@ import sys
 from glob import glob
 from os.path import dirname, join, basename, abspath
 
-from click import MultiCommand, Group
 from git import Repo
 
+from click import MultiCommand, Group
 from stylist.utils import find_dotenv, get_provider
 
 CONTEXT_SETTINGS = dict(auto_envvar_prefix='STYLIST')

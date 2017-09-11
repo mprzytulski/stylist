@@ -1,10 +1,8 @@
 import os
 from copy import copy
 
-from click import style
-
 import click
-
+from click import style
 from stylist.cli import stylist_context, logger
 from stylist.click.types import Boolean
 from stylist.commands import cli_prototype
