@@ -8,8 +8,7 @@ import git
 from click import Path
 
 from stylist.cli import stylist_context, logger
-from stylist.commands import cli_prototype
-from stylist.feature import get_feature, FEATURES
+from stylist.commands import cli_prototype, ENVIRONMENTSsfrom stylist.feature import get_feature, FEATURES
 
 cli = copy(cli_prototype)
 cli.short_help = "Stylist project helper"
@@ -18,12 +17,13 @@ TEMPLATES_REPO = 'git@github.com:ThreadsStylingLtd/stylist.git'
 
 
 @cli.command(help="Initialise new project")
-@click.argument("git_repository")
+@click.argument("git_repository", default=".")
 @click.option("--path", type=Path(), help="Destination directory in which project should be initialised")
 @click.option("--templates-version", default="master",
               help="Git branch / tag of templates repository which should be used for init")
+@click.option('--profile', default='default')
 @stylist_context
-def init(ctx, git_repository, path, templates_version='master'):
+def init(ctx, git_repository, path, templates_version='master', profile='default'):
     """
     @@ignore_check@@
     """
@@ -44,7 +44,8 @@ def init(ctx, git_repository, path, templates_version='master'):
 
         if not os.path.exists(join(ctx.working_dir, ".stylist")):
             from stylist.commands.cmd_profile import create
-            click.get_current_context().invoke(create, name="local")
+            for env in ENVIRONMENTS:
+                click.get_current_context().invoke(create, name=env)
     except Exception as e:
         logger.error("Failed to create project - you may need clean it up manually. \n{}".format(e))
         sys.exit(1)

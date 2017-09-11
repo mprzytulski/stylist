@@ -7,7 +7,7 @@ class AWSProvider(Provider):
     name = "aws"
 
     known_params = {
-        "profile": ("AWS cli profile name", {"type": str, "default": "default"}),
+        "profile": ("AWS cli profile name for env {env_name}", {"type": str, "default": "default"}),
         # "kms_key": ("KMS Encryption key id", {"type": str, "default": None}),
     }
 

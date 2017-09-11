@@ -10,3 +10,4 @@ GitPython==2.1.5
 pyhcl==0.3.8
 PyYAML==3.12
 virtualenv==15.1.0
+boto3==1.4.7

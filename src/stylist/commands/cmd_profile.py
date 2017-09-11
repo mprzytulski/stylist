@@ -73,7 +73,7 @@ def create(ctx, name, provider, profile=None, working_dir=None):
     values = {}
     for arg_name, parameter in provider.known_params.items():
         desc, kwargs = parameter
-        values[arg_name] = str(click.prompt(desc, **kwargs))
+        values[arg_name] = str(click.prompt(desc.format(env_name=name), **kwargs))
 
     provider.dump(values)
 
