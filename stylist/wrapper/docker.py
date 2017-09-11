@@ -5,6 +5,7 @@ import base64
 import subprocess
 
 import click
+from botocore.errorfactory import ClientExceptionsFactory
 from git import Repo
 
 
@@ -39,30 +40,30 @@ class Docker(object):
         self.project_name = self._get_project_name()
 
     def build(self, dockerfile_path, tag):
-        dockerfile_base_path, dockerfile = os.path.split(dockerfile_path)
-        repository_name = '{}/{}{}:{}'.format(self.ctx.environment,
-                                              self.ctx.name,
-                                              dockerfile.replace('Dockerfile', '').replace('.', '/'),
-                                              tag)
-        args = ['build']
-        args += ['-f', dockerfile_path]
-        args += ['-t', repository_name]
-        args.append(self.ctx.working_dir)
+        repository_name = self._get_repository_name(dockerfile_path)
 
-        self.__run_docker(args)
+        for tag_name in [tag, 'latest']:
+            args = ['build', '-f', dockerfile_path, '-t', '{}:{}'.format(repository_name, tag_name),
+                    self.ctx.working_dir]
+            self.__run_docker(args)
 
-        return repository_name
+        return '{}:{}'.format(repository_name, tag)
 
-    def push(self, tag):
-        repo = self.repositories.get_repository(self.project_name)
+    def push(self, dockerfile_path):
+        repository_name = self._get_repository_name(dockerfile_path)
+
+        try:
+            repo = self.repositories.get_repository(repository_name)
+        except ClientExceptionsFactory:
+            repo = self.repositories.create_repository(repository_name)
 
         username, password, endpoint = self.__get_authentication_data(repo)
 
         args = ['login', '-u', username, '-p', password, endpoint]
         self.__run_docker(args)
 
-        local_name = '{name}:{tag}'.format(name=self.project_name, tag=tag)
-        remote_name = '{url}:{tag}'.format(url=repo['repositoryUri'], tag=tag)
+        local_name = '{name}:{tag}'.format(name=repository_name, tag='latest')
+        remote_name = '{url}:{tag}'.format(url=repo['repositoryUri'], tag='latest')
 
         args = ['tag', local_name, remote_name]
         click.secho("Tagged {local} -> {remote}".format(local=local_name, remote=remote_name), fg="blue")
@@ -101,3 +102,10 @@ class Docker(object):
         ).get('authorizationData', [{}]).pop()
 
         return base64.b64decode(auth_data.get('authorizationToken')).decode().split(':') + [auth_data['proxyEndpoint']]
+
+    def _get_repository_name(self, dockerfile_path):
+        dockerfile_base_path, dockerfile = os.path.split(dockerfile_path)
+
+        return '{}/{}{}'.format(self.ctx.environment,
+                                self.ctx.name,
+                                dockerfile.replace('Dockerfile', '').replace('.', '/'))

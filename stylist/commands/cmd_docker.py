@@ -23,13 +23,13 @@ def build(ctx, tag, ask):
     """
     click.secho('Building docker container', fg='blue')
 
-    docker_files = glob.glob('{}/Dockerfile*'.format(ctx.working_dir))
-    try:
-        if ask:
-            indexes = _ask_about_docker_files('Which docker file would you like to build?', docker_files)
-        else:
-            indexes = tuple(range(0, len(docker_files)))
+    docker_files = _get_docker_files(ctx.working_dir)
+    if ask:
+        indexes = _ask_about_docker_files('Which docker file would you like to build?', docker_files)
+    else:
+        indexes = tuple(range(0, len(docker_files)))
 
+    try:
         docker = Docker(ctx)
         for index in indexes:
             try:
@@ -38,25 +38,43 @@ def build(ctx, tag, ask):
                                                                                  docker_files[index]), fg='green')
             except IndexError:
                 pass
-
     except NotADockerProjectException:
+        sys.exit(1)
+    except DockerException as e:
+        click.secho(
+            'Failed to run docker command with message "{message}", exit code: {errno}'.format(
+                message=e.message,
+                errno=e.errno
+            ), fg="red"
+        )
         sys.exit(1)
 
 
 @cli.command(help='Push docker image')
-@click.argument('build_tag', 'Image tag which should be pushed to current repository')
+@click.option('--ask', is_flag=True, help='Ask which repository to push')
 @stylist_context
-def push(ctx, build_tag):
+def push(ctx, ask):
     """
     @type ctx: stylist.cli.Context
     """
     click.secho('Pushing docker container', fg='blue')
 
+    docker_files = _get_docker_files(ctx.working_dir)
+    if ask:
+        indexes = _ask_about_docker_files('Which docker file would you like to push?', docker_files)
+    else:
+        indexes = tuple(range(0, len(docker_files)))
+
     try:
         docker = Docker(ctx)
-        remote = docker.push(build_tag)
-
-        click.secho('Image ready: {remote}'.format(remote=remote), fg='green')
+        for index in indexes:
+            try:
+                repository_name = docker.push(docker_files[index])
+                click.secho('Image for container "{}" pushed from dockerfile "{}"\n'.format(repository_name,
+                                                                                            docker_files[index]),
+                            fg='green')
+            except IndexError:
+                pass
     except NotADockerProjectException:
         sys.exit(1)
     except DockerException as e:
@@ -96,3 +114,7 @@ def _ask_about_docker_files(message, docker_files):
         docker_files_indexes = (docker_index - 1,)
 
     return docker_files_indexes
+
+
+def _get_docker_files(working_dir):
+    return glob.glob('{}/Dockerfile*'.format(working_dir))
