@@ -7,6 +7,8 @@ import tempfile
 from glob import glob
 from os.path import isfile, join, isdir, exists
 
+import re
+
 import click
 import hcl
 from click import style, prompt
@@ -146,12 +148,28 @@ class Terraform(object):
         maped_values = {
             'name': alias
         }
+
         values = {}
+        current_vars = {}
         template = self.templates.get_template('internal/terraform/module.jinja2')
-        for tf_file in glob(join(self.templates.destination, 'terraform_modules', module_name, '*.variables.tf')):
+
+        module_file = join(self.terraform_dir, 'module.' + module_name + '_' + alias + '.tf')
+        if exists(module_file):
+            regexp = ur'^\s*(?P<name>\w+)\s*=\s*"?(?P<value>.*?)"?$'
+
+            try:
+                with open(module_file, 'r') as f:
+                    current_vars = {v.group('name'): v.group('value') for k, v in enumerate(re.finditer(regexp, f.read(), re.MULTILINE))}
+            except Exception:
+                pass
+
+        for tf_file in glob(join(self.templates.destination, 'terraform_modules', module_name, '*.tf')):
             try:
                 with open(tf_file, 'r') as f:
                     variables = hcl.load(f).get("variable")
+
+                if not variables:
+                    continue
 
                 for name, config in variables.items():
                     if name in Terraform.STYLIST_VAR_NAMES:
@@ -166,21 +184,21 @@ class Terraform(object):
                             variable=name
                         )
 
-                        _val = prompt(prefix, default=config.get("default"))
+                        _val = prompt(prefix, default=current_vars.get(name, config.get("default")))
 
                         if _val and _val != config.get("default"):
                             values[name] = _val
 
-                rendered = template.render(
-                    module_name=module_name,
-                    vars=values,
-                    internal=Terraform.STYLIST_VAR_NAMES,
-                    source=join(self.templates.destination, 'terraform_modules', module_name),
-                    alias=alias
-                )
-
-                with open(join(self.terraform_dir, 'module.' + module_name + '_' + alias + '.tf'), 'w+') as f:
-                    f.write(rendered)
             except Exception as e:
-                raise e
                 pass
+
+        rendered = template.render(
+            module_name=module_name,
+            vars=values,
+            internal=Terraform.STYLIST_VAR_NAMES,
+            source=join(self.templates.destination, 'terraform_modules', module_name),
+            alias=alias
+        )
+
+        with open(module_file, 'w+') as f:
+            f.write(rendered)
