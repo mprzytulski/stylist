@@ -31,21 +31,20 @@ class Docker(object):
         def create_repository(self, name):
             return self.ecr.create_repository(repositoryName=name)
 
-    def __init__(self, dockerfile_path, ctx):
-        self.dockerfile_path = dockerfile_path
+    def __init__(self, ctx):
         self.ctx = ctx
         self.ecr = ctx.provider.session.client('ecr')
         self.repositories = Docker.Repositories(self.ecr)
         self.project_name = self._get_project_name()
 
-    def build(self, tag=None):
+    def build(self, dockerfile_path, tag=None):
         repository_name = '{}/{}{}'.format(self.ctx.environment,
                                            self.ctx.name,
-                                           self.dockerfile_path.replace('Dockerfile', '').replace('.', ''))
+                                           dockerfile_path.replace('Dockerfile', '').replace('.', ''))
         repository_tag = ':{}'.format(tag) if tag else ''
 
         args = ['build']
-        args += ['-f', '{}{}'.format(self.ctx.working_dir, self.dockerfile_path)]
+        args += ['-f', '{}{}'.format(self.ctx.working_dir, dockerfile_path)]
         args += ['-t', '{}{}'.format(repository_name, repository_tag)]
         args.append(self.ctx.working_dir)
 

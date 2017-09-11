@@ -43,10 +43,10 @@ def build(ctx, no_tag):
 
         current_fs.close()
 
+        docker = Docker(ctx)
         for index in docker_files_indexes:
             try:
-                docker = Docker(docker_files[index], ctx)
-                docker.build(build_tag)
+                docker.build(docker_files[index], build_tag)
 
                 click.secho('Container "{}" ready'.format(docker_files[index]), fg='green')
             except IndexError:
