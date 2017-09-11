@@ -10,8 +10,7 @@ reqs = [str(ir.req) for ir in install_reqs]
 setup(name='stylist',
       version='0.1',
       description='One tool to rule them all',
-      package_dir={'': 'src'},
-      packages=find_packages('src'),
+      packages=find_packages(),
       entry_points={
           'console_scripts': [
               'stylist=stylist.cli:cli'
