@@ -1,6 +1,8 @@
 import os
 from copy import copy
 
+from click import style
+
 import click
 
 from stylist.cli import stylist_context, logger
@@ -38,7 +40,7 @@ def apply(ctx):
         plan_path = terraform.plan(True)
 
         _apply = click.prompt(
-            "Apply saved plan? ",
+            style("Apply saved plan? ", fg="green"),
             type=Boolean(),
             default=True
         )
