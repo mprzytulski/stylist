@@ -112,4 +112,3 @@ def sync_vars(ctx, source_profile, destination_profile):
         terraform.sync_vars(source_profile, destination_profile)
     except Exception as e:
         logger.error(e.message)
-

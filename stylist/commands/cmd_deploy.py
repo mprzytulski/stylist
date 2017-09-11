@@ -2,9 +2,10 @@ import os
 import subprocess
 import sys
 
+from os.path import isdir, join
+
 import click
 from click import style
-from os.path import isdir, join
 
 from stylist.cli import stylist_context
 from stylist.click.types import Boolean
@@ -34,7 +35,7 @@ def cli(ctx, non_interactive):
 
     # Deploy serverless project
     try:
-        sls = Serverless.from_context(ctx)
+        Serverless.from_context(ctx)
         _deploy_serverless(ctx)
     except InvalidContextException:
         pass

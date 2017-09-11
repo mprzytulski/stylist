@@ -37,7 +37,8 @@ def cli_prototype(ctx, working_dir, profile):
     try:
         current_ctx = click.get_current_context()
 
-        if isinstance(current_ctx.command, GroupWithCommandOptions) and current_ctx.command.require_project(current_ctx):
+        if isinstance(current_ctx.command, GroupWithCommandOptions) and current_ctx.command.require_project(
+                current_ctx):
             ensure_project_directory(working_dir)
         ctx.working_dir = working_dir
     except NotProjectDirectoryException as e:
