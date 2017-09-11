@@ -19,7 +19,7 @@ TEMPLATES_REPO = 'git@github.com:ThreadsStylingLtd/stylist.git'
 
 
 @cli.command(help="Initialise new project")
-@click.argument("git_repository")
+@click.argument("git_repository", default=".")
 @click.option("--path", type=Path(), help="Destination directory in which project should be initialised")
 @click.option("--templates-version", default="master",
               help="Git branch / tag of templates repository which should be used for init")
