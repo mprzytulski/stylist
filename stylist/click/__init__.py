@@ -17,8 +17,8 @@ class Context(object):
     def __init__(self):
         self.working_dir = os.getcwd()
         self.environment = ""
-        self.loaded = False
         self.name = None
+        self._provider = None
 
         path = None
         for p in [".stylist", ".git"]:
@@ -37,15 +37,17 @@ class Context(object):
     def config_dir(self):
         return join(self.working_dir, ".stylist")
 
+    @property
+    def provider(self):
+        if not self._provider:
+            self._load_provider()
+
+        return self._provider
+
     def load(self, profile):
-        if self.loaded:
-            return
+        self.environment = profile or self.environment or self._active_environment() or ""
 
-        self.environment = profile or self._active_environment() or ""
-        self.name = Repo(self.working_dir).remote('origin').url.split('/')[-1].replace(".git", '')
-
-        self._load_provider()
-        self.loaded = True
+        self.name = self.name or Repo(self.working_dir).remote('origin').url.split('/')[-1].replace(".git", '')
 
     def _load_provider(self):
         configs = glob(join(self.profile_dir, "config.*"))
@@ -54,8 +56,8 @@ class Context(object):
 
         config_path = configs[0]
         provider_type = basename(config_path).split(".")[1]
-        self.provider = get_provider(provider_type)(self)
-        self.provider.load(config_path)
+        self._provider = get_provider(provider_type)(self)
+        self._provider.load(config_path)
 
     def _active_environment(self):
         try:
