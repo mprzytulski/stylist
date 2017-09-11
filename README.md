@@ -4,8 +4,8 @@
 
 ```
 pip install git+ssh://git@github.com/ThreadsStylingLtd/stylist.git
+stylist project init
 ```
-
 
 ## Functionality
 
