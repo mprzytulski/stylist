@@ -1,4 +1,5 @@
 import sys
+from copy import copy
 from datetime import datetime
 
 import click
@@ -7,7 +8,7 @@ from stylist.cli import stylist_context
 from stylist.commands import cli_prototype
 from stylist.wrapper.docker import Docker, NotADockerProjectException, DockerException
 
-cli = cli_prototype
+cli = copy(cli_prototype)
 cli.short_help = 'Docker image helper'
 
 

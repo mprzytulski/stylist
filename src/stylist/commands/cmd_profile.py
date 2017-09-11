@@ -1,5 +1,6 @@
 import os
 import sys
+from copy import copy
 from os import listdir
 from os.path import isdir, islink, join
 
@@ -7,10 +8,10 @@ import click
 
 from stylist.cli import stylist_context, logger
 from stylist.commands import cli_prototype
-from stylist.wrapper.terraform import Terraform, TerraformException
-from stylist.utils import colourize, get_provider, table
+from stylist.utils import colourize, get_provider
+from stylist.wrapper.terraform import Terraform
 
-cli = cli_prototype
+cli = copy(cli_prototype)
 cli.short_help = 'Manage project environments'
 
 
@@ -91,15 +92,6 @@ def list(ctx):
         click.secho(
             ("-> " if f == ctx.environment else "   ") + colourize(f)
         )
-
-
-@cli.command()
-@click.argument("name")
-@stylist_context
-def settings(ctx, name):
-    click.secho(
-        table("PROFILE SETTINGS", ctx.provider.values, ["name", "value"]).table
-    )
 
 
 @cli.command(name="sync-vars", help="Synchronise configuration variables between profiles")

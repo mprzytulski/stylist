@@ -1,4 +1,5 @@
 import base64
+from copy import copy
 
 import click
 
@@ -6,7 +7,7 @@ from stylist.cli import stylist_context
 from stylist.commands import cli_prototype
 from stylist.utils import line_prefix
 
-cli = cli_prototype
+cli = copy(cli_prototype)
 cli.short_help = "AWS KMS encryption helper"
 
 

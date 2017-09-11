@@ -1,15 +1,14 @@
 import os
-import subprocess
+from copy import copy
 
 import click
 
 from stylist.cli import stylist_context, logger
-from stylist.commands import cli_prototype
-from stylist.commands.cmd_check import which
 from stylist.click.types import Boolean
+from stylist.commands import cli_prototype
 from stylist.wrapper.terraform import Terraform, TerraformException
 
-cli = cli_prototype
+cli = copy(cli_prototype)
 cli.short_help = 'Wrapper around terraform'
 
 

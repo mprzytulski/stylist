@@ -1,4 +1,5 @@
 import sys
+from copy import copy
 from glob import glob
 from os.path import join, basename
 
@@ -12,7 +13,7 @@ from stylist.wrapper.serverless import Serverless, FunctionNotFoundException, In
 from stylist.utils import highlight_json, display_section, table
 from stylist.wrapper.virtualenv import Virtualenv
 
-cli = cli_prototype
+cli = copy(cli_prototype)
 cli.short_help = "Manage serverless functions"
 
 
