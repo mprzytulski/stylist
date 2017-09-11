@@ -1,8 +1,8 @@
 import sys
+import glob
 from copy import copy
 from datetime import datetime
 import click
-from fs import open_fs
 from stylist.cli import stylist_context
 from stylist.commands import cli_prototype
 from stylist.wrapper.docker import Docker, NotADockerProjectException, DockerException
@@ -23,8 +23,7 @@ def build(ctx, no_tag):
 
         click.secho('Building docker container', fg='blue')
 
-        current_fs = open_fs(ctx.working_dir)
-        docker_files = [p for p in current_fs.walk.files(filter=['Dockerfile*'])]
+        docker_files = [p for p in glob.glob('{}/Dockerfile*'.format(ctx.working_dir))]
 
         if len(docker_files) > 1:
             click.secho('Which docker file would you like to build?', fg='blue')
@@ -41,14 +40,12 @@ def build(ctx, no_tag):
         else:
             docker_files_indexes = (0,)
 
-        current_fs.close()
-
+        docker = Docker(ctx)
         for index in docker_files_indexes:
             try:
-                docker = Docker(docker_files[index], ctx)
-                docker.build(build_tag)
+                docker.build(docker_files[index], build_tag)
 
-                click.secho('Container "{}" ready'.format(docker_files[index]), fg='green')
+                click.secho('Container "{}" ready\n'.format(docker_files[index]), fg='green')
             except IndexError:
                 pass
 
