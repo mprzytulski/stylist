@@ -35,9 +35,7 @@ def invoke(ctx, function_name, source, mode, force, event, cleanup=False):
 
         with Virtualenv(lambda_function.global_id, lambda_function.get_runtime(), cleanup) as venv:
             if venv.created or force:
-                venv.pip.install_dependencies(
-                    lambda_function.get_dependencies(True)
-                )
+                venv.pip.install_dependencies(lambda_function.get_dependencies(True))
                 venv.pip.install_dependencies(['memory-profiler==0.47'])
 
             context = ExecutionContext(venv, ctx.environment, lambda_function)
