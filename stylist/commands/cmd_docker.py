@@ -56,6 +56,7 @@ def build(ctx, tag, ask):
 def push(ctx, ask):
     """
     @type ctx: stylist.cli.Context
+    @type ask: str
     """
     click.secho('Pushing docker container', fg='blue')
 
