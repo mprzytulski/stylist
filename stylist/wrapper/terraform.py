@@ -23,7 +23,7 @@ class TerraformException(Exception):
 
 
 class Terraform(object):
-    STYLIST_VAR_NAMES = ('aws_region', 'aws_account_id', 'environment')
+    STYLIST_VAR_NAMES = ('aws_region', 'aws_profile', 'aws_account_id', 'environment', 'alb_internal_arn', 'alb_external_arn')
 
     def __init__(self, ctx, templates=None):
         self.ctx = ctx
@@ -47,7 +47,18 @@ class Terraform(object):
 
         args += ['-var', '{}={}'.format('aws_account_id', aws_session.client('sts').get_caller_identity()["Account"])]
         args += ['-var', '{}={}'.format('aws_region', aws_session.region_name)]
+        args += ['-var', '{}={}'.format('aws_profile', self.ctx.provider.profile)]
         args += ['-var', '{}={}'.format('environment', self.ctx.environment)]
+
+        alb = aws_session.client('elbv2')
+
+        listeners = {}
+        for lb in alb.describe_load_balancers().get('LoadBalancers'):
+            listeners[lb.get("LoadBalancerName")] = \
+                alb.describe_listeners(LoadBalancerArn=lb.get("LoadBalancerArn")).get("Listeners")[0].get("ListenerArn")
+
+        args += ['-var', '{}={}'.format('alb_internal_arn', listeners.get("ecs-internal-lb"))]
+        args += ['-var', '{}={}'.format('alb_external_arn', listeners.get("ecs-external-lb"))]
 
         output = None
         if save:
@@ -186,10 +197,13 @@ class Terraform(object):
             except Exception:
                 pass
 
+        module_variables = []
+
         for tf_file in glob(join(module_dir, '*.tf')):
             try:
                 with open(tf_file, 'r') as f:
                     variables = hcl.load(f).get("variable")
+                    module_variables += variables.keys()
 
                 if not variables:
                     continue
@@ -219,7 +233,7 @@ class Terraform(object):
             module_name=module_name,
             full_module_name=full_module_name,
             vars=values,
-            internal=Terraform.STYLIST_VAR_NAMES,
+            internal=filter(lambda x: unicode(x) in module_variables, Terraform.STYLIST_VAR_NAMES),
             source=self.templates.get_module_source(module_name),
             alias=alias
         )
