@@ -23,7 +23,8 @@ class TerraformException(Exception):
 
 
 class Terraform(object):
-    STYLIST_VAR_NAMES = ('aws_region', 'aws_profile', 'aws_account_id', 'environment', 'alb_internal_arn', 'alb_external_arn')
+    STYLIST_VAR_NAMES = ('aws_region', 'aws_profile', 'aws_account_id', 'environment', 'alb_internal_arn',
+                         'alb_external_arn')
 
     def __init__(self, ctx, templates=None):
         self.ctx = ctx
@@ -225,8 +226,7 @@ class Terraform(object):
 
                         if _val and _val != config.get("default"):
                             values[name] = _val
-
-            except Exception as e:
+            except Exception:
                 pass
 
         rendered = template.render(
