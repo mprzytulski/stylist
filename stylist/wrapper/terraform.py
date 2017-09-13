@@ -152,7 +152,7 @@ class Terraform(object):
         self._exec(['workspace', 'select', self.ctx.environment])
 
         if get:
-            self._exec(['init'])
+            self._exec(['init', '-update=true'])
 
         return vars_file
 
