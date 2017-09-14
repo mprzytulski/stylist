@@ -100,7 +100,7 @@ def events(ctx, function_name):
         sys.exit(2)
 
 
-@cli.command(help='Deploy function')
+@cli.command(help='Deploy lambda function')
 @stylist_context
 def deploy(ctx):
     if not isfile('./serverless.yml'):
