@@ -1,9 +1,12 @@
+import subprocess
 import sys
 from copy import copy
 from glob import glob
-from os.path import join, basename
+from os.path import join, basename, isfile
 
+import boto3
 import click
+import yaml
 
 from stylist.cli import stylist_context, logger
 from stylist.commands import cli_prototype
@@ -16,6 +19,8 @@ from stylist.wrapper.virtualenv import Virtualenv
 
 cli = copy(cli_prototype)
 cli.short_help = 'Manage serverless functions'
+
+sns = boto3.client('sns')
 
 
 @cli.command(help='Invoke serverless lambda function with predefined event')
@@ -93,3 +98,27 @@ def events(ctx, function_name):
     except FunctionNotFoundException as e:
         logger.error(e.message)
         sys.exit(2)
+
+
+@cli.command(help='Deploy lambda function')
+@stylist_context
+def deploy(ctx):
+    if not isfile('./serverless.yml'):
+        raise Exception('No "serverless.yml" file in your current directory')
+
+    with open('./serverless.yml') as f:
+        serverless_yml = yaml.load(f.read())
+
+    _create_missing_sns(serverless_yml)
+
+    subprocess.call(['sls', 'deploy', '--stage', ctx.environment])
+
+
+def _create_missing_sns(serverless_yml):
+    def _extract_sns(name):
+        return name.split('sns_topic_', 1)[1].replace('}', '')
+
+    for function_name in serverless_yml['functions'].keys():
+        for value in serverless_yml['functions'][function_name]['events']:
+            if 'sns' in value:
+                sns.create_topic(Name=_extract_sns(value['sns']))
