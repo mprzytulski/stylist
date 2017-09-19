@@ -4,6 +4,7 @@ import os
 import base64
 import subprocess
 
+import botocore
 import click
 from botocore.errorfactory import ClientExceptionsFactory
 from git import Repo
@@ -54,7 +55,7 @@ class Docker(object):
 
         try:
             repo = self.repositories.get_repository(repository_name)
-        except ClientExceptionsFactory:
+        except Exception as e:
             repo = self.repositories.create_repository(repository_name)
 
         username, password, endpoint = self.__get_authentication_data(repo)
@@ -79,11 +80,7 @@ class Docker(object):
         self.__run_docker(args)
 
     def _get_project_name(self):
-        repo = Repo(self.ctx.working_dir)
-        origin = repo.remote('origin')
-        name = origin.urls.next().split('/')[-1].replace('.git', '')
-
-        return '{stage}/{project}'.format(stage=self.ctx.environment, project=name)
+        return '{stage}/{project}'.format(stage=self.ctx.environment, project=self.ctx.name)
 
     def __run_docker(self, flags):
         args = ['docker'] + flags
