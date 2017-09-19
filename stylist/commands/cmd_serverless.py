@@ -20,8 +20,6 @@ from stylist.wrapper.virtualenv import Virtualenv
 cli = copy(cli_prototype)
 cli.short_help = 'Manage serverless functions'
 
-sns = boto3.client('sns')
-
 
 @cli.command(help='Invoke serverless lambda function with predefined event')
 @click.option('--mode', '-m', type=click.Choice(['sns', 'api-gw', 'direct', 'auto']), default='auto',
@@ -115,6 +113,8 @@ def deploy(ctx):
 
 
 def _create_missing_sns(serverless_yml):
+    sns = boto3.client('sns')
+
     def _extract_sns(name):
         return name.split('sns_topic_', 1)[1].replace('}', '')
 
