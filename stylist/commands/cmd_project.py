@@ -44,9 +44,11 @@ def init(ctx, git_repository, path, templates_version='master', profile='default
             click.secho('Git repository cloned to: "{}"'.format(path), fg="green")
 
         if not os.path.exists(join(ctx.working_dir, ".stylist")):
+            prefix = click.prompt(click.style('Prefix name for environments', fg='blue'), default='threads-')
+
             from stylist.commands.cmd_profile import create
             for env in ENVIRONMENTS:
-                click.get_current_context().invoke(create, name=env)
+                click.get_current_context().invoke(create, name='{}{}'.format(prefix, env))
     except Exception as e:
         logger.error("Failed to create project - you may need clean it up manually. \n{}".format(e))
         sys.exit(1)
