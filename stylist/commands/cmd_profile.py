@@ -33,7 +33,7 @@ def selected(ctx):
 @cli.command(help="Activate named profile")
 @click.argument("name")
 @stylist_context
-def select(ctx, name, profile=None, working_dir=None):
+def select(ctx, name, project_name=None, profile=None, working_dir=None):
     """
     @type ctx: stylist.cli.Context
     """
@@ -54,7 +54,7 @@ def select(ctx, name, profile=None, working_dir=None):
 @click.argument("name")
 @click.option("--provider", default="aws")
 @stylist_context
-def create(ctx, name, provider, profile=None, working_dir=None):
+def create(ctx, name, provider, project_name=None, profile=None, working_dir=None):
     """
     @@ignore_check@@
     @type ctx: stylist.cli.Context
