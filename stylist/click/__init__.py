@@ -51,11 +51,17 @@ class Context(object):
 
     def _load_provider(self):
         configs = glob(join(self.profile_dir, "config.*"))
-        if not configs:
-            return
 
-        config_path = configs[0]
-        provider_type = basename(config_path).split(".")[1]
+        config_path = None
+
+        if not configs and ("AWS_KEY_ID" in os.environ or 'AWS_CONTAINER_CREDENTIALS_RELATIVE_URI' in os.environ):
+            provider_type = 'aws'
+        elif configs:
+            config_path = configs[0]
+            provider_type = basename(config_path).split(".")[1]
+        else:
+            return None
+
         self._provider = get_provider(provider_type)(self)
         self._provider.load(config_path)
 

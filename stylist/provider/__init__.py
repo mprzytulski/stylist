@@ -19,6 +19,9 @@ class Provider(object):
         return join(self.ctx.profile_dir, "config." + self.name)
 
     def load(self, path):
+        if not path:
+            return
+
         with open(path, "r") as f:
             self.values = yaml.load(f)
 
@@ -29,4 +32,4 @@ class Provider(object):
             yaml.dump(values, f)
 
     def __getattr__(self, item):
-        return self.values[item]
+        return self.values.get(item, None)

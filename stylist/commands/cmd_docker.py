@@ -3,7 +3,7 @@ import glob
 from copy import copy
 from datetime import datetime
 import click
-from stylist.cli import stylist_context
+from stylist.cli import stylist_context, logger
 from stylist.commands import cli_prototype
 from stylist.wrapper.docker import Docker, NotADockerProjectException, DockerException
 
@@ -20,6 +20,8 @@ def build(ctx, tag, ask):
     @type ctx: stylist.cli.Context
     @type tag: string
     @type ask: string
+
+    @@ignore_check@@
     """
     click.secho('Building docker container', fg='blue')
 
@@ -39,6 +41,7 @@ def build(ctx, tag, ask):
             except IndexError:
                 pass
     except NotADockerProjectException:
+        logger.error("Not a docker project")
         sys.exit(1)
     except DockerException as e:
         click.secho(
@@ -57,6 +60,8 @@ def push(ctx, ask):
     """
     @type ctx: stylist.cli.Context
     @type ask: str
+
+    @@ignore_check@@
     """
     click.secho('Pushing docker container', fg='blue')
 
