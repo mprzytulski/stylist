@@ -105,5 +105,5 @@ class Docker(object):
         dockerfile_base_path, dockerfile = os.path.split(dockerfile_path)
 
         return '{}/{}{}'.format(self.ctx.environment,
-                                self.ctx.name,
+                                self.ctx.name.replace('.', '-'),
                                 dockerfile.replace('Dockerfile', '').replace('.', '/'))

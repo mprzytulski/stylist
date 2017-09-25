@@ -44,7 +44,7 @@ def init(ctx, git_repository, path, templates_version='master', profile='default
             click.secho('Git repository cloned to: "{}"'.format(path), fg="green")
 
         if not os.path.exists(join(ctx.working_dir, ".stylist")):
-            prefix = click.prompt(click.style('Prefix name for environments', fg='blue'), default='threads-')
+            prefix = click.prompt(click.style('Prefix name for environments', fg='blue'), default='')
 
             from stylist.commands.cmd_profile import create
             for env in ENVIRONMENTS:
