@@ -47,7 +47,8 @@ class Context(object):
     def load(self, profile):
         self.environment = profile or self.environment or self._active_environment() or ""
 
-        self.name = self.name or Repo(self.working_dir).remote('origin').url.split('/')[-1].replace(".git", '')
+        self.name = self.name or Repo(self.working_dir).remote('origin').url.split('/')[-1].replace(".git", '').replace(
+            '.threads.team', '')
 
     def _load_provider(self):
         configs = glob(join(self.profile_dir, "config.*"))
