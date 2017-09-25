@@ -56,7 +56,8 @@ class Docker(object):
         try:
             repo = self.repositories.get_repository(repository_name)
         except Exception as e:
-            repo = self.repositories.create_repository(repository_name)
+            self.repositories.create_repository(repository_name)
+            repo = self.repositories.get_repository(repository_name)
 
         username, password, endpoint = self.__get_authentication_data(repo)
 
