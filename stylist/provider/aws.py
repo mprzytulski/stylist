@@ -1,7 +1,7 @@
 import boto3
 
 from stylist.provider import Provider
-from aws_utils import SSM as BaseSSM
+from threads_aws_utils import SSM as BaseSSM
 
 
 class AWSProvider(Provider):
