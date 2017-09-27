@@ -90,7 +90,7 @@ class Yoyo(object):
             exec_params.update(ssm.get_parameters('service:' + self.ctx.name))
 
             self._exec(
-                [cmd, '--no-config-file', '-b', '--database', dsn, '--migration-table', migration_table, path],
+                [cmd, '--no-config-file', '-b', '-v', '--database', dsn, '--migration-table', migration_table, path],
                 exec_params
             )
 
