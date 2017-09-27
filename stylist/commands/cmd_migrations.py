@@ -14,12 +14,13 @@ cli.short_help = "Manage database migrations"
 
 @cli.command(help="Create new database migration")
 @click.option("--instance", default='rds-postgres')
+@click.option("--superuser", is_flag=True, default=False)
 @click.argument("db")
 @click.argument("description")
 @stylist_context
-def new(ctx, instance, db, description):
+def new(ctx, instance, db, superuser, description):
     yoyo = Yoyo(ctx)
-    yoyo.new_migration(instance, db, description)
+    yoyo.new_migration(instance, db, superuser, description)
 
 
 @cli.command(help="Run migrations against database")

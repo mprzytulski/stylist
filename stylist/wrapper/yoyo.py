@@ -24,7 +24,8 @@ class Yoyo(object):
         if not isdir(self.migrations_dir):
             os.mkdir(self.migrations_dir)
 
-    def new_migration(self, instance, db, description):
+    def new_migration(self, instance, db, superuser, description):
+        db = db if not superuser else 'superuser_' + db
         migration_path = join(self.migrations_dir, instance, db)
 
         if not isdir(migration_path):
@@ -54,15 +55,22 @@ class Yoyo(object):
             click.secho('Running migrations from: {}'.format(click.format_filename(path)))
             instance, db = path.replace(self.migrations_dir, '').strip('/').split('/')
 
+            superuser = db.startswith('superuser_')
+            db = db.replace('superuser_', '')
+
             db_params = {}
 
             resource_params_id = '/resource/{instance}/{db}/'.format(instance=instance, db=db)
             resource_id = resource_params_id.replace('/resource/', 'resource:')
+
+            exec_params = {}
+
             for key, value in ssm.get_parameters(resource_id, env=False).items():
+                exec_params[ssm._normalize_name(key, True)] = value
                 db_params[key.replace(resource_params_id, '')] = value
 
             """ If migrations are for different database than master we use service credentials, otherwise use master"""
-            if db != 'master':
+            if not superuser:
                 service_params_id = '/service/{name}/{instance}/{db}/'.format(instance=instance, db=db,
                                                                               name=self.ctx.name)
                 service_id = service_params_id.replace('/service/', 'service:')
@@ -79,10 +87,10 @@ class Yoyo(object):
 
             dsn = self._build_dsn(**db_params)
 
-            exec_params = ssm.get_parameters('service:' + self.ctx.name)
+            exec_params.update(ssm.get_parameters('service:' + self.ctx.name))
 
             self._exec(
-                [cmd, '--no-config-file', '--database', dsn, '--migration-table', migration_table, path],
+                [cmd, '--no-config-file', '-b', '--database', dsn, '--migration-table', migration_table, path],
                 exec_params
             )
 
