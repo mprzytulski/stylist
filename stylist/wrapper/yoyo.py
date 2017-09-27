@@ -78,7 +78,7 @@ class Yoyo(object):
             else:
                 service_params_id = '/master/{instance}/'.format(instance=instance)
                 service_id = service_params_id.replace('/master/', 'master:')
-                migration_table = 'migrations_master_' + self.ctx.name
+                migration_table = 'migrations_superuser_' + self.ctx.name
 
             for key, value in ssm.get_parameters(service_id, env=False).items():
                 db_params[key.replace(service_params_id, '')] = value
