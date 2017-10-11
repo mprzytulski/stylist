@@ -21,7 +21,7 @@ cli.short_help = "Manage SSM parameters store"
 @stylist_context
 def write(ctx, namespace, encrypt, parameter, value):
     try:
-        namespace = namespace or "service:" + ctx.name
+        namespace = namespace or "service:" + re.sub('\W', '-', ctx.name)
 
         full_name = ctx.provider.ssm.write(namespace, parameter, value, encrypt)
     except Exception as e:
@@ -35,7 +35,7 @@ def write(ctx, namespace, encrypt, parameter, value):
 @click.argument("namespace", nargs=-1)
 @stylist_context
 def list(ctx, namespace):
-    namespace = namespace or ("service:" + ctx.name,)
+    namespace = namespace or ("service:" + re.sub('\W', '-', ctx.name),)
 
     click.secho(
         table(
@@ -50,7 +50,7 @@ def list(ctx, namespace):
 @click.argument("namespace", nargs=-1)
 @stylist_context
 def dump(ctx, namespace):
-    namespace = namespace or ("service:" + ctx.name,)
+    namespace = namespace or ("service:" + re.sub('\W', '-', ctx.name),)
     _all = ctx.provider.ssm.get_full_parameters(*namespace, env=True)
 
     for param in _all:
@@ -62,7 +62,7 @@ def dump(ctx, namespace):
 @click.argument('parameter')
 @stylist_context
 def delete(ctx, namespace, parameter):
-    namespace = namespace or "service:" + ctx.name
+    namespace = namespace or "service:" + re.sub('\W', '-', ctx.name)
 
     ssm = ctx.provider.ssm
     full_name = ssm.get_full_name(*namespace.split(':'), parameter=parameter)
