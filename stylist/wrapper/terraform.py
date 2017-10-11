@@ -55,11 +55,14 @@ class Terraform(object):
 
         listeners = {}
         for lb in alb.describe_load_balancers().get('LoadBalancers'):
-            listeners[lb.get("LoadBalancerName")] = \
-                alb.describe_listeners(LoadBalancerArn=lb.get("LoadBalancerArn")).get("Listeners")[0].get("ListenerArn")
+            for listener in alb.describe_listeners(LoadBalancerArn=lb.get("LoadBalancerArn")).get("Listeners"):
+                key = "{}-{}".format(lb.get("LoadBalancerName"), listener.get("Protocol").lower())
+                listeners[key] = listener.get("ListenerArn")
 
-        args += ['-var', '{}={}'.format('alb_internal_arn', listeners.get("ecs-internal-lb"))]
-        args += ['-var', '{}={}'.format('alb_external_arn', listeners.get("ecs-external-lb"))]
+        args += ['-var', '{}={}'.format('alb_internal_arn', listeners.get("ecs-internal-lb-https"))]
+        args += ['-var', '{}={}'.format('alb_external_arn', listeners.get("ecs-external-lb-https"))]
+        args += ['-var', '{}={}'.format('alb_public_arn', listeners.get("public-loadbalancer-https"))]
+        args += ['-var', '{}={}'.format('alb_public_arn_http', listeners.get("public-loadbalancer-http"))]
 
         output = None
         if save:
