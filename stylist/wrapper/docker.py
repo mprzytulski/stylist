@@ -43,10 +43,12 @@ class Docker(object):
     def build(self, dockerfile_path, tag):
         repository_name = self._get_repository_name(dockerfile_path)
 
-        for tag_name in [tag, 'latest']:
-            args = ['build', '-f', dockerfile_path, '-t', '{}:{}'.format(repository_name, tag_name),
-                    self.ctx.working_dir]
-            self.__run_docker(args)
+        latest_tag = '{}:{}'.format(repository_name, 'latest')
+        args = ['build', '-f', dockerfile_path, '-t', latest_tag,
+                self.ctx.working_dir]
+        self.__run_docker(args)
+
+        self.__run_docker(['tag', latest_tag, '{}:{}'.format(repository_name, tag)])
 
         return '{}:{}'.format(repository_name, tag)
 
