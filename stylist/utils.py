@@ -2,6 +2,8 @@ from __future__ import absolute_import
 
 import json
 import os
+import random
+import string
 from textwrap import wrap
 
 import sys
@@ -124,3 +126,9 @@ def find_dotenv(filename='.env', raise_error_if_not_found=False, usecwd=False, p
         raise IOError('File not found')
 
     return ''
+
+
+def random_password(size=15):
+    chars = (string.letters + string.digits + string.punctuation).translate(None, '\'";:@%{}&#?[]`~\\')
+
+    return ''.join((random.choice(chars)) for x in range(size)).replace("'", '-').replace('?', '*')
