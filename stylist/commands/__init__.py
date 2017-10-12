@@ -12,7 +12,6 @@ _global_options = [
     click.option('--profile', help='Temporary change active profile for given command'),
     click.option('--project-name', help='Overwrite project name')
 ]
-ENVIRONMENTS = ('test', 'staging', 'uat', 'prod', 'local')
 
 
 def global_options(func):

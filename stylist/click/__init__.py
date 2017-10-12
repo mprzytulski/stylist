@@ -2,12 +2,12 @@ from __future__ import absolute_import
 
 import os
 import sys
-from glob import glob
-from os.path import dirname, join, basename, abspath
+from os.path import dirname, join, abspath, isfile
 
-from git import Repo
-
+import yaml
 from click import MultiCommand, Group
+from git import Repo, InvalidGitRepositoryError
+
 from stylist.utils import find_dotenv, get_provider
 
 CONTEXT_SETTINGS = dict(auto_envvar_prefix='STYLIST')
@@ -18,6 +18,7 @@ class Context(object):
         self.working_dir = os.getcwd()
         self.environment = ""
         self.name = None
+        self.settings = {}
         self._provider = None
 
         path = None
@@ -30,12 +31,16 @@ class Context(object):
             self.working_dir = dirname(path)
 
     @property
-    def profile_dir(self):
-        return join(self.config_dir, self.environment)
+    def environment_file(self):
+        return join(self.config_dir, 'environment')
 
     @property
     def config_dir(self):
         return join(self.working_dir, ".stylist")
+
+    @property
+    def config_file(self):
+        return join(self.config_dir, 'config.yml')
 
     @property
     def provider(self):
@@ -47,30 +52,44 @@ class Context(object):
     def load(self, profile):
         self.environment = profile or self.environment or self._active_environment() or ""
 
-        self.name = self.name or Repo(self.working_dir).remote('origin').url.split('/')[-1].replace(".git", '').replace(
-            '***REMOVED***', '')
+        try:
+            self.name = self.name or Repo(self.working_dir) \
+                .remote('origin') \
+                .url \
+                .split('/')[-1] \
+                .replace(".git", '')\
+                .replace('***REMOVED***', '')
+        except InvalidGitRepositoryError:
+            from stylist.cli import logger
+            self.name = 'unknown'
+
+        if not isfile(self.config_file):
+            return
+
+        with open(self.config_file) as f:
+            self.settings = yaml.load(f).get('stylist')
+            self.settings.get('stages', {}).append('local')
 
     def _load_provider(self):
-        configs = glob(join(self.profile_dir, "config.*"))
-
-        config_path = None
-
-        if not configs and ("AWS_KEY_ID" in os.environ or 'AWS_CONTAINER_CREDENTIALS_RELATIVE_URI' in os.environ):
+        if "AWS_KEY_ID" in os.environ or 'AWS_CONTAINER_CREDENTIALS_RELATIVE_URI' in os.environ:
             provider_type = 'aws'
-        elif configs:
-            config_path = configs[0]
-            provider_type = basename(config_path).split(".")[1]
+        elif 'provider' in self.settings:
+            provider_type = self.settings.get('provider', {}).get('type', 'aws')
         else:
             return None
 
         self._provider = get_provider(provider_type)(self)
-        self._provider.load(config_path)
+        self._provider.load()
+        self._provider.values.update({
+            'profile': self.settings.get('provider', {}).get('prefix', '') + self.environment
+        })
 
     def _active_environment(self):
-        try:
-            return os.readlink(join(self.config_dir, "selected"))
-        except OSError:
-            return None
+        if not isfile(self.environment_file):
+            return 'local'
+
+        with open(self.environment_file) as f:
+            return f.readline().strip()
 
 
 class ComplexCLI(MultiCommand):

@@ -5,10 +5,11 @@ from os.path import join
 
 import click
 import git
+import yaml
 from click import Path
 
 from stylist.cli import stylist_context, logger
-from stylist.commands import cli_prototype, ENVIRONMENTS
+from stylist.commands import cli_prototype
 from stylist.feature import get_feature, FEATURES
 
 cli = copy(cli_prototype)
@@ -46,9 +47,26 @@ def init(ctx, git_repository, path, templates_version='master', profile='default
         if not os.path.exists(join(ctx.working_dir, ".stylist")):
             prefix = click.prompt(click.style('Prefix name for environments', fg='blue'), default='')
 
-            from stylist.commands.cmd_profile import create
-            for env in ENVIRONMENTS:
-                click.get_current_context().invoke(create, name='{}{}'.format(prefix, env))
+            try:
+                os.makedirs(ctx.config_dir)
+            except:
+                pass
+
+            with open(ctx.config_file, 'w+') as f:
+                yaml.dump({
+                    'stylist': {
+                        'provider': {
+                            'type': 'aws',
+                            'prefix': str(prefix)
+                        },
+                        'stages': ['prod', 'uat', 'staging']
+                    }
+                }, f)
+
+            # @todo: Add .stylist to git repository and .stylist/environment to .gitignore automatically
+
+            from stylist.commands.cmd_profile import select
+            click.get_current_context().invoke(select, name='local')
     except Exception as e:
         logger.error("Failed to create project - you may need clean it up manually. \n{}".format(e))
         sys.exit(1)

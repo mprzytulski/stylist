@@ -8,8 +8,7 @@ class AWSProvider(Provider):
     name = "aws"
 
     known_params = {
-        "profile": ("AWS cli profile name for env {env_name}", {"type": str, "default": "default"}),
-        # "kms_key": ("KMS Encryption key id", {"type": str, "default": None}),
+        "profile": ("AWS cli profile name for env {env_name}", {"type": str, "default": "default"})
     }
 
     @property
@@ -29,6 +28,12 @@ class AWSProvider(Provider):
                     _all += self._fetch_all_parameters(resource, kwargs.get('env', False))
 
                 return _all
+
+            def get_short_parameters(self, *args, **kwargs):
+                kwargs['env'] = False
+                params = self.get_parameters(*args, **kwargs)
+
+                return {k.split('/')[-1]: v for k, v in params.items()}
 
             def _fetch_all_parameters(self, resource, env=False):
                 namespace = self._resolve_namespace(resource)
