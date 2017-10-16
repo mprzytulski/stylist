@@ -18,7 +18,7 @@ class Provider(object):
     def config_path(self):
         return join(self.ctx.profile_dir, "config." + self.name)
 
-    def load(self, path):
+    def load(self, path=None):
         if not path:
             return
 
