@@ -58,7 +58,7 @@ def init(ctx, git_repository, path):
                     }
                 }, f)
 
-            def deal_with_git():
+            def deal_with_gitignore():
                 gitignore_path = os.path.join(path, '.gitignore')
                 mode = 'a' if os.path.isfile(gitignore_path) else 'w'
 
@@ -67,7 +67,7 @@ def init(ctx, git_repository, path):
 
                 for to_add in ('.gitignore', '.stylist'):
                     call(['git', 'add', to_add])
-            deal_with_git()
+            deal_with_gitignore()
 
             from stylist.commands.cmd_profile import select
             click.get_current_context().invoke(select, name='local')
