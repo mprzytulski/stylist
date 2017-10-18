@@ -46,7 +46,7 @@ class Terraform(object):
 
         aws_session = self.ctx.provider.session
 
-        args += ['-var', '{}={}'.format('aws_account_id', aws_session.client('sts').get_caller_identity()["Account"])]
+        args += ['-var', '{}={}'.format('aws_account_id', self.ctx.provider.account_id)]
         args += ['-var', '{}={}'.format('aws_region', aws_session.region_name)]
         args += ['-var', '{}={}'.format('aws_profile', self.ctx.provider.profile)]
         args += ['-var', '{}={}'.format('environment', self.ctx.environment)]
