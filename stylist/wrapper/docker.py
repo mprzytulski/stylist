@@ -1,13 +1,10 @@
 from __future__ import absolute_import
 
-import os
 import base64
+import os
 import subprocess
 
-import botocore
 import click
-from botocore.errorfactory import ClientExceptionsFactory
-from git import Repo
 
 
 class NotADockerProjectException(Exception):
