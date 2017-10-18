@@ -1,13 +1,10 @@
 from __future__ import absolute_import
 
-import os
 import base64
+import os
 import subprocess
 
-import botocore
 import click
-from botocore.errorfactory import ClientExceptionsFactory
-from git import Repo
 
 
 class NotADockerProjectException(Exception):
@@ -21,10 +18,54 @@ class DockerException(Exception):
         self.errno = errno
 
 
+REPOSITORY_PERMISSION_POLICY = """{
+    "Version": "2008-10-17",
+    "Statement": [
+        {
+            "Sid": "Allow pulls from ecs hosts",
+            "Effect": "Allow",
+            "Principal": {
+                "Service": "ec2.amazonaws.com",
+                "AWS": [
+                    "arn:aws:iam::%s:role/ecs_host_role",
+                    "arn:aws:iam::%s:root"
+                ]
+            },
+            "Action": [
+                "ecr:GetDownloadUrlForLayer",
+                "ecr:BatchGetImage",
+                "ecr:BatchCheckLayerAvailability"
+            ]
+        }
+    ]
+}"""
+
+LIFECYCLE_POLICY = """
+{
+  "rules": [
+    {
+      "rulePriority": 10,
+      "description": "Remove untagged images after 30 days",
+      "selection": {
+        "tagStatus": "untagged",
+        "countType": "sinceImagePushed",
+        "countUnit": "days",
+        "countNumber": 30
+      },
+      "action": {
+        "type": "expire"
+      }
+    }
+  ]
+}
+"""
+
+
 class Docker(object):
     class Repositories(object):
-        def __init__(self, ecr):
+        def __init__(self, ecr, ctx):
             self.ecr = ecr
+            self.ctx = ctx
 
         def get_repository(self, name):
             repos = self.ecr.describe_repositories(repositoryNames=[name])
@@ -32,12 +73,24 @@ class Docker(object):
             return repos.get('repositories', [None]).pop()
 
         def create_repository(self, name):
-            return self.ecr.create_repository(repositoryName=name)
+            self.ecr.create_repository(repositoryName=name)
+
+        def set_repository_policy(self, name):
+            self.ecr.set_repository_policy(
+                repositoryName=name,
+                policyText=REPOSITORY_PERMISSION_POLICY % (self.ctx.provider.account_id, self.ctx.provider.account_id)
+            )
+
+        def set_lifecycle_policy(self, name):
+            self.ecr.put_lifecycle_policy(
+                repositoryName=name,
+                lifecyclePolicyText=LIFECYCLE_POLICY
+            )
 
     def __init__(self, ctx):
         self.ctx = ctx
         self.ecr = ctx.provider.session.client('ecr')
-        self.repositories = Docker.Repositories(self.ecr)
+        self.repositories = Docker.Repositories(self.ecr, self.ctx)
         self.project_name = self._get_project_name()
 
     def build(self, dockerfile_path, tag):
@@ -60,6 +113,8 @@ class Docker(object):
         except Exception as e:
             self.repositories.create_repository(repository_name)
             repo = self.repositories.get_repository(repository_name)
+            self.repositories.set_repository_policy(repository_name)
+            self.repositories.set_lifecycle_policy(repository_name)
 
         username, password, endpoint = self.__get_authentication_data(repo)
 

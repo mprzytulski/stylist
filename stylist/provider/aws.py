@@ -6,6 +6,7 @@ from threads_aws_utils import SSM as BaseSSM
 
 class AWSProvider(Provider):
     name = "aws"
+    _account_id = None
 
     known_params = {
         "profile": ("AWS cli profile name for env {env_name}", {"type": str, "default": "default"})
@@ -14,6 +15,13 @@ class AWSProvider(Provider):
     @property
     def session(self):
         return boto3.Session(profile_name=self.profile)
+
+    @property
+    def account_id(self):
+        if not self._account_id:
+            self._account_id = self.session.client('sts').get_caller_identity()["Account"]
+
+        return self._account_id
 
     @property
     def ssm(self):
