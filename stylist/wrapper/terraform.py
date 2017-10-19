@@ -42,7 +42,10 @@ class Terraform(object):
     def plan(self, save=False):
         vars_file = self._ensure_env()
 
-        args = ['plan', '-var-file', vars_file]
+        args = ['plan']
+
+        if isfile(vars_file):
+            args += ['-var-file', vars_file]
 
         aws_session = self.ctx.provider.session
 
