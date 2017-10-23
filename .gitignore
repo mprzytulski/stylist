@@ -101,3 +101,4 @@ ENV/
 
 # intelli-J
 .idea
+.stylist

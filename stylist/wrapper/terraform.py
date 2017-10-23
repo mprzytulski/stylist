@@ -147,9 +147,6 @@ class Terraform(object):
     def _ensure_env(self, get=True):
         vars_file = join(self.terraform_dir, 'env.{env}.tfvars'.format(env=self.ctx.environment))
 
-        if not isfile(vars_file):
-            raise TerraformException("Missing vars file: " + vars_file)
-
         if self.ctx.environment == 'local':
             raise TerraformException("You can't use terraform on local env")
 
