@@ -5,6 +5,7 @@ import os
 import subprocess
 
 import click
+from os.path import dirname
 
 
 class NotADockerProjectException(Exception):
@@ -63,9 +64,10 @@ LIFECYCLE_POLICY = """
 
 class Docker(object):
     class Repositories(object):
-        def __init__(self, ecr, ctx):
+        def __init__(self, ecr, ctx, subproject):
             self.ecr = ecr
             self.ctx = ctx
+            self.subproject = subproject
 
         def get_repository(self, name):
             repos = self.ecr.describe_repositories(repositoryNames=[name])
@@ -87,18 +89,20 @@ class Docker(object):
                 lifecyclePolicyText=LIFECYCLE_POLICY
             )
 
-    def __init__(self, ctx):
+    def __init__(self, ctx, subproject, force_stage):
         self.ctx = ctx
         self.ecr = ctx.provider.session.client('ecr')
-        self.repositories = Docker.Repositories(self.ecr, self.ctx)
+        self.repositories = Docker.Repositories(self.ecr, self.ctx, subproject)
         self.project_name = self._get_project_name()
+        self.subproject = subproject
+        self.force_stage = force_stage
 
     def build(self, dockerfile_path, tag):
         repository_name = self._get_repository_name(dockerfile_path)
 
         latest_tag = '{}:{}'.format(repository_name, 'latest')
-        args = ['build', '-f', dockerfile_path, '-t', latest_tag,
-                self.ctx.working_dir]
+        args = ['build', '-f', dockerfile_path, '-t', latest_tag, dirname(dockerfile_path)]
+
         self.__run_docker(args)
 
         self.__run_docker(['tag', latest_tag, '{}:{}'.format(repository_name, tag)])
@@ -133,17 +137,22 @@ class Docker(object):
 
         return remote_name
 
-    def images(self):
-        args = ['images', self.project_name]
+    def images(self, docker_file):
+        args = ['images', self._get_repository_name(docker_file)]
         self.__run_docker(args)
 
     def _get_project_name(self):
         return '{stage}/{project}'.format(stage=self.ctx.environment, project=self.ctx.name)
 
-    def __run_docker(self, flags):
+    def __run_docker(self, flags, dockerfile_dir=None):
         args = ['docker'] + flags
 
-        p = subprocess.Popen(args, stdout=click.get_text_stream('stdout'), stderr=click.get_text_stream('stderr'))
+        p = subprocess.Popen(
+            args,
+            stdout=click.get_text_stream('stdout'),
+            stderr=click.get_text_stream('stderr'),
+            cwd=dockerfile_dir
+        )
         out, err = p.communicate()
 
         if p.returncode != 0:
@@ -161,6 +170,15 @@ class Docker(object):
     def _get_repository_name(self, dockerfile_path):
         dockerfile_base_path, dockerfile = os.path.split(dockerfile_path)
 
-        return '{}/{}{}'.format(self.ctx.environment,
-                                self.ctx.name.replace('.', '-'),
-                                dockerfile.replace('Dockerfile', '').replace('.', '/'))
+        parts = []
+        if self.force_stage or not self.subproject:
+            parts += [self.ctx.environment]
+
+        parts += [
+            '{}{}'.format(self.ctx.name.replace('.', '-'), dockerfile.replace('Dockerfile', '').replace('.', '/'))
+        ]
+
+        if self.subproject:
+            parts += [self.subproject]
+
+        return '/'.join(parts)
