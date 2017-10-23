@@ -17,6 +17,14 @@ cli.short_help = 'Stylist project helper'
 
 TEMPLATES_REPO = 'git@github.com:ThreadsStylingLtd/stylist.git'
 
+GIT_IGNORE = """
+.stylist/environment
+terraform/.terraform/environment
+terraform/.terraform/modules
+terraform/.terraform/plugins/*
+!terraform/.terraform/plugins/*/lock.json
+"""
+
 
 @cli.command(help='Initialise new project')
 @click.argument('git_repository', default='.')
@@ -63,10 +71,11 @@ def init(ctx, git_repository, path):
                 mode = 'a' if os.path.isfile(gitignore_path) else 'w'
 
                 with open(gitignore_path, mode) as f:
-                    f.write('.stylist/environment\n')
+                    f.write(GIT_IGNORE)
 
                 for to_add in ('.gitignore', '.stylist'):
                     call(['git', 'add', to_add])
+
             deal_with_gitignore()
 
             from stylist.commands.cmd_profile import select

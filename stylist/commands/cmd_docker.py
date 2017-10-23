@@ -2,6 +2,8 @@ import sys
 import glob
 from copy import copy
 from datetime import datetime
+from os.path import join
+
 import click
 from stylist.cli import stylist_context, logger
 from stylist.commands import cli_prototype
@@ -14,8 +16,11 @@ cli.short_help = 'Docker image helper'
 @cli.command(help='Build docker image using Dockerfile')
 @click.option('--tag', default=datetime.now().strftime('%Y%m%d_%H%M'))
 @click.option('--ask', is_flag=True, help='Ask which repository to build')
+@click.option('--force-stage', is_flag=True, default=False,
+              help='Add stage to repository name even if --subproject has been specified')
+@click.option('--subproject', default=None, help='Build docker image located in named subdirectory / project')
 @stylist_context
-def build(ctx, tag, ask):
+def build(ctx, tag, ask, subproject, force_stage):
     """
     @type ctx: stylist.cli.Context
     @type tag: string
@@ -25,19 +30,14 @@ def build(ctx, tag, ask):
     """
     click.secho('Building docker container', fg='blue')
 
-    docker_files = _get_docker_files(ctx.working_dir)
-    if ask:
-        indexes = _ask_about_docker_files('Which docker file would you like to build?', docker_files)
-    else:
-        indexes = tuple(range(0, len(docker_files)))
-
+    docker_files = _get_docker_files(ctx, ask, subproject)
     try:
-        docker = Docker(ctx)
-        for index in indexes:
+        docker = Docker(ctx, subproject, force_stage)
+        for docker_file in docker_files:
             try:
-                repository_name = docker.build(docker_files[index], tag)
+                repository_name = docker.build(docker_file, tag)
                 click.secho('Container "{}" built from dockerfile "{}"\n'.format(repository_name,
-                                                                                 docker_files[index]), fg='green')
+                                                                                 docker_file), fg='green')
             except IndexError:
                 pass
     except NotADockerProjectException:
@@ -55,8 +55,11 @@ def build(ctx, tag, ask):
 
 @cli.command(help='Push docker image')
 @click.option('--ask', is_flag=True, help='Ask which repository to push')
+@click.option('--force-stage', is_flag=True, default=False,
+              help='Add stage to repository name even if --subproject has been specified')
+@click.option('--subproject', default=None, help='Push given subproject')
 @stylist_context
-def push(ctx, ask):
+def push(ctx, ask, subproject, force_stage):
     """
     @type ctx: stylist.cli.Context
     @type ask: str
@@ -65,20 +68,17 @@ def push(ctx, ask):
     """
     click.secho('Pushing docker container', fg='blue')
 
-    docker_files = _get_docker_files(ctx.working_dir)
-    if ask:
-        indexes = _ask_about_docker_files('Which docker file would you like to push?', docker_files)
-    else:
-        indexes = tuple(range(0, len(docker_files)))
+    docker_files = _get_docker_files(ctx, ask, subproject)
 
     try:
-        docker = Docker(ctx)
-        for index in indexes:
+        docker = Docker(ctx, subproject, force_stage)
+        for docker_file in docker_files:
             try:
-                repository_name = docker.push(docker_files[index])
-                click.secho('Image for container "{}" pushed from dockerfile "{}"\n'.format(repository_name,
-                                                                                            docker_files[index]),
-                            fg='green')
+                repository_name = docker.push(docker_file)
+                click.secho(
+                    'Image for container "{}" pushed from dockerfile "{}"\n'.format(repository_name, docker_file),
+                    fg='green'
+                )
             except IndexError:
                 pass
     except NotADockerProjectException:
@@ -94,14 +94,17 @@ def push(ctx, ask):
 
 
 @cli.command(help='List current project images')
+@click.option('--subproject', default=None, help='List images for given subproject')
 @stylist_context
-def images(ctx):
+def images(ctx, subproject):
     """
     @type ctx: stylist.cli.Context
     """
     try:
-        docker = Docker(ctx)
-        docker.images()
+        docker_files = _get_docker_files(ctx, False, subproject)
+
+        docker = Docker(ctx, subproject, False)
+        docker.images(docker_files[0])
     except NotADockerProjectException:
         sys.exit(1)
 
@@ -122,5 +125,13 @@ def _ask_about_docker_files(message, docker_files):
     return docker_files_indexes
 
 
-def _get_docker_files(working_dir):
-    return glob.glob('{}/Dockerfile*'.format(working_dir))
+def _get_docker_files(ctx, ask, subproject):
+    if subproject:
+        docker_files = glob.glob('{}/Dockerfile*'.format(join(ctx.working_dir, subproject)))
+    else:
+        docker_files = glob.glob('{}/Dockerfile*'.format(ctx.working_dir))
+
+    if ask:
+        return _ask_about_docker_files('Which docker file would you like to build?', docker_files)
+    else:
+        return docker_files
