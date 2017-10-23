@@ -126,10 +126,8 @@ def _ask_about_docker_files(message, docker_files):
 
 
 def _get_docker_files(ctx, ask, subproject):
-    if subproject:
-        docker_files = glob.glob('{}/Dockerfile*'.format(join(ctx.working_dir, subproject)))
-    else:
-        docker_files = glob.glob('{}/Dockerfile*'.format(ctx.working_dir))
+    path = join(ctx.working_dir, subproject) if subproject else ctx.working_dir
+    docker_files = glob.glob('{}/Dockerfile*'.format(path))
 
     if ask:
         return _ask_about_docker_files('Which docker file would you like to build?', docker_files)
