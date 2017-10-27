@@ -3,7 +3,7 @@ from copy import copy
 
 import click
 
-from stylist.cli import stylist_context
+from stylist.cli import stylist_context, logger
 from stylist.commands import cli_prototype
 from stylist.utils import line_prefix
 
@@ -19,7 +19,7 @@ def encrypt(ctx, plain_text, plain):
     kms = ctx.provider.session.client("kms")
 
     response = kms.encrypt(
-        KeyId=ctx.provider.kms_key,
+        KeyId=ctx.provider.ssm.get_encryption_key().get('TargetKeyId'),
         Plaintext=bytes(plain_text),
     )
 
@@ -40,13 +40,17 @@ def encrypt(ctx, plain_text, plain):
 def decrypt(ctx, encrypted, plain):
     kms = ctx.provider.session.client("kms")
 
-    decrypted = kms.decrypt(
-        CiphertextBlob=base64.b64decode(encrypted)
-    ).get('Plaintext').decode("utf-8")
+    try:
+        decrypted = kms.decrypt(
+            CiphertextBlob=base64.b64decode(encrypted)
+        ).get('Plaintext').decode("utf-8")
 
-    if plain:
-        click.echo(decrypted)
-    else:
-        click.secho(
-            line_prefix(ctx) + decrypted
-        )
+        if plain:
+            click.echo(decrypted)
+        else:
+            click.secho(
+                line_prefix(ctx) + decrypted
+            )
+    except Exception, e:
+        logger.error(e.message)
+        return 1
