@@ -90,13 +90,12 @@ class Docker(object):
                 lifecyclePolicyText=LIFECYCLE_POLICY
             )
 
-    def __init__(self, ctx, subproject, force_stage):
+    def __init__(self, ctx, subproject):
         self.ctx = ctx
         self.ecr = ctx.provider.session.client('ecr')
         self.repositories = Docker.Repositories(self.ecr, self.ctx, subproject)
         self.project_name = self._get_project_name()
         self.subproject = subproject
-        self.force_stage = force_stage
 
     def build(self, dockerfile_path, tag):
         repository_name = self._get_repository_name(dockerfile_path)
@@ -143,7 +142,7 @@ class Docker(object):
         self.__run_docker(args)
 
     def _get_project_name(self):
-        return '{stage}/{project}'.format(stage=self.ctx.environment, project=self.ctx.name)
+        return '{project}'.format(project=self.ctx.name)
 
     def __run_docker(self, flags, dockerfile_dir=None):
         args = ['docker'] + flags
@@ -171,11 +170,7 @@ class Docker(object):
     def _get_repository_name(self, dockerfile_path):
         dockerfile_base_path, dockerfile = os.path.split(dockerfile_path)
 
-        parts = []
-        if self.force_stage or not self.subproject:
-            parts += [self.ctx.environment]
-
-        parts += [
+        parts = [
             '{}{}'.format(self.ctx.name.replace('.', '-'), dockerfile.replace('Dockerfile', '').replace('.', '/'))
         ]
 

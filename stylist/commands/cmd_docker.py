@@ -16,11 +16,9 @@ cli.short_help = 'Docker image helper'
 @cli.command(help='Build docker image using Dockerfile')
 @click.option('--tag', default=datetime.now().strftime('%Y%m%d_%H%M'))
 @click.option('--ask', is_flag=True, help='Ask which repository to build')
-@click.option('--force-stage', is_flag=True, default=False,
-              help='Add stage to repository name even if --subproject has been specified')
 @click.option('--subproject', default=None, help='Build docker image located in named subdirectory / project')
 @stylist_context
-def build(ctx, tag, ask, subproject, force_stage):
+def build(ctx, tag, ask, subproject):
     """
     @type ctx: stylist.cli.Context
     @type tag: string
@@ -32,7 +30,7 @@ def build(ctx, tag, ask, subproject, force_stage):
 
     docker_files = _get_docker_files(ctx, ask, subproject)
     try:
-        docker = Docker(ctx, subproject, force_stage)
+        docker = Docker(ctx, subproject)
         for docker_file in docker_files:
             try:
                 repository_name = docker.build(docker_file, tag)
@@ -55,11 +53,9 @@ def build(ctx, tag, ask, subproject, force_stage):
 
 @cli.command(help='Push docker image')
 @click.option('--ask', is_flag=True, help='Ask which repository to push')
-@click.option('--force-stage', is_flag=True, default=False,
-              help='Add stage to repository name even if --subproject has been specified')
 @click.option('--subproject', default=None, help='Push given subproject')
 @stylist_context
-def push(ctx, ask, subproject, force_stage):
+def push(ctx, ask, subproject):
     """
     @type ctx: stylist.cli.Context
     @type ask: str
@@ -71,7 +67,7 @@ def push(ctx, ask, subproject, force_stage):
     docker_files = _get_docker_files(ctx, ask, subproject)
 
     try:
-        docker = Docker(ctx, subproject, force_stage)
+        docker = Docker(ctx, subproject)
         for docker_file in docker_files:
             try:
                 repository_name = docker.push(docker_file)
@@ -104,7 +100,7 @@ def images(ctx, subproject):
     try:
         docker_files = _get_docker_files(ctx, False, subproject)
 
-        docker = Docker(ctx, subproject, False)
+        docker = Docker(ctx, subproject)
         docker.images(docker_files[0])
     except NotADockerProjectException:
         sys.exit(1)
