@@ -18,8 +18,10 @@ cli.short_help = "AWS KMS encryption helper"
 def encrypt(ctx, plain_text, plain):
     kms = ctx.provider.session.client("kms")
 
+    key_id = ctx.provider.ssm.get_encryption_key().get('TargetKeyId')
+
     response = kms.encrypt(
-        KeyId=ctx.provider.ssm.get_encryption_key().get('TargetKeyId'),
+        KeyId=key_id,
         Plaintext=bytes(plain_text),
     )
 
@@ -29,7 +31,7 @@ def encrypt(ctx, plain_text, plain):
         click.echo(encrypted)
     else:
         click.secho(
-            line_prefix(ctx) + encrypted
+            line_prefix(ctx) + ' ({}) '.format(key_id) + encrypted
         )
 
 
