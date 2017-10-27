@@ -9,6 +9,7 @@ import yaml
 
 from stylist.cli import stylist_context, logger
 from stylist.commands import cli_prototype
+from stylist.provider.aws import SSM
 from stylist.utils import colourize, get_provider
 from stylist.wrapper.terraform import Terraform
 
@@ -86,21 +87,30 @@ def list(ctx):
         )
 
 
-# @cli.command(name="sync-vars", help="Synchronise configuration variables between profiles")
-# @click.argument("source_profile")
-# @click.argument("destination_profile")
-# @stylist_context
-# def sync_vars(ctx, source_profile, destination_profile):
-#     try:
-#         profiles = _list_profiles(ctx)
-#
-#         if source_profile not in profiles:
-#             raise Exception('Source profile "{}" is missing'.format(source_profile))
-#
-#         if destination_profile not in profiles:
-#             raise Exception('Destination profile "{}" is missing'.format(destination_profile))
-#
-#         terraform = Terraform(ctx)
-#         terraform.sync_vars(source_profile, destination_profile)
-#     except Exception as e:
-#         logger.error(e.message)
+@cli.command(name="sync-vars", help="Synchronise configuration variables between profiles")
+@click.option("--namespace", help="SSM namespaces to migrate", multiple=True)
+@click.argument("source")
+@click.argument("destination")
+@stylist_context
+def sync_vars(ctx, namespace, source, destination):
+    try:
+        profiles = ctx.settings.get('stages')
+        if source not in profiles:
+            raise Exception('Source profile "{}" is missing'.format(source))
+
+        if destination not in profiles:
+            raise Exception('Destination profile "{}" is missing'.format(destination))
+
+        click.secho("Migrating terraform variables", fg="blue")
+        terraform = Terraform(ctx)
+        terraform.sync_vars(source, destination)
+
+        if namespace:
+            click.secho("Migrating ssm namespaces", fg="blue")
+            source_ssm = SSM(ctx.provider.get_session_for_stage(source).client('ssm'), ctx)
+            destination_ssm = SSM(ctx.provider.get_session_for_stage(destination).client('ssm'), ctx)
+
+            ctx.provider.ssm.sync_vars(source_ssm, destination_ssm, namespace)
+
+    except Exception as e:
+        logger.error(e.message)
