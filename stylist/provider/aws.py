@@ -73,16 +73,9 @@ class AWSProvider(Provider):
                 return params
 
             def write(self, namespace, parameter, value, encrypt):
-                kms = self.ctx.provider.session.client("kms")
-
                 key_id = None
                 if encrypt:
-                    aliases = kms.list_aliases()
-
-                    key_id = (next(iter(filter(
-                        lambda x: x.get('AliasName') == 'alias/parameter_store_key',
-                        aliases.get('Aliases', {})
-                    ))) or {}).get('TargetKeyId')
+                    key_id = self.get_encryption_key().get('TargetKeyId')
 
                 if not key_id and encrypt:
                     raise Exception('Unable to locate KMS key with parameter_store_key alias and encryption required')
@@ -107,5 +100,13 @@ class AWSProvider(Provider):
                 self.ssm.delete_parameter(
                     Name=self.get_full_name(*namespace.split(':'), parameter=parameter)
                 )
+
+            def get_encryption_key(self):
+                aliases = self.ctx.provider.session.client("kms").list_aliases()
+
+                return next(iter(filter(
+                    lambda x: x.get('AliasName') == 'alias/parameter_store_key',
+                    aliases.get('Aliases', {})
+                ))) or {}
 
         return SSM(self.session.client('ssm'), self.ctx)
