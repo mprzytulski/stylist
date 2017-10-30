@@ -81,9 +81,10 @@ def push(ctx, ask, subproject):
         sys.exit(1)
     except DockerException as e:
         click.secho(
-            'Failed to run docker command with message "{message}", exit code: {errno}'.format(
+            "Failed to run docker command with message '{message}', exit code: {errno}\nCommand: {cmd}".format(
                 message=e.message,
-                errno=e.errno
+                errno=e.errno,
+                cmd=' '.join(e.cmd)
             ), fg="red"
         )
         sys.exit(1)

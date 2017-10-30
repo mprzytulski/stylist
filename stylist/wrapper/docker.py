@@ -13,8 +13,9 @@ class NotADockerProjectException(Exception):
 
 
 class DockerException(Exception):
-    def __init__(self, message, errno):
+    def __init__(self, cmd, message, errno):
         super(DockerException, self).__init__()
+        self.cmd = cmd
         self.message = message
         self.errno = errno
 
@@ -155,7 +156,7 @@ class Docker(object):
         out, err = p.communicate()
 
         if p.returncode != 0:
-            raise DockerException(err, p.returncode)
+            raise DockerException(args, err, p.returncode)
 
         return True
 
