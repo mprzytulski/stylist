@@ -102,8 +102,10 @@ def sync_vars(ctx, namespace, source, destination):
             raise Exception('Destination profile "{}" is missing'.format(destination))
 
         click.secho("Migrating terraform variables", fg="blue")
-        terraform = Terraform(ctx)
-        terraform.sync_vars(source, destination)
+
+        if isdir(join(ctx.working_dir, 'terraform')):
+            terraform = Terraform(ctx)
+            terraform.sync_vars(source, destination)
 
         if namespace:
             click.secho("Migrating ssm namespaces", fg="blue")

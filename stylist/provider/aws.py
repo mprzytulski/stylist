@@ -82,6 +82,14 @@ class SSM(BaseSSM):
 
         return full_name
 
+    def get_encryption_key(self):
+        aliases = self.ctx.provider.session.client("kms").list_aliases()
+
+        return next(iter(filter(
+            lambda x: x.get('AliasName') == 'alias/parameter_store_key',
+            aliases.get('Aliases', {})
+        ))) or {}
+
     def delete(self, namespace, parameter):
         self.ssm.delete_parameter(
             Name=self.get_full_name(*namespace.split(':'), parameter=parameter)
