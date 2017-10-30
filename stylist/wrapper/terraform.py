@@ -64,8 +64,19 @@ class Terraform(object):
 
         args += ['-var', '{}={}'.format('alb_internal_arn', listeners.get("ecs-internal-lb-https"))]
         args += ['-var', '{}={}'.format('alb_external_arn', listeners.get("ecs-external-lb-https"))]
+
         args += ['-var', '{}={}'.format('alb_public_arn', listeners.get("public-loadbalancer-https"))]
         args += ['-var', '{}={}'.format('alb_public_arn_http', listeners.get("public-loadbalancer-http"))]
+
+        # new names
+        args += ['-var', '{}={}'.format('alb_public_arn_http', listeners.get("public-loadbalancer-http"))]
+        args += ['-var', '{}={}'.format('alb_public_arn_https', listeners.get("public-loadbalancer-https"))]
+
+        args += ['-var', '{}={}'.format('alb_external_arn_http', listeners.get("ecs-external-lb-http"))]
+        args += ['-var', '{}={}'.format('alb_external_arn_https', listeners.get("ecs-external-lb-https"))]
+
+        args += ['-var', '{}={}'.format('alb_internal_arn_http', listeners.get("ecs-internal-lb-http"))]
+        args += ['-var', '{}={}'.format('alb_internal_arn_https', listeners.get("ecs-internal-lb-https"))]
 
         output = None
         if save:
