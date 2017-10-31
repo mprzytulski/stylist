@@ -18,7 +18,7 @@ cli.short_help = 'Docker image helper'
 @click.option('--ask', is_flag=True, help='Ask which repository to build')
 @click.option('--subproject', default=None, help='Build docker image located in named subdirectory / project')
 @stylist_context
-def build(ctx, tag, ask, subproject):
+def build(ctx, tag, ask, subproject, profile=None, project_name=None, working_dir=None):
     """
     @type ctx: stylist.cli.Context
     @type tag: string
@@ -54,14 +54,24 @@ def build(ctx, tag, ask, subproject):
 @cli.command(help='Push docker image')
 @click.option('--ask', is_flag=True, help='Ask which repository to push')
 @click.option('--subproject', default=None, help='Push given subproject')
+@click.option('--force-build', default=False, is_flag=True, help='Force build before push')
 @stylist_context
-def push(ctx, ask, subproject):
+def push(ctx, ask, subproject, force_build):
     """
     @type ctx: stylist.cli.Context
     @type ask: str
 
     @@ignore_check@@
     """
+
+    if force_build:
+        click.get_current_context().invoke(
+            build,
+            ask=ask,
+            tag=datetime.now().strftime('%Y%m%d_%H%M'),
+            subproject=subproject
+        )
+
     click.secho('Pushing docker container', fg='blue')
 
     docker_files = _get_docker_files(ctx, ask, subproject)
