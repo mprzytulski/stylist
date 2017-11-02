@@ -42,6 +42,10 @@ class Terraform(object):
     def tfupdate_path(self):
         return join(self.terraform_dir, '.tfupdate')
 
+    @property
+    def env_vars_file(self):
+        return join(self.terraform_dir, 'env.{}.tfvars'.format(self.ctx.environment))
+
     def setup(self):
         if not exists(self.terraform_dir):
             shutil.copytree(join(self.templates.destination, 'terraform'), self.terraform_dir)
@@ -92,7 +96,7 @@ class Terraform(object):
             output = f.name
 
         provider_file = join(self.terraform_dir, 'provider.tf')
-        vars = self._get_vars(provider_file).get('variable')
+        vars = self._get_vars(provider_file).get('variable', {})
 
         with open(provider_file, 'a+') as f:
             for k, v in inject_vars.items():
@@ -276,3 +280,11 @@ class Terraform(object):
         click.secho("All done, module file updated: '{}'".format(
             module_file.replace(self.terraform_dir + '/', '')
         ), fg='green')
+
+    def get_env_vars(self):
+        return self._get_vars(self.env_vars_file)
+
+    def dump_env_vars(self, params):
+        with open(self.env_vars_file, 'w+') as f:
+            for k, v in params.items():
+                f.write("{} = \"{}\"\n".format(k, v))

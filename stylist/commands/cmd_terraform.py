@@ -2,6 +2,7 @@ import os
 from copy import copy
 
 import click
+import sys
 from click import style
 from stylist.cli import stylist_context, logger
 from stylist.click.types import Boolean
@@ -23,7 +24,8 @@ def plan(ctx, force_update):
     """
     try:
         terraform = Terraform(ctx)
-        terraform.plan(force_update=force_update)
+        plan, exit_code = terraform.plan(force_update=force_update)
+        sys.exit(exit_code)
     except TerraformException as e:
         logger.error(e.message)
 
