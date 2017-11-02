@@ -14,12 +14,15 @@ cli = copy(cli_prototype)
 cli.short_help = 'Docker image helper'
 
 
-@cli.command(help='Build docker image using Dockerfile')
+@cli.command(help='Build docker image using Dockerfile', context_settings=dict(
+    ignore_unknown_options=True,
+))
 @click.option('--tag', default=datetime.now().strftime('%Y%m%d_%H%M'))
 @click.option('--ask', is_flag=True, help='Ask which repository to build')
 @click.option('--subproject', default=None, help='Build docker image located in named subdirectory / project')
+@click.argument('docker_args', nargs=-1, type=click.UNPROCESSED)
 @stylist_context
-def build(ctx, tag, ask, subproject, profile=None, project_name=None, working_dir=None):
+def build(ctx, tag, ask, subproject, profile=None, project_name=None, working_dir=None, docker_args=None):
     """
     @type ctx: stylist.cli.Context
     @type tag: string
@@ -34,7 +37,7 @@ def build(ctx, tag, ask, subproject, profile=None, project_name=None, working_di
         docker = Docker(ctx, subproject)
         for docker_file in docker_files:
             try:
-                repository_name = docker.build(docker_file, tag)
+                repository_name = docker.build(docker_file, tag, docker_args)
                 click.secho('Container "{}" built from dockerfile "{}"\n'.format(repository_name,
                                                                                  docker_file), fg='green')
             except IndexError:

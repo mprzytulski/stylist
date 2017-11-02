@@ -99,11 +99,11 @@ class Docker(object):
         self.project_name = self._get_project_name()
         self.subproject = subproject
 
-    def build(self, dockerfile_path, tag):
+    def build(self, dockerfile_path, tag, custom_args):
         repository_name = self._get_repository_name(dockerfile_path)
 
         latest_tag = '{}:{}'.format(repository_name, 'latest')
-        args = ['build', '-f', dockerfile_path, '-t', latest_tag, dirname(dockerfile_path)]
+        args = ['build', '-f', dockerfile_path, '-t', latest_tag] + list(custom_args) + [dirname(dockerfile_path)]
 
         self.__run_docker(args)
 
