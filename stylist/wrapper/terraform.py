@@ -87,9 +87,7 @@ class Terraform(object):
 
             output = f.name
 
-        self._exec(args)
-
-        return output
+        return output, self._exec(args)
 
     def apply(self, plan):
         self._ensure_env(get=False)
@@ -177,7 +175,9 @@ class Terraform(object):
         p = subprocess.Popen([self.cmd] + args, cwd=self.terraform_dir,
                              stdout=click.get_text_stream("stdout"),
                              stderr=click.get_text_stream("stderr"))
-        return p.communicate()
+        p.communicate()
+
+        return p.returncode
 
     def configure_module(self, module_name, alias):
         maped_values = {
