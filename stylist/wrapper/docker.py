@@ -126,7 +126,7 @@ class Docker(object):
         args = ['login', '-u', username, '-p', password, endpoint]
         self.__run_docker(args)
 
-        names = [self.__push(repository_name, repo['repositoryUri'], tag)]
+        names = [self.__do_push(repository_name, repo['repositoryUri'], tag)]
 
         if tag == 'latest':
             images = self.images(dockerfile_path)
@@ -137,11 +137,11 @@ class Docker(object):
                 )
             )[1].get('Tag')
 
-            names.append(self.__push(repository_name, repo['repositoryUri'], latest_release))
+            names.append(self.__do_push(repository_name, repo['repositoryUri'], latest_release))
 
         return names
 
-    def __push(self, repository_name, repository_uri, tag):
+    def __do_push(self, repository_name, repository_uri, tag):
         local_name = '{name}:{tag}'.format(name=repository_name, tag=tag)
         remote_name = '{url}:{tag}'.format(url=repository_uri, tag=tag)
 
@@ -158,14 +158,7 @@ class Docker(object):
         args = ['images', '--format','{{json .}}', self._get_repository_name(docker_file)]
         process, out, err = self.__run_docker(args, stdout=subprocess.PIPE)
 
-        images = []
-        for line in out.strip().split("\n"):
-            if not line:
-                continue
-
-            images.append(json.loads(line))
-
-        return images
+        return [json.loads(line) for line in out.strip().split("\n") if line]
 
     def _get_project_name(self):
         return '{project}'.format(project=self.ctx.name)
