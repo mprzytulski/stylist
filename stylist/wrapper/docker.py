@@ -1,12 +1,13 @@
 from __future__ import absolute_import
 
 import base64
+import glob
 import json
 import os
 import subprocess
+from os.path import dirname, join
 
 import click
-from os.path import dirname
 
 
 class NotADockerProjectException(Exception):
@@ -129,15 +130,13 @@ class Docker(object):
         names = [self.__do_push(repository_name, repo['repositoryUri'], tag)]
 
         if tag == 'latest':
-            images = self.images(dockerfile_path)
-            latest_hash = next(enumerate(filter(lambda x: x.get('Tag') == 'latest', images)))[1].get('ID')
-            latest_release = next(
-                enumerate(
-                    filter(lambda x: x.get('Tag') != 'latest' and x.get('ID') == latest_hash, images)
+            names.append(
+                self.__do_push(
+                    repository_name,
+                    repo['repositoryUri'],
+                    self.get_latest_build_tag(dockerfile_path)
                 )
-            )[1].get('Tag')
-
-            names.append(self.__do_push(repository_name, repo['repositoryUri'], latest_release))
+            )
 
         return names
 
@@ -155,10 +154,19 @@ class Docker(object):
         return remote_name
 
     def images(self, docker_file):
-        args = ['images', '--format','{{json .}}', self._get_repository_name(docker_file)]
+        args = ['images', '--format', '{{json .}}', self._get_repository_name(docker_file)]
         process, out, err = self.__run_docker(args, stdout=subprocess.PIPE)
 
         return [json.loads(line) for line in out.strip().split("\n") if line]
+
+    def get_latest_build_tag(self, dockerfile_path):
+        images = self.images(dockerfile_path)
+        latest_hash = next(enumerate(filter(lambda x: x.get('Tag') == 'latest', images)))[1].get('ID')
+        return next(
+            enumerate(
+                filter(lambda x: x.get('Tag') != 'latest' and x.get('ID') == latest_hash, images)
+            )
+        )[1].get('Tag')
 
     def _get_project_name(self):
         return '{project}'.format(project=self.ctx.name)
@@ -197,3 +205,29 @@ class Docker(object):
             parts += [self.subproject]
 
         return '/'.join(parts)
+
+
+def _ask_about_docker_files(message, docker_files):
+    click.secho(message, fg='blue')
+    for i, docker_file in enumerate(docker_files):
+        click.secho('  [{}] {}'.format(i + 1, docker_file), fg='blue')
+    all_above = len(docker_files) + 1
+    click.secho('  [{}] All above.'.format(all_above), fg='blue')
+
+    docker_index = click.prompt(click.style('Build', fg='blue'), default=all_above)
+    if docker_index == all_above:
+        docker_files_indexes = tuple(range(0, len(docker_files)))
+    else:
+        docker_files_indexes = (docker_index - 1,)
+
+    return docker_files_indexes
+
+
+def _get_docker_files(ctx, ask, subproject):
+    path = join(ctx.working_dir, subproject) if subproject else ctx.working_dir
+    docker_files = glob.glob('{}/Dockerfile*'.format(path))
+
+    if ask:
+        return _ask_about_docker_files('Which docker file would you like to build?', docker_files)
+    else:
+        return docker_files
