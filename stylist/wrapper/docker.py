@@ -1,6 +1,7 @@
 from __future__ import absolute_import
 
 import base64
+import json
 import os
 import subprocess
 
@@ -109,7 +110,7 @@ class Docker(object):
 
         return '{}:{}'.format(repository_name, tag)
 
-    def push(self, dockerfile_path):
+    def push(self, dockerfile_path, tag):
         repository_name = self._get_repository_name(dockerfile_path)
 
         try:
@@ -125,8 +126,24 @@ class Docker(object):
         args = ['login', '-u', username, '-p', password, endpoint]
         self.__run_docker(args)
 
-        local_name = '{name}:{tag}'.format(name=repository_name, tag='latest')
-        remote_name = '{url}:{tag}'.format(url=repo['repositoryUri'], tag='latest')
+        names = [self.__do_push(repository_name, repo['repositoryUri'], tag)]
+
+        if tag == 'latest':
+            images = self.images(dockerfile_path)
+            latest_hash = next(enumerate(filter(lambda x: x.get('Tag') == 'latest', images)))[1].get('ID')
+            latest_release = next(
+                enumerate(
+                    filter(lambda x: x.get('Tag') != 'latest' and x.get('ID') == latest_hash, images)
+                )
+            )[1].get('Tag')
+
+            names.append(self.__do_push(repository_name, repo['repositoryUri'], latest_release))
+
+        return names
+
+    def __do_push(self, repository_name, repository_uri, tag):
+        local_name = '{name}:{tag}'.format(name=repository_name, tag=tag)
+        remote_name = '{url}:{tag}'.format(url=repository_uri, tag=tag)
 
         args = ['tag', local_name, remote_name]
         click.secho("Tagged {local} -> {remote}".format(local=local_name, remote=remote_name), fg="blue")
@@ -138,19 +155,21 @@ class Docker(object):
         return remote_name
 
     def images(self, docker_file):
-        args = ['images', self._get_repository_name(docker_file)]
-        self.__run_docker(args)
+        args = ['images', '--format','{{json .}}', self._get_repository_name(docker_file)]
+        process, out, err = self.__run_docker(args, stdout=subprocess.PIPE)
+
+        return [json.loads(line) for line in out.strip().split("\n") if line]
 
     def _get_project_name(self):
         return '{project}'.format(project=self.ctx.name)
 
-    def __run_docker(self, flags, dockerfile_dir=None):
+    def __run_docker(self, flags, dockerfile_dir=None, stdout=None, stderr=None):
         args = ['docker'] + flags
 
         p = subprocess.Popen(
             args,
-            stdout=click.get_text_stream('stdout'),
-            stderr=click.get_text_stream('stderr'),
+            stdout=stdout or click.get_text_stream('stdout'),
+            stderr=stderr or click.get_text_stream('stderr'),
             cwd=dockerfile_dir
         )
         out, err = p.communicate()
@@ -158,7 +177,7 @@ class Docker(object):
         if p.returncode != 0:
             raise DockerException(args, err, p.returncode)
 
-        return True
+        return p, out, err
 
     def __get_authentication_data(self, repository):
         auth_data = self.ecr.get_authorization_token(

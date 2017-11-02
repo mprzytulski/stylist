@@ -7,6 +7,7 @@ from os.path import join
 import click
 from stylist.cli import stylist_context, logger
 from stylist.commands import cli_prototype
+from stylist.utils import table
 from stylist.wrapper.docker import Docker, NotADockerProjectException, DockerException
 
 cli = copy(cli_prototype)
@@ -53,10 +54,11 @@ def build(ctx, tag, ask, subproject, profile=None, project_name=None, working_di
 
 @cli.command(help='Push docker image')
 @click.option('--ask', is_flag=True, help='Ask which repository to push')
+@click.option('--tag', default='latest', help='Push given tag')
 @click.option('--subproject', default=None, help='Push given subproject')
 @click.option('--force-build', default=False, is_flag=True, help='Force build before push')
 @stylist_context
-def push(ctx, ask, subproject, force_build):
+def push(ctx, ask, subproject, force_build, tag):
     """
     @type ctx: stylist.cli.Context
     @type ask: str
@@ -80,11 +82,11 @@ def push(ctx, ask, subproject, force_build):
         docker = Docker(ctx, subproject)
         for docker_file in docker_files:
             try:
-                repository_name = docker.push(docker_file)
-                click.secho(
-                    'Image for container "{}" pushed from dockerfile "{}"\n'.format(repository_name, docker_file),
-                    fg='green'
-                )
+                for name in docker.push(docker_file, tag):
+                    click.secho(
+                        'Image for container "{}" pushed from dockerfile "{}"\n'.format(name, docker_file),
+                        fg='green'
+                    )
             except IndexError:
                 pass
     except NotADockerProjectException:
@@ -111,7 +113,25 @@ def images(ctx, subproject):
         docker_files = _get_docker_files(ctx, False, subproject)
 
         docker = Docker(ctx, subproject)
-        docker.images(docker_files[0])
+
+        images_list = []
+        for image in docker.images(docker_files[0]):
+            images_list.append([
+                image.get('ID'),
+                image.get('Repository'),
+                image.get('Tag'),
+                image.get('VirtualSize'),
+                image.get('CreatedAt')]
+            )
+
+        click.secho(
+            table(
+                "DOCKER IMAGES",
+                images_list,
+                ["ID", "Repository", "Tag", "Size", "Created"]
+            ).table
+        )
+
     except NotADockerProjectException:
         sys.exit(1)
 
