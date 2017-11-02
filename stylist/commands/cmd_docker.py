@@ -8,7 +8,7 @@ import click
 from stylist.cli import stylist_context, logger
 from stylist.commands import cli_prototype
 from stylist.utils import table
-from stylist.wrapper.docker import Docker, NotADockerProjectException, DockerException
+from stylist.wrapper.docker import Docker, NotADockerProjectException, DockerException, _get_docker_files
 
 cli = copy(cli_prototype)
 cli.short_help = 'Docker image helper'
@@ -134,29 +134,3 @@ def images(ctx, subproject):
 
     except NotADockerProjectException:
         sys.exit(1)
-
-
-def _ask_about_docker_files(message, docker_files):
-    click.secho(message, fg='blue')
-    for i, docker_file in enumerate(docker_files):
-        click.secho('  [{}] {}'.format(i + 1, docker_file), fg='blue')
-    all_above = len(docker_files) + 1
-    click.secho('  [{}] All above.'.format(all_above), fg='blue')
-
-    docker_index = click.prompt(click.style('Build', fg='blue'), default=all_above)
-    if docker_index == all_above:
-        docker_files_indexes = tuple(range(0, len(docker_files)))
-    else:
-        docker_files_indexes = (docker_index - 1,)
-
-    return docker_files_indexes
-
-
-def _get_docker_files(ctx, ask, subproject):
-    path = join(ctx.working_dir, subproject) if subproject else ctx.working_dir
-    docker_files = glob.glob('{}/Dockerfile*'.format(path))
-
-    if ask:
-        return _ask_about_docker_files('Which docker file would you like to build?', docker_files)
-    else:
-        return docker_files
