@@ -36,7 +36,10 @@ def apply(ctx):
     plan_path = None
     try:
         terraform = Terraform(ctx)
-        plan_path = terraform.plan(True)
+        plan_path, exit_code = terraform.plan(True)
+
+        if exit_code != 0:
+            return exit_code
 
         _apply = click.prompt(
             style('Apply saved plan to "{}"? '.format(colourize(ctx.environment)), fg="green"),
