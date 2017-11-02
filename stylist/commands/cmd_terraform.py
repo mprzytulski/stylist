@@ -15,14 +15,15 @@ cli.short_help = 'Wrapper around terraform'
 
 
 @cli.command(help="Show terraform plan for current env")
+@click.option('--force-update', is_flag=True, default=False, help="Force modules update, by default modules are updated after an hour")
 @stylist_context
-def plan(ctx):
+def plan(ctx, force_update):
     """
     @type ctx: stylist.cli.Context
     """
     try:
         terraform = Terraform(ctx)
-        terraform.plan()
+        terraform.plan(force_update=force_update)
     except TerraformException as e:
         logger.error(e.message)
 
