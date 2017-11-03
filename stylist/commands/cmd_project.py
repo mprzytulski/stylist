@@ -19,6 +19,7 @@ TEMPLATES_REPO = 'git@github.com:ThreadsStylingLtd/stylist.git'
 
 GIT_IGNORE = """
 .stylist/environment
+terraform/.tfupdate
 terraform/.terraform/environment
 terraform/.terraform/modules
 terraform/.terraform/plugins/*
