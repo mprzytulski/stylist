@@ -2,6 +2,7 @@ import os
 from copy import copy
 
 import click
+import sys
 from click import style
 from stylist.cli import stylist_context, logger
 from stylist.click.types import Boolean
@@ -15,14 +16,16 @@ cli.short_help = 'Wrapper around terraform'
 
 
 @cli.command(help="Show terraform plan for current env")
+@click.option('--force-update', is_flag=True, default=False, help="Force modules update, by default modules are updated after an hour")
 @stylist_context
-def plan(ctx):
+def plan(ctx, force_update):
     """
     @type ctx: stylist.cli.Context
     """
     try:
         terraform = Terraform(ctx)
-        terraform.plan()
+        plan, exit_code = terraform.plan(force_update=force_update)
+        sys.exit(exit_code)
     except TerraformException as e:
         logger.error(e.message)
 
