@@ -16,25 +16,33 @@ cli.short_help = 'ECS Service management'
 
 
 @cli.command(help='Enrol given version of docker image')
-@click.option('--service', default=None, help='Overwrite service name')
 @click.option('--tag', default='latest', help='Tag which should be enrolled')
+@click.option('--subproject', default='latest', help='Tag which should be enrolled')
 @stylist_context
-def enrol(ctx, service, tag):
+def enrol(ctx, subproject, tag):
     """
     @type ctx: stylist.cli.Context
     """
-    service = service or ctx.name
-
     try:
-        docker_files = _get_docker_files(ctx, False, None)
+        docker_files = _get_docker_files(ctx, False, subproject)
+        service = subproject or ctx.name
 
-        docker = Docker(ctx, None)
+        if not docker_files:
+            logger.error("Unable to locate Dockerfile for given project")
+            sys.exit(1)
+
+        # @todo check if remote image exists before enrolling service
+        docker = Docker(ctx, subproject)
         deploy_tag = tag if tag != 'latest' else docker.get_latest_build_tag(docker_files[0])
 
         terraform = Terraform(ctx)
 
         env_vars = terraform.get_env_vars()
-        env_vars['ecs_service_{}_version'.format(service)] = deploy_tag
+        env_vars[
+            'ecs_service_{}_version'.format(
+                docker.get_repository_name(docker_files[0]).replace('/', '_')
+            )
+        ] = deploy_tag
 
         terraform.dump_env_vars(env_vars)
 
@@ -55,12 +63,16 @@ def enrol(ctx, service, tag):
         terraform.apply(plan_path)
 
         ecs = ctx.provider.session.client('ecs')
-        task = ecs.list_task_definitions(familyPrefix=service, status='ACTIVE').get('taskDefinitionArns')[0]
+        tasks = ecs.list_task_definitions(familyPrefix=service, status='ACTIVE')
+
+        if not tasks.get('taskDefinitionArns'):
+            logger.error("Opss. Unable to locate task definition")
+            return
 
         ecs.update_service(
             cluster='ecs-main-cluster',
             service=service,
-            taskDefinition=task
+            taskDefinition=tasks.get('taskDefinitionArns')[0]
         )
 
         click.secho("Version {} has been enrolled.".format(deploy_tag))
