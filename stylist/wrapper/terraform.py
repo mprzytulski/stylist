@@ -18,11 +18,13 @@ import time
 from click import style, prompt
 from stylist.cli import logger
 from stylist.commands.cmd_check import which
+from stylist.utils import compare_dicts
 
 
 class TerraformException(Exception):
-    def __init__(self, message):
+    def __init__(self, message, errno=None):
         self.message = message
+        self.errno = errno
 
 
 class Terraform(object):
@@ -76,6 +78,7 @@ class Terraform(object):
             'alb_public_arn_http': listeners.get("public-loadbalancer-http"),
             'alb_public_arn_https': listeners.get("public-loadbalancer-https"),
 
+        # new names
             'alb_external_arn_http': listeners.get("ecs-external-lb-http"),
             'alb_external_arn_https': listeners.get("ecs-external-lb-https"),
 
@@ -116,44 +119,11 @@ class Terraform(object):
     def sync_vars(self, source_profile, destination_profile):
         source_file = join(self.terraform_dir, 'env.{}.tfvars'.format(source_profile))
         if not isfile(source_file):
-            raise TerraformException("Missing tfvars file for source profile: {}".format(source_profile))
+            raise TerraformException("Missing tfvars file for source profile: {}".format(source_profile), 1)
 
         destination_file = join(self.terraform_dir, 'env.{}.tfvars'.format(destination_profile))
 
-        source_vars = self._get_vars(source_file)
-        destination_vars = self._get_vars(destination_file)
-
-        # merge values
-        for name, val in source_vars.items():
-            _default = val if name not in destination_vars else destination_vars.get(name, "")
-            prompt = '{name}: "{source_value}" -> "{dest_value}"'.format(
-                name=name,
-                source_value=val,
-                dest_value=destination_vars.get(name, "")
-            )
-            destination_vars[name] = click.prompt(
-                click.style(prompt, fg="yellow" if val != _default else "green"),
-                default=_default
-            )
-
-        # delete if dest contain var which isn't define in source
-        for name, val in destination_vars.items():
-            if name in source_vars:
-                continue
-
-            prompt = '{name}: "{source_value}" -> "{dest_value}"'.format(
-                name=name,
-                source_value=val,
-                dest_value="[del]"
-            )
-
-            _val = click.prompt(
-                click.style(prompt, fg="red"),
-                default='[del]'
-            )
-
-            if _val == '[del]':
-                del destination_vars[name]
+        destination_vars = compare_dicts(self._get_vars(source_file), self._get_vars(destination_file))
 
         with open(destination_file, 'w+') as f:
             for name, value in destination_vars.items():

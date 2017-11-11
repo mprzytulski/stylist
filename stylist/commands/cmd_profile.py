@@ -1,16 +1,13 @@
-import os
-import sys
 from copy import copy
-from os import listdir
-from os.path import isdir, islink, join
+from os.path import isdir, join
 
 import click
-import yaml
 
 from stylist.cli import stylist_context, logger
 from stylist.commands import cli_prototype
-from stylist.utils import colourize, get_provider
-from stylist.wrapper.terraform import Terraform
+from stylist.provider.aws import SSM
+from stylist.utils import colourize
+from stylist.wrapper.terraform import Terraform, TerraformException
 
 cli = copy(cli_prototype)
 cli.short_help = 'Manage project environments'
@@ -42,39 +39,9 @@ def select(ctx, name, project_name=None, profile=None, working_dir=None):
     click.secho("Selected profile: {}".format(colourize(name)))
 
 
-# @cli.command(help="Create deployment profile")
-# @click.argument("name")
-# @click.option("--provider", default="aws")
-# @stylist_context
-# def create(ctx, name, provider, project_name=None, profile=None, working_dir=None):
-#     """
-#     @@ignore_check@@
-#     @type ctx: stylist.cli.Context
-#     """
-#     if not isdir(ctx.config_dir):
-#         os.mkdir(ctx.config_dir)
-#
-#     ctx.environment = name
-#
-#     if isdir(ctx.profile_dir):
-#         logger.error("Profile '{}' already exists".format(name))
-#         sys.exit(1)
-#
-#     provider = get_provider(provider)(ctx)
-#
-#     values = {}
-#     for arg_name, parameter in provider.known_params.items():
-#         desc, kwargs = parameter
-#         values[arg_name] = str(click.prompt(desc.format(env_name=name), **kwargs))
-#
-#     provider.dump(values)
-#
-#     click.get_current_context().invoke(select, name=name)
-
-
-@cli.command(help="List all available profiles")
+@cli.command(name="list", help="List all available profiles")
 @stylist_context
-def list(ctx):
+def list_profiles(ctx):
     """
     @type ctx: stylist.cli.Context
     """
@@ -86,21 +53,44 @@ def list(ctx):
         )
 
 
-# @cli.command(name="sync-vars", help="Synchronise configuration variables between profiles")
-# @click.argument("source_profile")
-# @click.argument("destination_profile")
-# @stylist_context
-# def sync_vars(ctx, source_profile, destination_profile):
-#     try:
-#         profiles = _list_profiles(ctx)
-#
-#         if source_profile not in profiles:
-#             raise Exception('Source profile "{}" is missing'.format(source_profile))
-#
-#         if destination_profile not in profiles:
-#             raise Exception('Destination profile "{}" is missing'.format(destination_profile))
-#
-#         terraform = Terraform(ctx)
-#         terraform.sync_vars(source_profile, destination_profile)
-#     except Exception as e:
-#         logger.error(e.message)
+@cli.command(name="sync-vars", help="Synchronise configuration variables between profiles")
+@click.option("--namespaces", help="SSM namespaces to migrate", multiple=True)
+@click.argument("source")
+@click.argument("destination")
+@stylist_context
+def sync_vars(ctx, namespaces, source, destination):
+    try:
+        profiles = ctx.settings.get('stages')
+        if source not in profiles:
+            raise Exception('Source profile "{}" is missing'.format(source))
+
+        if destination not in profiles:
+            raise Exception('Destination profile "{}" is missing'.format(destination))
+
+        click.secho("Migrating terraform variables", fg="blue")
+
+        if isdir(join(ctx.working_dir, 'terraform')):
+            try:
+                terraform = Terraform(ctx)
+                terraform.sync_vars(source, destination)
+            except TerraformException as e:
+                click.secho("No stage tfvars. Skipping terraform migration.")
+
+        namespaces = list(namespaces)
+        if not namespaces:
+            namespaces.append('service:{}'.format(ctx.name))
+
+        click.secho("Migrating ssm namespaces", fg="blue")
+        source_ssm = SSM(ctx.provider.get_session_for_stage(source).client('ssm'), ctx)
+        destination_session = ctx.provider.get_session_for_stage(destination)
+        destination_ssm = SSM(destination_session.client('ssm'), ctx)
+
+        for namespace in namespaces:
+            click.secho("Migrating '{}' from '{}' -> '{}'".format(namespace, colourize(source), colourize(destination)))
+            diff = SSM.sync_vars(source_ssm, destination_ssm, namespace)
+
+            for key, value in diff.items():
+                destination_ssm.write(namespace, key, value, session=destination_session)
+
+    except Exception as e:
+        logger.error(e.message)
