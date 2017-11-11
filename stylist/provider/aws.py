@@ -3,6 +3,8 @@ import boto3
 from stylist.provider import Provider
 from threads_aws_utils import SSM as BaseSSM
 
+from stylist.utils import compare_dicts
+
 
 class SSM(BaseSSM):
     def __init__(self, ssm, ctx):
@@ -20,7 +22,7 @@ class SSM(BaseSSM):
         kwargs['env'] = False
         params = self.get_parameters(*args, **kwargs)
 
-        return {k.split('/')[-1]: v for k, v in params.items()}
+        return {"/".join(k.split('/')[3:]): v for k, v in params.items()}
 
     def _fetch_all_parameters(self, resource, env=False):
         namespace = self._resolve_namespace(resource)
@@ -51,8 +53,8 @@ class SSM(BaseSSM):
 
         return params
 
-    def write(self, namespace, parameter, value, encrypt):
-        kms = self.ctx.provider.session.client("kms")
+    def write(self, namespace, parameter, value, encrypt=True, session=None):
+        kms = (session or self.ctx.provider.session).client("kms")
 
         key_id = None
         if encrypt:
@@ -96,16 +98,18 @@ class SSM(BaseSSM):
         )
 
     @staticmethod
-    def sync_vars(source, destination, namespaces):
+    def sync_vars(source, destination, namespace):
         """
         Sync SSM variables between profiles
         :type source SSM
-        :type namespaces SSM
-        :param list:
+        :type destination SSM
+        :type namespace str
         :return:
         """
-
-        pass
+        return compare_dicts(
+            source.get_short_parameters(namespace),
+            destination.get_short_parameters(namespace)
+        )
 
 
 class AWSProvider(Provider):

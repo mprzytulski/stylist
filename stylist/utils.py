@@ -11,7 +11,7 @@ import click
 from pygments import highlight, lexers, formatters
 from terminaltables import SingleTable
 
-from stylist.provider.aws import AWSProvider
+from stylist.click.types import Boolean
 
 
 def colourize(name):
@@ -73,13 +73,6 @@ def display_section(title, data, title_fg="blue", body_fg="white"):
     click.secho(data + "\n", fg=body_fg)
 
 
-def get_provider(name):
-    if name == "aws":
-        return AWSProvider
-
-    return None
-
-
 def line_prefix(ctx):
     return "[{env}] ".format(env=colourize(ctx.environment))
 
@@ -132,3 +125,45 @@ def random_password(size=15):
     chars = (string.letters + string.digits + string.punctuation).translate(None, '\'";:@%{}&#?[]`~\\')
 
     return ''.join((random.choice(chars)) for x in range(size)).replace("'", '-').replace('?', '*')
+
+
+def compare_dicts(source, destination):
+    """
+    :type source dict
+    :type destination dict
+    :return: dict
+    """
+    source_vars = source.copy()
+    destination_vars = destination.copy()
+
+    def prompt(name, source, dest, default):
+        return click.prompt(
+            click.style(
+                '{name}: "{source_value}" -> "{dest_value}"'.format(name=name, source_value=source, dest_value=dest),
+                fg='yellow' if val != default else 'green'
+            ),
+            default=default
+        )
+
+    # merge values
+    for name in sorted(source_vars.iterkeys()):
+        val = source_vars.get(name)
+        destination_vars[name] = prompt(
+            name, val, destination_vars.get(name, ""),
+            val if name not in destination_vars else destination_vars.get(name, "")
+        )
+
+    for name in sorted(destination_vars.iterkeys()):
+        if name in source_vars:
+            continue
+
+        val = click.prompt(
+            'Parameter {} has been removed from source profile, delete it from destination as well?',
+            type=Boolean(),
+            default=True
+        )
+
+        if val:
+            del destination_vars[name]
+
+    return destination_vars

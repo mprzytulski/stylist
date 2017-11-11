@@ -8,7 +8,8 @@ import yaml
 from click import MultiCommand, Group
 from git import Repo, InvalidGitRepositoryError
 
-from stylist.utils import find_dotenv, get_provider
+from stylist.provider.aws import AWSProvider
+from stylist.utils import find_dotenv
 
 CONTEXT_SETTINGS = dict(auto_envvar_prefix='STYLIST')
 
@@ -57,7 +58,7 @@ class Context(object):
                 .remote('origin') \
                 .url \
                 .split('/')[-1] \
-                .replace(".git", '')\
+                .replace(".git", '') \
                 .replace('***REMOVED***', '')
         except InvalidGitRepositoryError:
             from stylist.cli import logger
@@ -71,14 +72,7 @@ class Context(object):
             self.settings.get('stages', {}).append('local')
 
     def _load_provider(self):
-        if "AWS_KEY_ID" in os.environ or 'AWS_CONTAINER_CREDENTIALS_RELATIVE_URI' in os.environ:
-            provider_type = 'aws'
-        elif 'provider' in self.settings:
-            provider_type = self.settings.get('provider', {}).get('type', 'aws')
-        else:
-            return None
-
-        self._provider = get_provider(provider_type)(self)
+        self._provider = AWSProvider(self)
         self._provider.load()
         self._provider.values.update({
             'profile': self.settings.get('provider', {}).get('prefix', '') + self.environment
