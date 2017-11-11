@@ -60,7 +60,7 @@ def table(title, data, headers=None, wraped_col=1):
     _table = SingleTable(_data, click.style(title, fg="blue"))
     _table.inner_row_border = True
 
-    max_width = math.fabs(_table.column_max_width(wraped_col))
+    max_width = math.fabs(_table.column_max_width(wraped_col)) or 30
     for i, val in enumerate(_data):
         wrapped_string = '\n'.join(wrap(str(val[wraped_col]), max_width))
         _table.table_data[i][wraped_col] = wrapped_string

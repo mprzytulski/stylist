@@ -105,9 +105,9 @@ class Docker(object):
         latest_tag = '{}:{}'.format(repository_name, 'latest')
         args = ['build', '-f', dockerfile_path, '-t', latest_tag] + list(custom_args) + [dirname(dockerfile_path)]
 
-        self.__run_docker(args)
+        self.run_docker(args)
 
-        self.__run_docker(['tag', latest_tag, '{}:{}'.format(repository_name, tag)])
+        self.run_docker(['tag', latest_tag, '{}:{}'.format(repository_name, tag)])
 
         return '{}:{}'.format(repository_name, tag)
 
@@ -125,7 +125,7 @@ class Docker(object):
         username, password, endpoint = self.__get_authentication_data(repo)
 
         args = ['login', '-u', username, '-p', password, endpoint]
-        self.__run_docker(args)
+        self.run_docker(args)
 
         names = [self.__do_push(repository_name, repo['repositoryUri'], tag)]
 
@@ -146,16 +146,16 @@ class Docker(object):
 
         args = ['tag', local_name, remote_name]
         click.secho("Tagged {local} -> {remote}".format(local=local_name, remote=remote_name), fg="blue")
-        self.__run_docker(args)
+        self.run_docker(args)
 
         args = ['push', remote_name]
-        self.__run_docker(args)
+        self.run_docker(args)
 
         return remote_name
 
     def images(self, docker_file):
-        args = ['images', '--format', '{{json .}}', self._get_repository_name(docker_file)]
-        process, out, err = self.__run_docker(args, stdout=subprocess.PIPE)
+        args = ['images', '--format', '{{json .}}', self.get_repository_name(docker_file)]
+        process, out, err = self.run_docker(args, stdout=subprocess.PIPE)
 
         return [json.loads(line) for line in out.strip().split("\n") if line]
 
@@ -171,7 +171,7 @@ class Docker(object):
     def _get_project_name(self):
         return '{project}'.format(project=self.ctx.name)
 
-    def __run_docker(self, flags, dockerfile_dir=None, stdout=None, stderr=None):
+    def run_docker(self, flags, dockerfile_dir=None, stdout=None, stderr=None):
         args = ['docker'] + flags
 
         p = subprocess.Popen(
