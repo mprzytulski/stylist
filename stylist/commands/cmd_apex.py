@@ -9,9 +9,9 @@ from os.path import join
 
 import shutil
 
-from stylist.cli import stylist_context
+from stylist.cli import stylist_context, logger
 from stylist.commands import cli_prototype
-from stylist.wrapper.apex import Apex
+from stylist.wrapper.apex import Apex, ApexException
 from stylist.wrapper.docker import Docker
 
 cli = copy(cli_prototype)
@@ -55,17 +55,27 @@ def clean(ctx):
 
 
 @cli.command(help="Deploy apex function")
+@click.argument('apex_args', nargs=-1, type=click.UNPROCESSED)
 @stylist_context
-def deploy(ctx):
-    session = ctx.provider.session
-    # session.
+def deploy(ctx, apex_args):
+    try:
+        apex = Apex(ctx)
+        apex.deploy(apex_args)
+    except ApexException as e:
+        logger.error(e.message)
+        logger.error(e.cmd)
 
 
 @cli.command(help="Init apex project")
 @click.option('--vpc', help="VPC name in which lambda functions should be placed")
 @click.option('--security-group', help="List of security groups")
 @click.option('--subnet', help="List of security groups")
+@click.argument('apex_args', nargs=-1, type=click.UNPROCESSED)
 @stylist_context
-def init(ctx, vpc, security_group, subnet):
-    apex = Apex(ctx)
-    apex.init()
+def init(ctx, vpc, security_group, subnet, apex_args):
+    try:
+        apex = Apex(ctx)
+        apex.init(apex_args)
+    except ApexException as e:
+        logger.error(e.message)
+        logger.error(e.cmd)

@@ -28,7 +28,7 @@ class Apex(object):
         self.ctx = ctx
 
     def run(self, args, dockerfile_dir=None, stdout=None, stderr=None):
-        args = ['apex'] + args
+        args = ['apex', '--profile', self.ctx.provider.profile, '-e', self.ctx.environment] + args
 
         p = subprocess.Popen(
             args,
@@ -42,6 +42,12 @@ class Apex(object):
             raise ApexException(args, err, p.returncode)
 
         return p, out, err
+
+    def init(self, apex_args):
+        self.run(['init', '--skip-skeleton', '--no-prompt', '--name', self.ctx.name] + list(apex_args))
+
+    def deploy(self, apex_args):
+        self.run(['deploy'] + list(apex_args))
 
     @property
     def lambda_role_name(self):
