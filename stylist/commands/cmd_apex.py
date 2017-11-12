@@ -6,7 +6,7 @@ from copy import copy
 import click
 import subprocess
 
-from os.path import join
+from os.path import join, isfile
 
 import shutil
 
@@ -26,23 +26,38 @@ def build(ctx, native):
     with open('.project_files', 'w+') as f:
         json.dump(glob.glob("*"), f)
 
-    if native:
-        docker = Docker(ctx, None)
-        args = [
-            'run', '--rm',
-            '-v', '{}:/src'.format(os.getcwd()),
-            'ctx.settings['docker_images']['python3-lambda']',
-            'pip', 'install', '-r', '/src/requirements.txt', '--upgrade', '-t', '/src'
-        ]
+    try:
+        global_req = ""
+        for req_file in [join(ctx.working_dir, 'requirements.txt'), join(os.getcwd(), 'requirements.txt')]:
+            if not isfile(req_file):
+                continue
+            with open(req_file, 'r') as f:
+                global_req += f.read() + "\n"
 
-        p, out, err = docker.run_docker(args, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
-    else:
-        p = subprocess.Popen(
-            ['pip', 'install', '-r', 'requirements.txt', '-t', '.'],
-            stdout=subprocess.PIPE,
-            stderr=subprocess.PIPE,
-        )
-        out, err = p.communicate()
+        with open(join(os.getcwd(), "req_all.txt"), "w+") as f:
+            f.write(global_req)
+
+        if native:
+            docker = Docker(ctx, None)
+
+            args = [
+                'run', '--rm',
+                '-v', '{}:/src'.format(os.getcwd()),
+                'ctx.settings['docker_images']['python3-lambda']',
+                'pip', 'install', '-r', '/src/req_all.txt', '--upgrade', '-t', '/src'
+            ]
+
+            p, out, err = docker.run_docker(args, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+        else:
+            p = subprocess.Popen(
+                ['pip', 'install', '-r', 'req_all.txt', '-t', '.'],
+                stdout=subprocess.PIPE,
+                stderr=subprocess.PIPE,
+            )
+            out, err = p.communicate()
+    finally:
+        if isfile('req_all.txt'):
+            os.unlink('req_all.txt')
 
 
 @cli.command(help="Clean dependencies after build")
