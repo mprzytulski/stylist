@@ -118,11 +118,7 @@ class Terraform(object):
 
             output = f.name
 
-        provider_file = join(self.terraform_dir, 'provider.tf')
-
-        with open(provider_file, 'w+') as f:
-            template = Template(PROVIDER_TEMPLATE)
-            f.write(template.render(items=inject_vars))
+        self._update_provider()
 
         return output, self._exec(args)
 
@@ -189,6 +185,7 @@ class Terraform(object):
         return p.returncode
 
     def configure_module(self, module_name, alias):
+        self._update_provider()
         maped_values = {
             'name': alias
         }
@@ -273,3 +270,13 @@ class Terraform(object):
         with open(self.env_vars_file, 'w+') as f:
             for k, v in params.items():
                 f.write("{} = \"{}\"\n".format(k, v))
+
+    def _update_provider(self):
+        provider_file = join(self.terraform_dir, 'provider.tf')
+
+        if not isdir(self.terraform_dir):
+            os.makedirs(self.terraform_dir)
+
+        with open(provider_file, 'w+') as f:
+            template = Template(PROVIDER_TEMPLATE)
+            f.write(template.render())
