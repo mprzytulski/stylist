@@ -1,4 +1,5 @@
 import glob
+import json
 import os
 from copy import copy
 
@@ -22,6 +23,9 @@ cli.short_help = "Helper for apex lambda functions"
 @click.option('--native', is_flag=True, default=False, help="Build with native module support via docker")
 @stylist_context
 def build(ctx, native):
+    with open('.project_files', 'w+') as f:
+        json.dump(glob.glob("*"), f)
+
     if native:
         docker = Docker(ctx, None)
         args = [
@@ -44,14 +48,20 @@ def build(ctx, native):
 @cli.command(help="Clean dependencies after build")
 @stylist_context
 def clean(ctx):
-    for file in [f for f in glob.glob('*') if f not in ('function.json', 'main.py', 'requirements.txt')]:
-        try:
-            shutil.rmtree(join(os.getcwd(), file))
-        except OSError:
+    with open('.project_files') as f:
+        project_files = json.load(f)
+
+    try:
+        for dependency_file in [f for f in glob.glob('*') if f not in project_files]:
             try:
-                os.unlink(join(os.getcwd(), file))
+                shutil.rmtree(join(os.getcwd(), dependency_file))
             except OSError:
-                pass
+                try:
+                    os.unlink(join(os.getcwd(), dependency_file))
+                except OSError:
+                    pass
+    finally:
+        os.unlink('.project_files')
 
 
 @cli.command(help="Deploy apex function")
@@ -76,6 +86,17 @@ def init(ctx, vpc, security_group, subnet, apex_args):
     try:
         apex = Apex(ctx)
         apex.init(apex_args)
+
+        with open(join(ctx.working_dir, 'project.json'), 'r+') as f:
+            config = json.load(f)
+
+            if 'hooks' not in config:
+                config['hooks'] = {
+                    'build': 'apex build',
+                    'clean': 'apex clean'
+                }
+                json.dump(config, f)
+
     except ApexException as e:
         logger.error(e.message)
         logger.error(e.cmd)
