@@ -1,24 +1,36 @@
 from __future__ import absolute_import
 
 import json
+import os
 import re
 import shutil
 import subprocess
 import sys
 import tempfile
+import time
 from glob import glob
 from os.path import isfile, join, isdir, exists
 
-import hcl
-
 import click
-import os
-
-import time
+import hcl
 from click import style, prompt
+from jinja2 import Template
+
 from stylist.cli import logger
 from stylist.commands.cmd_check import which
 from stylist.utils import compare_dicts
+
+PROVIDER_TEMPLATE = """
+provider "aws" {
+  region = "${var.context["aws_region"]}"
+  profile = "${var.context["aws_profile"]}"
+}
+
+variable "context" {
+  type = "map"
+  default = {}
+}
+"""
 
 
 class TerraformException(Exception):
@@ -79,7 +91,7 @@ class Terraform(object):
             'alb_public_arn_http': listeners.get("public-loadbalancer-http"),
             'alb_public_arn_https': listeners.get("public-loadbalancer-https"),
 
-        # new names
+            # new names
             'alb_external_arn_http': listeners.get("ecs-external-lb-http"),
             'alb_external_arn_https': listeners.get("ecs-external-lb-https"),
 
@@ -87,8 +99,11 @@ class Terraform(object):
             'alb_internal_arn_https': listeners.get("ecs-internal-lb-https")
         }
 
+        params = []
         for k, v in inject_vars.items():
-            args += ['--var', '{}={}'.format(k, v)]
+            params += ['{k}="{v}"'.format(k=k, v=v)]
+
+        args += ['--var', 'context={%s}' % ", ".join(params)]
 
         output = None
         if save:
@@ -100,13 +115,10 @@ class Terraform(object):
             output = f.name
 
         provider_file = join(self.terraform_dir, 'provider.tf')
-        vars = self._get_vars(provider_file).get('variable', {})
 
-        with open(provider_file, 'a+') as f:
-            for k, v in inject_vars.items():
-                if k in vars:
-                    continue
-                f.write("variable \"{key}\" {{}}\n\n".format(key=k))
+        with open(provider_file, 'w+') as f:
+            template = Template(PROVIDER_TEMPLATE)
+            f.write(template.render(items=inject_vars))
 
         return output, self._exec(args)
 
