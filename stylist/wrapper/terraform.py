@@ -75,6 +75,7 @@ class Terraform(object):
             'aws_region': aws_session.region_name,
             'aws_profile': self.ctx.provider.profile,
             'environment': self.ctx.environment,
+            'project_name': self.ctx.name,
             'alb_public_arn_http': listeners.get("public-loadbalancer-http"),
             'alb_public_arn_https': listeners.get("public-loadbalancer-https"),
 
