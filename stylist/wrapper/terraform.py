@@ -40,8 +40,7 @@ class TerraformException(Exception):
 
 
 class Terraform(object):
-    STYLIST_VAR_NAMES = ('aws_region', 'aws_profile', 'aws_account_id', 'environment', 'alb_internal_arn',
-                         'alb_external_arn')
+    STYLIST_VAR_NAMES = ('context',)
 
     def __init__(self, ctx, templates=None):
         self.ctx = ctx
@@ -82,6 +81,8 @@ class Terraform(object):
                 key = "{}-{}".format(lb.get("LoadBalancerName"), listener.get("Protocol").lower())
                 listeners[key] = listener.get("ListenerArn")
 
+        apis = aws_session.client('apigateway').get_rest_apis(limit=200)
+
         inject_vars = {
             'aws_account_id': self.ctx.provider.account_id,
             'aws_region': aws_session.region_name,
@@ -98,6 +99,9 @@ class Terraform(object):
             'alb_internal_arn_http': listeners.get("ecs-internal-lb-http"),
             'alb_internal_arn_https': listeners.get("ecs-internal-lb-https")
         }
+
+        for api in apis.get('items'):
+            inject_vars['api_{}'.format(api.get('name'))] = api.get('id')
 
         params = []
         for k, v in inject_vars.items():
@@ -222,16 +226,14 @@ class Terraform(object):
         for tf_file in glob(join(module_dir, '*.tf')):
             try:
                 with open(tf_file, 'r') as f:
-                    variables = hcl.load(f).get("variable")
+                    variables = hcl.load(f).get("variable") or {}
                     module_variables += variables.keys()
 
                 if not variables:
                     continue
 
-                for name, config in variables.items():
-                    if name in Terraform.STYLIST_VAR_NAMES:
-                        continue
-
+                for name, config in {k: v for k, v in variables.items() if
+                                     k not in Terraform.STYLIST_VAR_NAMES}.items():
                     if name in maped_values:
                         values[name] = maped_values.get(name)
                     else:
@@ -245,8 +247,8 @@ class Terraform(object):
 
                         if _val and _val != config.get("default"):
                             values[name] = _val
-            except Exception:
-                pass
+            except Exception as e:
+                print "Error: {}".format(e)
 
         rendered = template.render(
             module_name=module_name,
