@@ -75,32 +75,20 @@ class Terraform(object):
         aws_session = self.ctx.provider.session
         alb = aws_session.client('elbv2')
 
-        listeners = {}
-        for lb in alb.describe_load_balancers().get('LoadBalancers'):
-            for listener in alb.describe_listeners(LoadBalancerArn=lb.get("LoadBalancerArn")).get("Listeners"):
-                key = "{}-{}".format(lb.get("LoadBalancerName"), listener.get("Protocol").lower())
-                listeners[key] = listener.get("ListenerArn")
-
-        apis = aws_session.client('apigateway').get_rest_apis(limit=200)
-
         inject_vars = {
             'aws_account_id': self.ctx.provider.account_id,
             'aws_region': aws_session.region_name,
             'aws_profile': self.ctx.provider.profile,
             'environment': self.ctx.environment,
-            'project_name': self.ctx.name,
-            'alb_public_arn_http': listeners.get("public-loadbalancer-http"),
-            'alb_public_arn_https': listeners.get("public-loadbalancer-https"),
-
-            # new names
-            'alb_external_arn_http': listeners.get("ecs-external-lb-http"),
-            'alb_external_arn_https': listeners.get("ecs-external-lb-https"),
-
-            'alb_internal_arn_http': listeners.get("ecs-internal-lb-http"),
-            'alb_internal_arn_https': listeners.get("ecs-internal-lb-https")
+            'project_name': self.ctx.name
         }
 
-        for api in apis.get('items'):
+        for lb in alb.describe_load_balancers().get('LoadBalancers'):
+            for listener in alb.describe_listeners(LoadBalancerArn=lb.get("LoadBalancerArn")).get("Listeners"):
+                key = "alb_{}_arn_{}".format(lb.get("LoadBalancerName"), listener.get("Protocol").lower())
+                inject_vars[key] = listener.get("ListenerArn")
+
+        for api in aws_session.client('apigateway').get_rest_apis(limit=200).get('items'):
             inject_vars['api_{}'.format(api.get('name'))] = api.get('id')
 
         params = []
