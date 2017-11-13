@@ -17,7 +17,7 @@ cli.short_help = 'ECS Service management'
 
 @cli.command(help='Enrol given version of docker image')
 @click.option('--tag', default='latest', help='Tag which should be enrolled')
-@click.option('--subproject', default='latest', help='Tag which should be enrolled')
+@click.option('--subproject', help='Tag which should be enrolled')
 @stylist_context
 def enrol(ctx, subproject, tag):
     """

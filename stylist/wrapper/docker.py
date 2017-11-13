@@ -100,7 +100,11 @@ class Docker(object):
         self.subproject = subproject
 
     def build(self, dockerfile_path, tag, custom_args):
-        repository_name = self._get_repository_name(dockerfile_path)
+        repository_name = self.get_repository_name(dockerfile_path)
+        try:
+            self._do_login('docker-images/python3')
+        except:
+            pass
 
         latest_tag = '{}:{}'.format(repository_name, 'latest')
         args = ['build', '-f', dockerfile_path, '-t', latest_tag] + list(custom_args) + [dirname(dockerfile_path)]
@@ -112,7 +116,7 @@ class Docker(object):
         return '{}:{}'.format(repository_name, tag)
 
     def push(self, dockerfile_path, tag):
-        repository_name = self._get_repository_name(dockerfile_path)
+        repository_name = self.get_repository_name(dockerfile_path)
 
         try:
             repo = self.repositories.get_repository(repository_name)
@@ -122,16 +126,13 @@ class Docker(object):
             self.repositories.set_repository_policy(repository_name)
             self.repositories.set_lifecycle_policy(repository_name)
 
-        username, password, endpoint = self.__get_authentication_data(repo)
+        self._do_login(repo)
 
-        args = ['login', '-u', username, '-p', password, endpoint]
-        self.run_docker(args)
-
-        names = [self.__do_push(repository_name, repo['repositoryUri'], tag)]
+        names = [self._do_push(repository_name, repo['repositoryUri'], tag)]
 
         if tag == 'latest':
             names.append(
-                self.__do_push(
+                self._do_push(
                     repository_name,
                     repo['repositoryUri'],
                     self.get_latest_build_tag(dockerfile_path)
@@ -140,7 +141,7 @@ class Docker(object):
 
         return names
 
-    def __do_push(self, repository_name, repository_uri, tag):
+    def _do_push(self, repository_name, repository_uri, tag):
         local_name = '{name}:{tag}'.format(name=repository_name, tag=tag)
         remote_name = '{url}:{tag}'.format(url=repository_uri, tag=tag)
 
@@ -168,6 +169,12 @@ class Docker(object):
             )
         )[1].get('Tag')
 
+    def _do_login(self, repo):
+        username, password, endpoint = self._get_authentication_data(repo)
+
+        args = ['login', '-u', username, '-p', password, endpoint]
+        self.run_docker(args)
+
     def _get_project_name(self):
         return '{project}'.format(project=self.ctx.name)
 
@@ -187,14 +194,14 @@ class Docker(object):
 
         return p, out, err
 
-    def __get_authentication_data(self, repository):
+    def _get_authentication_data(self, repository):
         auth_data = self.ecr.get_authorization_token(
             registryIds=[repository.get('registryId')]
         ).get('authorizationData', [{}]).pop()
 
         return base64.b64decode(auth_data.get('authorizationToken')).decode().split(':') + [auth_data['proxyEndpoint']]
 
-    def _get_repository_name(self, dockerfile_path):
+    def get_repository_name(self, dockerfile_path):
         dockerfile_base_path, dockerfile = os.path.split(dockerfile_path)
 
         parts = [
