@@ -62,6 +62,7 @@ def enrol(ctx, subproject, tag):
 
         terraform.apply(plan_path)
 
+        # @todo - use latest active task!!!!
         ecs = ctx.provider.session.client('ecs')
         tasks = ecs.list_task_definitions(familyPrefix=service, status='ACTIVE')
 
