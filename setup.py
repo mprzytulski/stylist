@@ -10,7 +10,7 @@ reqs = [str(ir.req) for ir in install_reqs]
 
 setup(
     name='stylist',
-    version='0.3.1',
+    version='0.4',
     description='One tool to rule them all',
     packages=find_packages(),
     entry_points={
