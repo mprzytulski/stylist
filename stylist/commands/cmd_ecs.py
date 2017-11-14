@@ -2,6 +2,7 @@ import sys
 from copy import copy
 
 import click
+import re
 from click import style
 
 from stylist.cli import stylist_context, logger
@@ -63,8 +64,9 @@ def enrol(ctx, subproject, tag):
         terraform.apply(plan_path)
 
         # @todo - use latest active task!!!!
+        task_name = str(re.sub("\W", "-", service))
         ecs = ctx.provider.session.client('ecs')
-        tasks = ecs.list_task_definitions(familyPrefix=service, status='ACTIVE')
+        tasks = ecs.list_task_definitions(familyPrefix=task_name, status='ACTIVE')
 
         if not tasks.get('taskDefinitionArns'):
             logger.error("Opss. Unable to locate task definition")
@@ -72,7 +74,7 @@ def enrol(ctx, subproject, tag):
 
         ecs.update_service(
             cluster='ecs-main-cluster',
-            service=service,
+            service=task_name,
             taskDefinition=tasks.get('taskDefinitionArns')[0]
         )
 
