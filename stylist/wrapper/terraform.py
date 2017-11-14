@@ -80,7 +80,7 @@ class Terraform(object):
             'aws_region': aws_session.region_name,
             'aws_profile': self.ctx.provider.profile,
             'environment': self.ctx.environment,
-            'project_name': self.ctx.name
+            'project_name': re.sub('\W', '-', self.ctx.name)
         }
 
         for lb in alb.describe_load_balancers().get('LoadBalancers'):
