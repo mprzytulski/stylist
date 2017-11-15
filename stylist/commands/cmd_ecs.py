@@ -48,9 +48,8 @@ def enrol(ctx, subproject, tag):
         terraform.dump_env_vars(env_vars)
 
         plan_path, exit_code = terraform.plan(True)
-
         if exit_code != 0:
-            click.secho("")
+            click.secho('terraform plan failed')
             sys.exit(exit_code)
 
         msg = style('Enrol "{tag}" to "{env}" with given plan? '.format(
@@ -61,9 +60,11 @@ def enrol(ctx, subproject, tag):
             click.secho("Aborted!", fg="yellow")
             sys.exit(2)
 
-        terraform.apply(plan_path)
+        exit_code = terraform.apply(plan_path)
+        if exit_code != 0:
+            click.secho('terraform apply failed')
+            sys.exit(exit_code)
 
-        # @todo - use latest active task!!!!
         task_name = str(re.sub("\W", "-", service))
         ecs = ctx.provider.session.client('ecs')
         tasks = ecs.list_task_definitions(familyPrefix=task_name, status='ACTIVE')
@@ -75,7 +76,7 @@ def enrol(ctx, subproject, tag):
         ecs.update_service(
             cluster='ecs-main-cluster',
             service=task_name,
-            taskDefinition=tasks.get('taskDefinitionArns')[0]
+            taskDefinition=tasks.get('taskDefinitionArns')[-1]
         )
 
         click.secho("Version {} has been enrolled.".format(deploy_tag))
