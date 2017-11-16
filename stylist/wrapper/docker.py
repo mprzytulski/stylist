@@ -102,7 +102,7 @@ class Docker(object):
     def build(self, dockerfile_path, tag, custom_args):
         repository_name = self.get_repository_name(dockerfile_path)
         try:
-            self._do_login('docker-images/python3')
+            self.do_login('docker-images/python3')
         except:
             pass
 
@@ -126,7 +126,7 @@ class Docker(object):
             self.repositories.set_repository_policy(repository_name)
             self.repositories.set_lifecycle_policy(repository_name)
 
-        self._do_login(repo)
+        self.do_login(repo)
 
         names = [self._do_push(repository_name, repo['repositoryUri'], tag)]
 
@@ -169,7 +169,7 @@ class Docker(object):
             )
         )[1].get('Tag')
 
-    def _do_login(self, repo):
+    def do_login(self, repo):
         username, password, endpoint = self._get_authentication_data(repo)
 
         args = ['login', '-u', username, '-p', password, endpoint]

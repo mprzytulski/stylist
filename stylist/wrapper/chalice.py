@@ -2,6 +2,7 @@ import subprocess
 from os.path import join
 
 import click
+import os
 
 
 class ChaliceException(Exception):
@@ -35,7 +36,8 @@ class Chalice(object):
             args,
             stdout=stdout or click.get_text_stream('stdout'),
             stderr=stderr or click.get_text_stream('stderr'),
-            cwd=cwd or join(self.ctx.working_dir, self.ctx.name)
+            cwd=cwd or join(self.ctx.working_dir, self.ctx.name),
+            env=os.environ
         )
         out, err = p.communicate()
 
