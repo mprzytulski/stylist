@@ -1,8 +1,10 @@
-import boto3
+import os
+from ConfigParser import ConfigParser
 
-from stylist.provider import Provider
+import boto3
 from threads_aws_utils import SSM as BaseSSM
 
+from stylist.provider import Provider
 from stylist.utils import compare_dicts
 
 
@@ -145,3 +147,19 @@ class AWSProvider(Provider):
     @property
     def ssm(self):
         return SSM(self.session.client('ssm'), self.ctx)
+
+    @property
+    def credentials(self):
+        config = ConfigParser()
+        config.read([os.path.expanduser('~/.aws/credentials')])
+
+        values = {
+            'AWS_ACCESS_KEY_ID': config.get(self.profile, 'aws_access_key_id'),
+            'AWS_SECRET_ACCESS_KEY': config.get(self.profile, 'aws_secret_access_key')
+        }
+
+        config = ConfigParser()
+        config.read([os.path.expanduser('~/.aws/config')])
+        values['AWS_DEFAULT_REGION'] = config.get('profile '+self.profile, 'region')
+
+        return values
