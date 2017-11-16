@@ -13,7 +13,7 @@ import shutil
 from stylist.cli import stylist_context, logger
 from stylist.commands import cli_prototype
 from stylist.wrapper.apex import Apex, ApexException
-from stylist.wrapper.docker import Docker
+from stylist.wrapper.docker import Docker, DockerException
 
 cli = copy(cli_prototype)
 cli.short_help = "Helper for apex lambda functions"
@@ -47,6 +47,10 @@ def build(ctx, native):
                 'pip', 'install', '-r', '/src/req_all.txt', '--upgrade', '-t', '/src'
             ]
 
+            try:
+                docker.do_login(docker.repositories.get_repository('docker-images/python3-lambda'))
+            except DockerException as e:
+                logger.error(e)
             p, out, err = docker.run_docker(args, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
         else:
             p = subprocess.Popen(
