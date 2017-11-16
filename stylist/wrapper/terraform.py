@@ -115,7 +115,7 @@ class Terraform(object):
 
         args = ['apply', plan]
 
-        self._exec(args)
+        return self._exec(args)
 
     def sync_vars(self, source_profile, destination_profile):
         source_file = join(self.terraform_dir, 'env.{}.tfvars'.format(source_profile))

@@ -1,6 +1,8 @@
 import subprocess
+from os.path import expanduser
 
 import click
+import os
 
 
 class ApexException(Exception):
@@ -34,7 +36,8 @@ class Apex(object):
             args,
             stdout=stdout or click.get_text_stream('stdout'),
             stderr=stderr or click.get_text_stream('stderr'),
-            cwd=dockerfile_dir
+            cwd=dockerfile_dir,
+            env=dict(os.environ, **{'AWS_SHARED_CREDENTIALS_FILE': expanduser('~/.aws/credentials')})
         )
         out, err = p.communicate()
 
