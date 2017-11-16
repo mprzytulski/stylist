@@ -5,7 +5,7 @@ import click
 from pygments import highlight
 from pygments.formatters import get_formatter_by_name
 from pygments.lexers import get_lexer_by_name
-from stylist.helper.rds import DbContext
+from stylist.helper.rds import DbContext, get_connection_credentials
 
 from stylist.cli import stylist_context, logger
 from stylist.click.types import Boolean
@@ -13,34 +13,6 @@ from stylist.commands import cli_prototype
 
 cli = copy(cli_prototype)
 cli.short_help = "Manage database creation / users / schemas"
-
-
-def get_connection_credentials(ctx, instance, db=None):
-    """
-    Return connection parameters for named instance
-
-    If db name is provided function will return connection parameters for owner of that database
-    otherwise it will return parameters for master user of given instance
-    :param instance:
-    :param db:
-    :rtype: dict
-    """
-    ssm = ctx.provider.ssm
-    db_params = ('host', 'port', 'user', 'password', 'schema')
-    if not db:
-        params = ssm.get_short_parameters('master:{}'.format(instance))
-        return {k: v for k, v in params.items() if k in db_params}
-    else:
-        params = ssm.get_short_parameters(
-            'master:{instance}/{db}'.format(instance=instance, db=db).format(instance)
-        )
-        return dict(
-            host=params.get('{}/host'.format(db)),
-            db=db,
-            user=params.get('{}/user'.format(db)),
-            password=params.get('{}/password'.format(db)),
-            port=str(params.get('{}/port'.format(db))),
-        )
 
 
 def get_service_role_name(ctx):
