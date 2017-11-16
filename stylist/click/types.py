@@ -25,4 +25,7 @@ class EventAwareFile(File):
 
 class Boolean(ParamType):
     def convert(self, value, param, ctx):
-        return bool(strtobool(value))
+        try:
+            return bool(strtobool(value))
+        except ValueError:
+            return False
