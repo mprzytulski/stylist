@@ -4,6 +4,34 @@ from stylist.helper.rds.flavors import MySQLFlavor, PostgreSQLFlavor
 from stylist.utils import random_password
 
 
+def get_connection_credentials(ctx, instance, db=None):
+    """
+    Return connection parameters for named instance
+
+    If db name is provided function will return connection parameters for owner of that database
+    otherwise it will return parameters for master user of given instance
+    :param instance:
+    :param db:
+    :rtype: dict
+    """
+    ssm = ctx.provider.ssm
+    db_params = ('host', 'port', 'user', 'password', 'schema')
+    if not db:
+        params = ssm.get_short_parameters('master:{}'.format(instance))
+        return {k: v for k, v in params.items() if k in db_params}
+    else:
+        params = ssm.get_short_parameters(
+            'master:{instance}/{db}'.format(instance=instance, db=db).format(instance)
+        )
+        return dict(
+            host=params.get('{}/host'.format(db)),
+            db=db,
+            user=params.get('{}/user'.format(db)),
+            password=params.get('{}/password'.format(db)),
+            port=str(params.get('{}/port'.format(db))),
+        )
+
+
 class NotSupportedEngineException(Exception):
     pass
 
@@ -32,9 +60,6 @@ class DbContext(object):
     def __exit__(self, exc_type, exc_val, exc_tb):
         self.queries = []
         self.parameters = []
-
-    def run_queries(self, sql):
-        pass
 
     def role_exists(self, role_name):
         return self.flavor.role_exists(role_name)
@@ -93,6 +118,9 @@ class DbContext(object):
 
         return self.parameters
 
+    def build_dsn(self):
+        return self.flavor.build_dsn(**self.credentials)
+
     def _get_flavor(self, instance):
         rds = self.ctx.provider.session.client('rds')
         db_instance = rds.describe_db_instances(DBInstanceIdentifier=instance)
@@ -104,12 +132,3 @@ class DbContext(object):
             return PostgreSQLFlavor(**self.credentials)
 
         raise NotSupportedEngineException()
-
-    def _get_connection_params(self, params):
-        return dict(
-            host=params.get('host'),
-            port=params.get('port'),
-            db=params.get('db'),
-            user=params.get('user'),
-            password=params.get('password'),
-        )

@@ -11,24 +11,24 @@ cli.short_help = "Manage database migrations"
 
 
 @cli.command(help="Create new database migration")
-@click.option("--instance", default='rds-postgres')
-@click.option("--superuser", is_flag=True, default=False)
+@click.option("--instance", default='rds-postgresql')
 @click.argument("db")
 @click.argument("description")
 @stylist_context
-def new(ctx, instance, db, superuser, description):
+def new(ctx, instance, db, description):
     yoyo = Yoyo(ctx)
-    yoyo.new_migration(instance, db, superuser, description)
+    yoyo.new_migration(instance, db, description)
 
 
 @cli.command(help="Run migrations against database")
-@click.option("--instance")
-@click.option("--db")
+@click.option("--instance", help="Limit migrations only to specific server")
+@click.option("--db", help="Limit migrations to specific database on given server instance")
 @click.option("--revision")
+@click.argument('yoyo_args', nargs=-1, type=click.UNPROCESSED)
 @stylist_context
-def apply(ctx, instance, db, revision):
+def apply(ctx, instance, db, revision, yoyo_args):
     yoyo = Yoyo(ctx)
-    yoyo.apply(instance, db, revision)
+    yoyo.apply(instance, db, revision, yoyo_args)
 
 
 @cli.command(help="Rollback migrations")
