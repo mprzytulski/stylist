@@ -136,12 +136,13 @@ def images(ctx, subproject):
         )
 
     except NotADockerProjectException:
+        logger.error("Unable to locate Docker file - is that a Docker project?")
         sys.exit(1)
 
 
 @cli.command(help='Run command in project docker container with AWS settings for given stage')
-@click.option('--tag', default='latest', help='Push given tag')
-@click.option('--non-interactive', default=False, is_flag=True, help='Run in interactive mode')
+@click.option('--tag', default='latest', help='Run given tag')
+@click.option('--non-interactive', default=False, is_flag=True, help='Execute command in non interactive mode')
 @click.option('--subproject', default=None, help='Run subproject container')
 @click.argument('cmd', default='/bin/bash')
 @click.argument('docker_args', nargs=-1, type=click.UNPROCESSED)
@@ -164,7 +165,7 @@ def enter(ctx, subproject, tag, non_interactive, cmd, docker_args):
 
         docker.run_docker(args)
     except NotADockerProjectException as e:
-        print e
+        logger.error("Unable to locate Docker file - is that a Docker project?")
         sys.exit(1)
     except DockerException as e:
         click.secho(
