@@ -59,6 +59,9 @@ def build(ctx, native):
                 stderr=subprocess.PIPE,
             )
             out, err = p.communicate()
+
+            if p.returncode != 0:
+                logger.error(err)
     finally:
         if isfile('req_all.txt'):
             os.unlink('req_all.txt')
