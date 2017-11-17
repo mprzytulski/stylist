@@ -2,6 +2,7 @@ import sys
 from copy import copy
 
 import click
+import re
 from pygments import highlight
 from pygments.formatters import get_formatter_by_name
 from pygments.lexers import get_lexer_by_name
@@ -16,11 +17,11 @@ cli.short_help = "Manage database creation / users / schemas"
 
 
 def get_service_role_name(ctx):
-    return ctx.name + '_service'
+    return re.sub("\W", "_", ctx.name + '_service')
 
 
 def get_owner_role_name(ctx):
-    return str(ctx.name)
+    return str(re.sub("\W", "_", ctx.name))
 
 
 def get_db_tag(instance, db):
@@ -85,7 +86,7 @@ def init(ctx, instance, db, schema, role):
             ssm_key = 'master:{}/{}'.format(instance, db)
             kms_tags = {'db': get_db_tag(instance, db)}
         elif role:
-            role_name = ctx.name + '_service' if role == '.' else role
+            role_name = re.sub("\W", "_", ctx.name + '_service') if role == '.' else role
             if context.role_exists(role_name):
                 logger.error("Can't create role. Role '{}' already exists.".format(role_name))
                 sys.exit(2)
