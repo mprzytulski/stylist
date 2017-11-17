@@ -148,11 +148,9 @@ def images(ctx, subproject):
 @click.argument('docker_args', nargs=-1, type=click.UNPROCESSED)
 @stylist_context
 def enter(ctx, subproject, tag, non_interactive, cmd, docker_args):
-    docker_files = _get_docker_files(ctx, False, subproject)
-
     try:
         docker = Docker(ctx, subproject)
-        args = ['run', '--rm']
+        args = ['run', '--rm'] + list(docker_args)
 
         if not non_interactive:
             args.append('-it')
@@ -168,6 +166,9 @@ def enter(ctx, subproject, tag, non_interactive, cmd, docker_args):
         logger.error("Unable to locate Docker file - is that a Docker project?")
         sys.exit(1)
     except DockerException as e:
+        # Exit from the container
+        if e.errno == 130:
+            sys.exit(130)
         click.secho(
             "Failed to run docker command with message '{message}', exit code: {errno}\nCommand: {cmd}".format(
                 message=e.message,

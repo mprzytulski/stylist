@@ -40,7 +40,7 @@ def prompt(instance, db, sqls, mask='-dummy-', fg="green"):
 
     return click.prompt(
         click.style(
-            "Execute following queries on db: '{}' (instance: {}): \n".format(db, instance), fg=fg
+            "Execute following queries on db: '{}' (instance: {}): \n".format(db or 'default', instance), fg=fg
         ) + queries,
         type=Boolean()
     )
@@ -60,20 +60,19 @@ def write_parameters(ssm, instance, db, namespaces, params, tags=None):
 @cli.command(name="init", help="Create new database with db owner")
 @click.option("--instance", default='rds-postgresql')
 @click.option('--db')
+@click.option('--role', help="Create named role, create service role when '.' is provided as a name")
 @click.option('--schema')
 @stylist_context
-def init(ctx, instance, db, schema):
-    if not (db or schema):
-        logger.error('You need to provide value for at least one option db or schema')
+def init(ctx, instance, db, schema, role):
+    if len(filter(None, [db, schema, role])) != 1:
+        logger.error('You need to provide value for one option db|role|schema')
         sys.exit(3)
-
-    if db and schema:
-        logger.error('You should provide only one option db|schema')
-        sys.exit(4)
 
     with DbContext(ctx, instance, get_connection_credentials(ctx, instance)) as context:
         role_name = db
         password = None
+        ssm_key = None
+        kms_tags = {}
         if db:
             if context.db_exists(db):
                 logger.error("Can't initialise database. Database '{}' already exists.".format(db))
@@ -83,6 +82,16 @@ def init(ctx, instance, db, schema):
                 _, password = context.create_role(role_name)
 
             context.create_database(db, role_name)
+            ssm_key = 'master:{}/{}'.format(instance, db)
+            kms_tags = {'db': get_db_tag(instance, db)}
+        elif role:
+            role_name = ctx.name + '_service' if role == '.' else role
+            if context.role_exists(role_name):
+                logger.error("Can't create role. Role '{}' already exists.".format(role_name))
+                sys.exit(2)
+            _, password = context.create_role(role_name, False)
+            ssm_key = 'service:{}/{}'.format(ctx.name, instance)
+            kms_tags = {'role': get_role_tag(instance, role_name)}
         elif schema:
             pass
 
@@ -91,11 +100,11 @@ def init(ctx, instance, db, schema):
             sys.exit(2)
 
         namespaces = {
-            'master:{}/{}'.format(instance, db): ('user', 'password', 'db', 'instance', 'host', 'port', 'schema')
+            ssm_key: ('user', 'password', 'db', 'instance', 'host', 'port', 'schema')
         }
 
         write_parameters(
-            ctx.provider.ssm, instance, db, namespaces, context.commit(), {'db': get_db_tag(instance, db)}
+            ctx.provider.ssm, instance, db, namespaces, context.commit(), kms_tags
         )
 
 
@@ -106,7 +115,7 @@ def init(ctx, instance, db, schema):
 @click.option('--role')
 @stylist_context
 def drop(ctx, instance, db, schema, role):
-    if len(filter(lambda x: x, (db, schema, role))) != 1:
+    if len(filter(None, [db, schema, role])) != 1:
         logger.error('You must provide only one db|schema|role')
         sys.exit(4)
 
@@ -148,7 +157,7 @@ def drop(ctx, instance, db, schema, role):
             if not click.prompt(
                     'Operation will remove parameters stored under:\n{}\nContinue?'.format("\n".join(sorted(parameters))),
                     type=Boolean(),
-                    confirmation_prompt=True
+                    confirmation_prompt=(db is not None)
             ):
                 click.secho("Aborted!", fg="yellow")
                 sys.exit(2)
