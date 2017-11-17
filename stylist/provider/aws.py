@@ -53,7 +53,7 @@ class SSM(BaseSSM):
 
         return params
 
-    def write(self, namespace, parameter, value, encrypt=True, session=None):
+    def write(self, namespace, parameter, value, encrypt=True, session=None, tags=None):
         kms = (session or self.ctx.provider.session).client("kms")
 
         key_id = None
@@ -82,6 +82,13 @@ class SSM(BaseSSM):
 
         self.ssm.put_parameter(**args)
 
+        if tags:
+            self.ssm.add_tags_to_resource(
+                ResourceType='Parameter',
+                ResourceId=full_name,
+                Tags=[{'Key': k, 'Value': v} for k, v in tags.items()]
+            )
+
         return full_name
 
     def get_encryption_key(self):
@@ -91,6 +98,32 @@ class SSM(BaseSSM):
             lambda x: x.get('AliasName') == 'alias/parameter_store_key',
             aliases.get('Aliases', {})
         ))) or {}
+
+    def find_by_tag(self, tag, value):
+        params = self.ssm.describe_parameters(
+            ParameterFilters=[{
+                'Key': 'tag:{}'.format(tag),
+                'Option': 'Equals',
+                'Values': [value]
+            }]
+        )
+
+        return map(
+            lambda x: x.get('Name'),
+            params.get('Parameters')
+        )
+
+    def find_by_tags(self, tags={}):
+        params = self.ssm.describe_parameters(
+            ParameterFilters=[
+                {'Key': 'tag:{}'.format(tag), 'Option': 'Equals', 'Values': [value]} for tag, value in tags.items()
+            ]
+        )
+
+        return map(
+            lambda x: x.get('Name'),
+            params.get('Parameters')
+        )
 
     def delete(self, namespace, parameter):
         self.ssm.delete_parameter(

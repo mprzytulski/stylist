@@ -19,7 +19,6 @@ class Templates(object):
     def __init__(self, version='master'):
         self.version = version
 
-        # self.destination = '/Users/me/projects/threads/templates'
         self.destination = join(tempfile.gettempdir(), "stylist-templates")
 
         self.env = Environment(loader=FileSystemLoader(self.destination))
