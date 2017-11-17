@@ -106,12 +106,8 @@ def init(ctx, instance, db, schema):
 @click.option('--role')
 @stylist_context
 def drop(ctx, instance, db, schema, role):
-    if not any((db, schema, role)):
-        logger.error('You need to provide value for at least one option db, schema or role')
-        sys.exit(3)
-
     if len(filter(lambda x: x, (db, schema, role))) != 1:
-        logger.error('You should provide only one option db|schema|role')
+        logger.error('You must provide only one db|schema|role')
         sys.exit(4)
 
     with DbContext(ctx, instance, get_connection_credentials(ctx, instance)) as context:
@@ -151,7 +147,8 @@ def drop(ctx, instance, db, schema, role):
         if len(parameters):
             if not click.prompt(
                     'Operation will remove parameters stored under:\n{}\nContinue?'.format("\n".join(sorted(parameters))),
-                    type=Boolean()
+                    type=Boolean(),
+                    confirmation_prompt=True
             ):
                 click.secho("Aborted!", fg="yellow")
                 sys.exit(2)
