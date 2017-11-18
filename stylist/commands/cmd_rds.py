@@ -3,6 +3,9 @@ from copy import copy
 
 import click
 import re
+
+import os
+import subprocess
 from pygments import highlight
 from pygments.formatters import get_formatter_by_name
 from pygments.lexers import get_lexer_by_name
@@ -235,3 +238,48 @@ def revoke(ctx, instance, db, schema):
             sys.exit(2)
 
         context.commit()
+
+
+@cli.command(help="Generate RDS database credentials")
+@click.option("--instance", default='rds-postgresql')
+@click.option('--db', help='Use db owner credentials rather than instance')
+@click.argument('command', nargs=-1, type=click.UNPROCESSED)
+@stylist_context
+def credentials(ctx, instance, db, command):
+    credentials = {}
+    with DbContext(ctx, instance, get_connection_credentials(ctx, instance, db)) as context:
+        engine = context.get_instance_type(instance)
+
+        if engine == 'postgres':
+            mapping = {
+                'host': 'PGHOST',
+                'port': 'PGPORT',
+                'db': 'PGDATABASE',
+                'user': 'PGUSER',
+                'password': 'PGPASSWORD'
+            }
+
+            credentials = {mapping.get(k): v for k, v in context.credentials.items()}
+
+    if command:
+        credentials.update(os.environ)
+
+        p = subprocess.Popen(
+            command,
+            stdout=click.get_text_stream('stdout'),
+            stderr=click.get_text_stream('stderr'),
+            env=credentials
+        )
+        p.communicate()
+        sys.exit(p.returncode)
+    else:
+        for name, value in credentials.items():
+            if any(word in os.environ['SHELL'] for word in ('bash', 'zsh')):
+                pattern = 'export {}="{}"'
+            elif 'fish' in os.environ['SHELL']:
+                pattern = 'set -x {} "{}"'
+            else:
+                logger.error('Unknown shell')
+                sys.exit(1)
+
+            click.echo(pattern.format(name, value))
