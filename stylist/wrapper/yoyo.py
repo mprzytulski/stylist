@@ -6,6 +6,7 @@ import subprocess
 from os.path import join, isdir
 
 import click
+import re
 
 from stylist.commands.cmd_check import which
 from stylist.helper.rds import DbContext, get_connection_credentials
@@ -47,7 +48,7 @@ class Yoyo(object):
         for path in glob.glob(join(migration_path, '*', '*')):
             click.secho('Running migrations from: {}'.format(click.format_filename(path)))
             instance, db = path.replace(self.migrations_dir, '').strip('/').split('/')
-            migration_table = 'migrations_' + self.ctx.name
+            migration_table = re.sub(ur"\W", "_", 'migrations_' + self.ctx.name)
 
             with DbContext(self.ctx, instance, get_connection_credentials(self.ctx, instance, db)) as context:
                 self._exec([
