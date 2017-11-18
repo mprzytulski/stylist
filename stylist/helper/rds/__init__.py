@@ -122,13 +122,16 @@ class DbContext(object):
         return self.flavor.build_dsn(**self.credentials)
 
     def _get_flavor(self, instance):
-        rds = self.ctx.provider.session.client('rds')
-        db_instance = rds.describe_db_instances(DBInstanceIdentifier=instance)
-
-        engine = next(iter(db_instance.get('DBInstances') or []), {}).get('Engine')
+        engine = self.get_instance_type(instance)
         if engine == 'mysql':
             return MySQLFlavor(**self.credentials)
         elif engine == 'postgres':
             return PostgreSQLFlavor(**self.credentials)
 
         raise NotSupportedEngineException()
+
+    def get_instance_type(self, instance):
+        rds = self.ctx.provider.session.client('rds')
+        db_instance = rds.describe_db_instances(DBInstanceIdentifier=instance)
+
+        return next(iter(db_instance.get('DBInstances') or []), {}).get('Engine')
