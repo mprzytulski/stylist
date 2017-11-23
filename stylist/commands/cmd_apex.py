@@ -1,6 +1,7 @@
 import glob
 import json
 import os
+from collections import OrderedDict
 from copy import copy
 
 import click
@@ -109,15 +110,14 @@ def init(ctx, vpc, security_group, subnet, apex_args):
         apex = Apex(ctx)
         apex.init(apex_args)
 
-        with open(join(ctx.working_dir, 'project.json'), 'r+') as f:
-            config = json.load(f)
+        with open(join(ctx.working_dir, 'project.json'), 'r') as f:
+            config = OrderedDict(json.load(f))
 
             if 'hooks' not in config:
-                config['hooks'] = {
-                    'build': 'apex build',
-                    'clean': 'apex clean'
-                }
-                json.dump(config, f)
+                config['hooks'] = {'build': 'stylist apex build',
+                                   'clean': 'stylist apex clean'}
+                with open(join(ctx.working_dir, 'project.json'), 'w') as wf:
+                    json.dump(config, wf)
 
     except ApexException as e:
         logger.error(e.message)
