@@ -159,7 +159,7 @@ def compare_dicts(source, destination):
             continue
 
         val = click.prompt(
-            'Parameter {} has been removed from source profile, delete it from destination as well?',
+            'Parameter "{}" has been removed from source profile, delete it from destination as well?'.format(name),
             type=Boolean(),
             default=True
         )
