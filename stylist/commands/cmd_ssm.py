@@ -23,7 +23,7 @@ def write(ctx, namespace, encrypt, parameter, value):
     try:
         namespace = namespace or "service:" + re.sub('\W', '-', ctx.name)
 
-        full_name = ctx.provider.ssm.write(namespace, parameter, value, encrypt)
+        full_name = ctx.provider.ssm.write(namespace.lower(), parameter.lower(), value, encrypt)
     except Exception as e:
         logger.error(e.message)
         sys.exit(1)
