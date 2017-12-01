@@ -48,6 +48,7 @@ def build(ctx, native):
                 'pip', 'install', '-r', '/src/req_all.txt', '--upgrade', '-t', '/src'
             ]
 
+            # @todo - login to staging repository
             try:
                 docker.do_login(docker.repositories.get_repository('docker-images/python3-lambda'))
             except DockerException as e:
