@@ -23,12 +23,13 @@ def get_connection_credentials(ctx, instance, db=None):
         params = ssm.get_short_parameters(
             'master:{instance}/{db}'.format(instance=instance, db=db).format(instance)
         )
+
         return dict(
-            host=params.get('{}/host'.format(db)),
+            host=params.get('host'),
             db=db,
-            user=params.get('{}/user'.format(db)),
-            password=params.get('{}/password'.format(db)),
-            port=str(params.get('{}/port'.format(db))),
+            user=params.get('user'),
+            password=params.get('password'),
+            port=str(params.get('port')),
         )
 
 

@@ -10,7 +10,7 @@ from stylist.utils import compare_dicts
 
 class SSM(BaseSSM):
     def __init__(self, ssm, ctx):
-        self.ssm = ssm
+        super(SSM, self).__init__(ssm)
         self.ctx = ctx
 
     def get_full_parameters(self, *args, **kwargs):
@@ -22,9 +22,10 @@ class SSM(BaseSSM):
 
     def get_short_parameters(self, *args, **kwargs):
         kwargs['env'] = False
+        kwargs['exclude_namespace'] = True
         params = self.get_parameters(*args, **kwargs)
 
-        return {"/".join(k.split('/')[3:]): v for k, v in params.items()}
+        return params
 
     def _fetch_all_parameters(self, resource, env=False):
         namespace = self._resolve_namespace(resource)
@@ -46,7 +47,7 @@ class SSM(BaseSSM):
         params = []
         for param in parameters.get('Parameters', []):
             params.append([
-                self._normalize_name(param.get('Name'), env),
+                SSM.normalize_name(namespace, param.get('Name'), env, False),
                 values.get(param.get('Name'), {}).get('Type'),
                 values.get(param.get('Name'), {}).get('Value'),
                 param.get('LastModifiedDate'),
@@ -193,6 +194,6 @@ class AWSProvider(Provider):
 
         config = ConfigParser()
         config.read([os.path.expanduser('~/.aws/config')])
-        values['AWS_DEFAULT_REGION'] = config.get('profile '+self.profile, 'region')
+        values['AWS_DEFAULT_REGION'] = config.get('profile ' + self.profile, 'region')
 
         return values

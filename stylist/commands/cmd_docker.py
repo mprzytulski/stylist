@@ -5,6 +5,8 @@ from datetime import datetime
 from os.path import join
 
 import click
+import re
+
 from stylist.cli import stylist_context, logger
 from stylist.commands import cli_prototype
 from stylist.utils import table
@@ -150,7 +152,7 @@ def images(ctx, subproject):
 def enter(ctx, subproject, tag, non_interactive, cmd, docker_args):
     try:
         docker = Docker(ctx, subproject)
-        args = ['run', '--rm'] + list(docker_args)
+        args = ['run', '--rm', '-p', '8000:8000', '-v', '{}:/app'.format(ctx.working_dir)] + list(docker_args)
 
         if not non_interactive:
             args.append('-it')
@@ -158,7 +160,7 @@ def enter(ctx, subproject, tag, non_interactive, cmd, docker_args):
         for k, v in ctx.provider.credentials.items():
             args += ['-e', '{}={}'.format(k, v)]
 
-        args.append('{}:{}'.format(ctx.name, tag or 'latest'))
+        args.append('{}:{}'.format(re.sub('\W', '-', ctx.name), tag or 'latest'))
         args.append(cmd)
 
         docker.run_docker(args)
