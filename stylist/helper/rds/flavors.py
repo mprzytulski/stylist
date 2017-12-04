@@ -5,7 +5,19 @@ class DBFlavor(object):
     __metaclass__ = abc.ABCMeta
 
     def __init__(self, host, port, user, password, db):
-        self.connection = self._connect(host, port, user, password, db)
+        self.host = host
+        self.port = port
+        self.user = user
+        self.password = password
+        self.db = db
+        self._connection = None
+
+    @property
+    def connection(self):
+        if not self._connection:
+            self._connection = self._connect(self.host, self.port, self.user, self.password, self.db)
+
+        return self._connection
 
     @abc.abstractmethod
     def db_exists(self, database_name):
