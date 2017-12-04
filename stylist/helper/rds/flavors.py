@@ -134,6 +134,9 @@ class PostgreSQLFlavor(DBFlavor):
 
 
 class MySQLFlavor(DBFlavor):
+    def __init__(self, host, port, user, password, db='mysql'):
+        super(MySQLFlavor, self).__init__(host, port, user, password, db)
+
     def get_engine(self):
         return 'mysql+mysqldb'
 
@@ -159,19 +162,20 @@ class MySQLFlavor(DBFlavor):
 
     def create_role_queries(self, role_name, role_password, db_owner=False):
         queries = [
-            """CREATE USER '{role_name}'@'%' IDENTIFIED BY '{role_password}''""".format(
+            """CREATE USER '{role_name}'@'%' IDENTIFIED BY '{role_password}'""".format(
                 role_name=role_name,
-                role_password=role_password
+                role_password=role_password,
             )
         ]
 
         if db_owner:
             queries.append(
-                "GRANT ALL PRIVILEGES ON {role_name}.* TO '{role_name}'@'%'".format(
+                "GRANT ALL PRIVILEGES ON {role_name}.* TO '{role_name}'@'%' WITH GRANT OPTION".format(
                     role_name=role_name,
                     role_password=role_password
                 )
             )
+            queries.append("GRANT SELECT ON mysql.user TO '{role_name}'@'%'".format(role_name=role_name))
 
         queries.append('FLUSH PRIVILEGES')
 
@@ -197,3 +201,16 @@ class MySQLFlavor(DBFlavor):
                 role_name=role_name
             )
         ]
+
+    def execute(self, sqls):
+        cursor = self.connection.cursor()
+        if not isinstance(sqls, list):
+            sqls = [sqls]
+
+        for sql in sqls:
+            cursor.execute(sql)
+
+    def execute_one(self, sql):
+        cursor = self.connection.cursor()
+        cursor.execute(sql)
+        return cursor.fetchone()
