@@ -249,6 +249,7 @@ def credentials(ctx, instance, db, command):
     credentials = {}
     with DbContext(ctx, instance, get_connection_credentials(ctx, instance, db)) as context:
         engine = context.get_instance_type(instance)
+        mapping = {}
 
         if engine == 'postgres':
             mapping = {
@@ -258,7 +259,16 @@ def credentials(ctx, instance, db, command):
                 'user': 'PGUSER',
                 'password': 'PGPASSWORD'
             }
+        elif engine == 'mysql':
+            mapping = {
+                'host': 'MYSQL_HOST',
+                'port': 'MYSQL_PORT',
+                'db': 'MYSQL_DB',
+                'user': 'MYSQL_USER',
+                'password': 'MYSQL_PWD'
+            }
 
+        if mapping:
             credentials = {mapping.get(k): v for k, v in context.credentials.items()}
 
     if command:
