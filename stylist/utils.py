@@ -123,7 +123,7 @@ def find_dotenv(filename='.env', raise_error_if_not_found=False, usecwd=False, p
 
 
 def random_password(size=15):
-    chars = (string.letters + string.digits + string.punctuation).translate(None, '\'";:@%{}/&#?[]`~\\')
+    chars = (string.letters + string.digits + string.punctuation).translate(None, '\'";:@%{}*$/&#?[]`~\\')
 
     return ''.join((random.choice(chars)) for x in range(size)).replace("'", '-').replace('?', '*')
 
