@@ -30,7 +30,7 @@ def cli():
     Verify installation and configuration of required tools
     :return:
     """
-    tools = ("aws", "terraform", "serverless", "virtualenv", "pip", "aws-vault", "yoyo-migrate")
+    tools = ("aws", "terraform", "serverless", "virtualenv", "pip", "aws-vault", "yoyo-migrate", "chalice")
 
     software = []
 
