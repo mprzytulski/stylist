@@ -35,7 +35,26 @@ class SentryProject:
         template = 'https://{}/api/0/projects/{}/{}/'
         return template.format(self.host, self.org_slug, self.project['slug'])
 
-    def create(self, proj_name):
+    def get_retrieve_proj_endpoint(self):
+        template = 'https://{}/api/0/organizations/{}/projects/'
+        return template.format(self.host, self.org_slug)
+
+    def list(self):
+        endpoint = self.get_retrieve_proj_endpoint()
+        response = requests.get(endpoint, headers=self.headers)
+        return response.json()
+
+    def list_by_name(self, def_proj_name=None):
+        proj_name = self.project['name'] if def_proj_name is None else def_proj_name
+        is_this_proj = lambda proj: proj_name == proj['name']
+        return list(filter(is_this_proj, self.list()))
+
+    def retrieve(self, proj_name):
+        filtered_projs = self.list_by_name(proj_name)
+        self.project = filtered_projs[0] if filtered_projs else None
+        return self.project
+
+    def _create_new(self, proj_name):
         proj_slug = proj_name + '_' + uuid.uuid4().hex
         endpoint = self.get_create_proj_endpoint()
         data = {'name': proj_name, 'slug': proj_slug}
@@ -43,9 +62,14 @@ class SentryProject:
         if response.status_code == 201:
             self.project = response.json()
 
+    def create(self, proj_name):
+        if not self.retrieve(proj_name):
+            self._create_new(proj_name)
+
     def delete(self):
         if self.project:
             endpoint = self.get_delete_proj_endpoint()
             response = requests.delete(endpoint, headers=self.headers)
             if response.status_code == 204:
                 self.project = None
+
