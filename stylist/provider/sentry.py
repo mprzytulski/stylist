@@ -43,3 +43,9 @@ class SentryTeam(SentryOrg):
     def __init__(self, team_slug):
         SentryOrg.__init__(self)
         self.team_slug = team_slug
+
+class SentryProj(SentryTeam):
+    def __init__(self, proj_name, proj_slug):
+        SentryTeam.__init__(self)
+        self.proj_name
+        self.proj_slug
