@@ -1,10 +1,9 @@
 import uuid
 import requests
+import stylist.provider.sentry as sentry
 
 from unittest import TestCase
 from nose.plugins.attrib import attr
-
-import stylist.provider.sentry as sentry
 
 
 class Sentry(sentry.Sentry):
@@ -31,7 +30,7 @@ class CreateProjTest(TestCase):
 
     @attr('clutter')
     def test_can_create_project(self):
-        response = self.sentry_proj.create(self.proj_slug)
+        response = self.sentry_proj.create_proj(self.proj_slug)
         self.assertEqual(response.status_code, requests.codes.created)
 
     @attr('clutter')
@@ -42,6 +41,12 @@ class CreateProjTest(TestCase):
         unsuccessfully_created_proj_status_code = self.sentry_proj.create(self.proj_slug).status_code
         self.assertEqual([successfully_created_proj_status_code, unsuccessfully_created_proj_status_code],
                          [requests.codes.created, requests.codes.conflict])
+
+    @attr('clutter')
+    def test_create_client_key(self):
+        self.sentry_proj.create_proj(self.proj_slug)
+        client_key = self.sentry_proj.create_client_key(self.proj_slug)
+        self.assertIn('dsn', client_key.keys())
 
     def tearDown(self):
         self.sentry_proj.delete(self.proj_slug)

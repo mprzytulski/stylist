@@ -19,12 +19,16 @@ class Sentry:
         self.team_slug = team_slug
         self.headers = {'Authorization': 'Bearer ' + auth_token}
 
-    def get_create_proj_endpoint(self):
+    def _get_create_proj_endpoint(self):
         template = 'https://{}/api/0/teams/{}/{}/projects/'
         return template.format(self.host, self.org_slug, self.team_slug)
 
-    def create(self, proj_slug):
-        endpoint = self.get_create_proj_endpoint()
+    def _get_create_client_key_endpoint(self, proj_slug):
+        template = 'https://{}/api/0/projects/{}/{}/keys/'
+        return template.format(self.host, self.org_slug, proj_slug)
+
+    def create_proj(self, proj_slug):
+        endpoint = self._get_create_proj_endpoint()
         data = {'name': proj_slug, 'slug': proj_slug}
         response = requests.post(endpoint, data=data, headers=self.headers)
         if response.status_code == requests.codes.created:
@@ -34,4 +38,15 @@ class Sentry:
         else:
             response.raise_for_status()
         return response
+
+    def create_client_key(self, proj_slug):
+        endpoint = self._get_create_client_key_endpoint(proj_slug)
+        key_name = proj_slug + "'s key"
+        data = {'name': key_name}
+        response = requests.post(endpoint, data=data, headers=self.headers)
+        if response.status_code == requests.codes.created:
+            return response.json()
+        else:
+            response.raise_for_status()
+
 
