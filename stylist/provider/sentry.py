@@ -1,5 +1,7 @@
 import os
 import requests
+import git
+import giturlparse
 
 from stylist.cli import logger
 
@@ -49,4 +51,19 @@ class Sentry:
         else:
             response.raise_for_status()
 
+
+# TODO test this
+def get_git_remote_origin_url():
+    git_url = next(git.Repo().remotes.origin.urls)
+    return giturlparse.parse(git_url).name
+
+def proj_init_integration(auth_token, org, team):
+    git_repo_name = get_git_remote_origin_url
+    sentry = Sentry(auth_token, org, team)
+    sentry.create_proj(git_repo_name)
+    client_key = sentry.create_client_key(git_repo_name)
+    # TODO ssm_param_name = write_DSN_to_SSM(client_key['dsn']['secret'])
+    return (git_repo_name, ssm_param_name)
+
+# TODO find how versioned/dev config works
 

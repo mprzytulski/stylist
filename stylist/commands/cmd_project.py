@@ -8,6 +8,7 @@ import git
 import yaml
 from click import Path
 
+import stylist.provider.sentry as sentry
 from stylist.cli import stylist_context, logger
 from stylist.commands import cli_prototype
 from stylist.feature import get_feature, FEATURES
@@ -81,6 +82,8 @@ def init(ctx, git_repository, path):
 
             from stylist.commands.cmd_profile import select
             click.get_current_context().invoke(select, name='local')
+
+            sentry.proj_init_integration()
     except Exception as e:
         logger.error('Failed to create project - you may need clean it up manually. \n{}'.format(e))
         sys.exit(1)
