@@ -16,7 +16,6 @@ class Sentry(sentry.Sentry):
         template = 'https://{}/api/0/projects/{}/{}/'
         return template.format(self.host, self.org_slug, proj_slug)
 
-
     def delete(self, proj_slug):
         endpoint = self.get_delete_proj_endpoint(proj_slug)
         requests.delete(endpoint, headers=self.headers)
