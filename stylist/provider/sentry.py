@@ -10,7 +10,8 @@ config = {'sentry': {'auth_token': os.environ.get('SENTRY_AUTH_TOKEN')}}
 # raise Exception('SENTRY_AUTH_TOKEN environment variable is missing. ' +
 #                "To create the token go to 'https://sentry.io/api/'.")
 
-class SentryProject:
+
+class Sentry:
 
     def __init__(self, auth_token, org_slug, team_slug, host='sentry.io'):
         self.host = host
@@ -22,24 +23,15 @@ class SentryProject:
         template = 'https://{}/api/0/teams/{}/{}/projects/'
         return template.format(self.host, self.org_slug, self.team_slug)
 
-    def get_delete_proj_endpoint(self, proj_slug):
-        template = 'https://{}/api/0/projects/{}/{}/'
-        return template.format(self.host, self.org_slug, proj_slug)
-
     def create(self, proj_slug):
         endpoint = self.get_create_proj_endpoint(proj_slug)
         data = {'name': proj_slug, 'slug': proj_slug}
         response = requests.post(endpoint, data=data, headers=self.headers)
-        if response.status_code == 201:
+        if response.status_code == requests.codes.created:
             logger.info('[Create Sentry Project] OK')
-        elif response.status_code == 409:
+        elif response.status_code == requests.codes.conflict:
             logger.info('[Create Sentry Project] Already exists. Skipping..')
         else:
-            exception_msg_template = '[Create Sentry Project] Unexpected issue. Response status code is {}.'
-            raise Exception(exception_msg_template.format(response.status_code), response)
+            response.raise_for_status()
         return response
-
-    def delete(self, proj_slug):
-        endpoint = self.get_delete_proj_endpoint(proj_slug)
-        requests.delete(endpoint, headers=self.headers)
 
