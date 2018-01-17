@@ -17,14 +17,14 @@ class Sentry:
         self.host = host
         self.org_slug = org_slug
         self.team_slug = team_slug
-        self.headers = {'Authorization': 'Bearer ' + config['sentry']['auth_token']}
+        self.headers = {'Authorization': 'Bearer ' + auth_token}
 
-    def get_create_proj_endpoint(self, proj_slug):
+    def get_create_proj_endpoint(self):
         template = 'https://{}/api/0/teams/{}/{}/projects/'
         return template.format(self.host, self.org_slug, self.team_slug)
 
     def create(self, proj_slug):
-        endpoint = self.get_create_proj_endpoint(proj_slug)
+        endpoint = self.get_create_proj_endpoint()
         data = {'name': proj_slug, 'slug': proj_slug}
         response = requests.post(endpoint, data=data, headers=self.headers)
         if response.status_code == requests.codes.created:
