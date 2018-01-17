@@ -48,6 +48,12 @@ class CreateProjTest(TestCase):
         client_key = self.sentry_proj.create_client_key(self.proj_slug)
         self.assertIn('dsn', client_key.keys())
 
+    def test_proj_init_integration(self):
+        # TODO test that the project is in Sentry
+        # TODO test that the DSN is added to AWS SSM without duplicating it
+        (proj_name, ssm_param_name) = sentry.proj_init_integration(sentry.config['sentry']['auth_token'])
+
+
     def tearDown(self):
         self.sentry_proj.delete(self.proj_slug)
 
