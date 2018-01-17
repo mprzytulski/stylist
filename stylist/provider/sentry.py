@@ -51,7 +51,9 @@ class SentryProject:
 
     def retrieve(self, proj_name):
         filtered_projs = self.list_by_name(proj_name)
-        self.project = filtered_projs[0] if filtered_projs else None
+        is_not_deleted_proj = lambda proj: proj['status'] != 'deleted'
+        non_deleted_projs = filter(is_not_deleted_proj, filtered_projs)
+        self.project = filtered_projs[0] if non_deleted_projs else None
         return self.project
 
     def _create_new(self, proj_name):
