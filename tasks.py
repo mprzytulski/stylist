@@ -7,4 +7,4 @@ def check_syntax(ctx):
 
 @task
 def test(ctx):
-    ctx.run('nosetests tests/')
+    ctx.run('nosetests tests')
