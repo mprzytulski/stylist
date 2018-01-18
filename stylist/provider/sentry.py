@@ -30,40 +30,41 @@ class Sentry:
         return template.format(self.host, self.org_slug, proj_slug)
 
     def create_proj(self, proj_slug):
-        endpoint = self._get_create_proj_endpoint()
-        data = {'name': proj_slug, 'slug': proj_slug}
-        response = requests.post(endpoint, data=data, headers=self.headers)
-        if response.status_code == requests.codes.created:
+        resp = requests.post(self._get_create_proj_endpoint(),
+                             data={'name': proj_slug, 'slug': proj_slug},
+                             headers=self.headers)
+        if resp.status_code == requests.codes.created:
             logger.info('[Create Sentry Project] OK')
-        elif response.status_code == requests.codes.conflict:
+        elif resp.status_code == requests.codes.conflict:
             logger.info('[Create Sentry Project] Already exists. Skipping..')
         else:
-            response.raise_for_status()
-        return response
+            raise(Exception('[Create Sentry Project] ' + json.loads(resp.text)['detail']))
+        return resp
 
     def create_client_key(self, proj_slug):
-        endpoint = self._get_create_client_key_endpoint(proj_slug)
-        key_name = proj_slug + "'s key"
-        data = {'name': key_name}
-        response = requests.post(endpoint, data=data, headers=self.headers)
-        if response.status_code == requests.codes.created:
-            return response.json()
-        else:
-            response.raise_for_status()
+        resp = requests.post(self._get_create_client_key_endpoint(proj_slug),
+                             data={'name': proj_slug + "'s key"},
+                             headers=self.headers)
+        resp.raise_for_status()
+        return resp.json()
 
 
-# TODO test this
 def get_git_remote_origin_url():
     git_url = next(git.Repo().remotes.origin.urls)
     return giturlparse.parse(git_url).name
 
-def proj_init_integration(auth_token, org, team):
-    git_repo_name = get_git_remote_origin_url
+def proj_init_integration(auth_token, ctx, org, team):
+    git_repo_name = get_git_remote_origin_url()
     sentry = Sentry(auth_token, org, team)
     sentry.create_proj(git_repo_name)
     client_key = sentry.create_client_key(git_repo_name)
-    # TODO ssm_param_name = write_DSN_to_SSM(client_key['dsn']['secret'])
-    return (git_repo_name, ssm_param_name)
+    for environment in ['staging']:
+        ctx.load(environment)
+        ssm_param_name = ctx.provider.ssm.write("service:" + git_repo_name,
+                                                'dsn_secret',
+                                                client_key['dsn']['secret'],
+                                                True)
+    return git_repo_name, ssm_param_name
 
 # TODO find how versioned/dev config works
 

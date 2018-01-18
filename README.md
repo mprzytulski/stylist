@@ -14,7 +14,7 @@ SENTRY_AUTH_TOKEN=<YOUR_SENTRY_AUTH_TOKEN> stylist project init
 
 ## Testing
 ```
-SENTRY_AUTH_TOKEN=<YOUR_SENTRY_AUTH_TOKEN> nosetests -a '!clutter' tests/
+SENTRY_AUTH_TOKEN=<YOUR_SENTRY_AUTH_TOKEN> nosetests -a '!clutter' tests
 ```
 
 ## Functionality

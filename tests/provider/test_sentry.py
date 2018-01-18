@@ -8,19 +8,16 @@ from nose.plugins.attrib import attr
 
 class Sentry(sentry.Sentry):
 
-    def __init__(self, *args, **kwargs):
-        sentry.Sentry.__init__(self, *args, **kwargs)
-
     def get_delete_proj_endpoint(self, proj_slug):
         template = 'https://{}/api/0/projects/{}/{}/'
         return template.format(self.host, self.org_slug, proj_slug)
 
     def delete(self, proj_slug):
-        endpoint = self.get_delete_proj_endpoint(proj_slug)
-        requests.delete(endpoint, headers=self.headers)
+        requests.delete(self.get_delete_proj_endpoint(proj_slug),
+                        headers=self.headers)
 
 
-class CreateProjTest(TestCase):
+class SentryIntegrationTest(TestCase):
 
     def setUp(self):
         self.proj_slug = 'test_proj' + '_' + uuid.uuid4().hex
@@ -37,8 +34,8 @@ class CreateProjTest(TestCase):
     def test_two_projs_same_name_only_one_created_proj(self):
         # TODO test throwing exception on unknown response status code
         # TODO test project creation messages being printed
-        successfully_created_proj_status_code = self.sentry_proj.create(self.proj_slug).status_code
-        unsuccessfully_created_proj_status_code = self.sentry_proj.create(self.proj_slug).status_code
+        successfully_created_proj_status_code = self.sentry_proj.create_proj(self.proj_slug).status_code
+        unsuccessfully_created_proj_status_code = self.sentry_proj.create_proj(self.proj_slug).status_code
         self.assertEqual([successfully_created_proj_status_code, unsuccessfully_created_proj_status_code],
                          [requests.codes.created, requests.codes.conflict])
 
@@ -48,11 +45,20 @@ class CreateProjTest(TestCase):
         client_key = self.sentry_proj.create_client_key(self.proj_slug)
         self.assertIn('dsn', client_key.keys())
 
-    def test_proj_init_integration(self):
-        # TODO test that the project is in Sentry
-        # TODO test that the DSN is added to AWS SSM without duplicating it
-        (proj_name, ssm_param_name) = sentry.proj_init_integration(sentry.config['sentry']['auth_token'])
+    # def test_proj_init_integration(self):
+    #     # TODO test that the project is in Sentry
+    #     # TODO test that the DSN is added to AWS SSM without duplicating it
+    #     ctx = Context()
+    #     #ctx.provider
+    #     print type(ctx.provider.ssm)
+    #     #(proj_name, ssm_param_name) = sentry.proj_init_integration(sentry.config['sentry']['auth_token'],
+    #     #                                                           SSM(ssm, ctx), # TODO find wth is
+    #     #                                                           'threads-styling-ltd',
+    #     #                                                           'threads-styling-ltd')
+    #     #self.assertEqual((proj_name, ssm_param_name), ('abc', 'def'))
 
+    def test_get_git_remote_origin_url(self):
+        self.assertEqual(sentry.get_git_remote_origin_url(), 'stylist')
 
     def tearDown(self):
         self.sentry_proj.delete(self.proj_slug)
