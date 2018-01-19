@@ -51,7 +51,8 @@ class Sentry:
 
 def get_git_remote_origin_url():
     git_url = next(git.Repo().remotes.origin.urls)
-    return giturlparse.parse(git_url).name
+    return giturlparse.parse(git_url).repo
+
 
 def proj_init_integration(auth_token, ctx, org, team):
     git_repo_name = get_git_remote_origin_url()
