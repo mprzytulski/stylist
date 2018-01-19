@@ -57,9 +57,6 @@ class SentryIntegrationTest(TestCase):
     #     #                                                           'threads-styling-ltd')
     #     #self.assertEqual((proj_name, ssm_param_name), ('abc', 'def'))
 
-    def test_get_git_remote_origin_url(self):
-        self.assertEqual(sentry.get_git_remote_origin_url(), 'stylist')
-
     def tearDown(self):
         self.sentry_proj.delete(self.proj_slug)
 
