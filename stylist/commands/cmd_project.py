@@ -83,7 +83,11 @@ def init(ctx, git_repository, path):
             from stylist.commands.cmd_profile import select
             click.get_current_context().invoke(select, name='local')
 
-            sentry.proj_init_integration(os.environ.get('SENTRY_AUTH_TOKEN'), ctx, 'threads-styling-ltd', 'threads-styling-ltd')
+            sentry.proj_init_integration(os.environ.get('SENTRY_AUTH_TOKEN'),
+                                         ctx,
+                                         'threads-styling-ltd',
+                                         'threads-styling-ltd',
+                                         ('staging', 'uat', 'prod'))
     except Exception as e:
         logger.error('Failed to create project - you may need clean it up manually. \n{}'.format(e))
         sys.exit(1)

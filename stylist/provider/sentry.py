@@ -52,17 +52,17 @@ class Sentry:
         return resp.json()
 
 
-def proj_init_integration(auth_token, ctx, org, team):
+def proj_init_integration(auth_token, ctx, org, team, envs):
     sentry = Sentry(auth_token, org, team)
-    sentry.create_proj(ctx.name)
+    resp = sentry.create_proj(ctx.name)
     client_key = sentry.create_client_key(ctx.name)
     # bind .invoke method into ctx so that we can deepcopy ctx and use .load/.invoke
     ctx.invoke = click.get_current_context().invoke.__get__(ctx)
-    for environment in ('prod', 'staging', 'uat'):
-        new_ctx = copy.deepcopy(ctx)
+    for environment in envs:
+        ctx_copy = copy.deepcopy(ctx)
         # I don't do a lot. Just here to pretty print the environment name
-        new_ctx.invoke(select, name=environment)
-        new_ctx.load(environment)  # I'm the one that changes the environment
-        new_ctx.invoke(write,
-                       parameter='sentry',
-                       value=client_key['dsn']['secret'])
+        ctx_copy.invoke(select, name=environment)
+        ctx_copy.load(environment)  # I'm the one that changes the environment
+        ctx_copy.invoke(write,
+                        parameter='sentry',
+                        value=client_key['dsn']['secret'])
