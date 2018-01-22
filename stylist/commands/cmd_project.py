@@ -12,6 +12,7 @@ import stylist.provider.sentry as sentry
 from stylist.cli import stylist_context, logger
 from stylist.commands import cli_prototype
 from stylist.feature import get_feature, FEATURES
+from stylist.config import Config
 
 cli = copy(cli_prototype)
 cli.short_help = 'Stylist project helper'
@@ -36,6 +37,9 @@ def init(ctx, git_repository, path):
     """
     @@ignore_check@@
     """
+
+    ctx.config = Config({'sentry': {'auth_token': str, 'org': str, 'team': str}})
+
     try:
         if git_repository == '.':
             path = os.getcwd()
@@ -83,11 +87,7 @@ def init(ctx, git_repository, path):
             from stylist.commands.cmd_profile import select
             click.get_current_context().invoke(select, name='local')
 
-            sentry.proj_init_integration(os.environ.get('SENTRY_AUTH_TOKEN'),
-                                         ctx,
-                                         'threads-styling-ltd',
-                                         'threads-styling-ltd',
-                                         ('staging', 'uat', 'prod'))
+            sentry.proj_init_integration(ctx, ('staging', 'uat', 'prod'))
     except Exception as e:
         logger.error('Failed to create project - you may need clean it up manually. \n{}'.format(e))
         sys.exit(1)
