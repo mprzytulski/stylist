@@ -1,9 +1,13 @@
+import copy
 import json
 import os
 
+import click
 import requests
 
 from stylist.cli import logger
+from stylist.commands.cmd_profile import select
+from stylist.commands.cmd_ssm import write
 
 config = {'sentry': {'auth_token': os.environ.get('SENTRY_AUTH_TOKEN')}}
 
@@ -14,7 +18,6 @@ config = {'sentry': {'auth_token': os.environ.get('SENTRY_AUTH_TOKEN')}}
 
 
 class Sentry:
-
     def __init__(self, auth_token, org_slug, team_slug, host='sentry.io'):
         self.host = host
         self.org_slug = org_slug
@@ -53,9 +56,13 @@ def proj_init_integration(auth_token, ctx, org, team):
     sentry = Sentry(auth_token, org, team)
     sentry.create_proj(ctx.name)
     client_key = sentry.create_client_key(ctx.name)
-    for environment in ['staging']:
-        ctx.load(environment)
-        ctx.provider.ssm.write('service:' + ctx.name,
-                               'sentry',
-                               client_key['dsn']['secret'],
-                               True)
+    # bind .invoke method into ctx so that we can deepcopy ctx and use .load/.invoke
+    ctx.invoke = click.get_current_context().invoke.__get__(ctx)
+    for environment in ('prod', 'staging', 'uat'):
+        new_ctx = copy.deepcopy(ctx)
+        # I don't do a lot. Just here to pretty print the environment name
+        new_ctx.invoke(select, name=environment)
+        new_ctx.load(environment)  # I'm the one that changes the environment
+        new_ctx.invoke(write,
+                       parameter='sentry',
+                       value=client_key['dsn']['secret'])

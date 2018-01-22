@@ -19,7 +19,7 @@ cli.short_help = "Manage SSM parameters store"
 @click.argument('parameter')
 @click.argument('value')
 @stylist_context
-def write(ctx, namespace, encrypt, parameter, value):
+def write(ctx, namespace, encrypt, parameter, value, profile=None, project_name=None, working_dir=None):
     try:
         namespace = namespace or "service:" + re.sub('\W', '-', ctx.name)
 
