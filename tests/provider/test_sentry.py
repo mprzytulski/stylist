@@ -1,5 +1,6 @@
 import uuid
 import requests
+
 import stylist.provider.sentry as sentry
 
 from unittest import TestCase
@@ -45,18 +46,5 @@ class SentryIntegrationTest(TestCase):
         client_key = self.sentry_proj.create_client_key(self.proj_slug)
         self.assertIn('dsn', client_key.keys())
 
-    # def test_proj_init_integration(self):
-    #     # TODO test that the project is in Sentry
-    #     # TODO test that the DSN is added to AWS SSM without duplicating it
-    #     ctx = Context()
-    #     #ctx.provider
-    #     print type(ctx.provider.ssm)
-    #     #(proj_name, ssm_param_name) = sentry.proj_init_integration(sentry.config['sentry']['auth_token'],
-    #     #                                                           SSM(ssm, ctx), # TODO find wth is
-    #     #                                                           'threads-styling-ltd',
-    #     #                                                           'threads-styling-ltd')
-    #     #self.assertEqual((proj_name, ssm_param_name), ('abc', 'def'))
-
     def tearDown(self):
         self.sentry_proj.delete(self.proj_slug)
-
