@@ -52,8 +52,10 @@ class Sentry:
         return resp.json()
 
 
-def proj_init_integration(auth_token, ctx, org, team, envs):
-    sentry = Sentry(auth_token, org, team)
+def proj_init_integration(ctx, envs):
+    sentry = Sentry(ctx.config['sentry']['auth_token'],
+                    ctx.config['sentry']['org'],
+                    ctx.config['sentry']['team'])
     resp = sentry.create_proj(ctx.name)
     client_key = sentry.create_client_key(ctx.name)
     # bind .invoke method into ctx so that we can deepcopy ctx and use .load/.invoke
