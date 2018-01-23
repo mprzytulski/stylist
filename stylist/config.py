@@ -10,12 +10,11 @@ class Config(object):
     _dir_in_home = '.threads'
     _config_file_name = 'config.yml'
 
-    def __init__(self, schema):
+    def __init__(self):
         self._value = self._merge(self._dir_in_home, self._config_file_name)
-        Schema(schema, ignore_extra_keys=True).validate(self._value)
 
-    def __getitem__(self, key):
-        return self._value[key]
+    def conform(self, schema):
+        return Schema(schema, ignore_extra_keys=True).validate(self._value)
 
     @classmethod
     def _deep_update(cls, source, overrides):
