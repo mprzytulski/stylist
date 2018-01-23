@@ -25,7 +25,7 @@ class SentryIntegrationTest(TestCase):
 
     def setUp(self):
         self.proj_slug = 'test_proj' + '_' + uuid.uuid4().hex
-        config = Config().conform(cmd_project.init_config_schema)
+        config = Config().conform(cmd_project.INIT_CONFIG_SCHEMA)
         self.sentry_proj = Sentry(config['sentry']['auth_token'],
                                   config['sentry']['org'],
                                   config['sentry']['team'])

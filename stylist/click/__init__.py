@@ -4,14 +4,15 @@ import os
 import sys
 from os.path import dirname, join, abspath, isfile
 
-import yaml
 from click import MultiCommand, Group
 from git import Repo, InvalidGitRepositoryError
 
+from stylist import config
 from stylist.provider.aws import AWSProvider
 from stylist.utils import find_dotenv
 
 CONTEXT_SETTINGS = dict(auto_envvar_prefix='STYLIST')
+INIT_CONFIG_SCHEMA = {'sentry': {'auth_token': str, 'org': str, 'team': str}}
 
 
 class Context(object):
@@ -64,12 +65,7 @@ class Context(object):
             from stylist.cli import logger
             self.name = 'unknown'
 
-        if not isfile(self.config_file):
-            return
-
-        with open(self.config_file) as f:
-            self.settings = yaml.load(f).get('stylist')
-            self.settings.get('stages', {}).append('local')
+        self.settings = config.validate(config.get(self.config_file))
 
     def _load_provider(self):
         self._provider = AWSProvider(self)
