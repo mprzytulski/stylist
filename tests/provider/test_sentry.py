@@ -5,6 +5,9 @@ import stylist.provider.sentry as sentry
 
 from unittest import TestCase
 from nose.plugins.attrib import attr
+from stylist.config import Config
+
+import stylist.commands.cmd_project as cmd_project
 
 
 class Sentry(sentry.Sentry):
@@ -22,9 +25,10 @@ class SentryIntegrationTest(TestCase):
 
     def setUp(self):
         self.proj_slug = 'test_proj' + '_' + uuid.uuid4().hex
-        self.sentry_proj = Sentry(sentry.config['sentry']['auth_token'],
-                                  'threads-styling-ltd',
-                                  'threads-styling-ltd')
+        config = Config().conform(cmd_project.init_config_schema)
+        self.sentry_proj = Sentry(config['sentry']['auth_token'],
+                                  config['sentry']['org'],
+                                  config['sentry']['team'])
 
     @attr('clutter')
     def test_can_create_project(self):
