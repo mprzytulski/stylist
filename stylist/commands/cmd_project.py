@@ -12,7 +12,6 @@ import stylist.provider.sentry as sentry
 from stylist.cli import stylist_context, logger
 from stylist.commands import cli_prototype
 from stylist.feature import get_feature, FEATURES
-from stylist.config import Config
 
 cli = copy(cli_prototype)
 cli.short_help = 'Stylist project helper'
@@ -29,9 +28,6 @@ terraform/.terraform/plugins/*
 """
 
 
-init_config_schema = {'sentry': {'auth_token': str, 'org': str, 'team': str}}
-
-
 @cli.command(help='Initialise new project')
 @click.argument('git_repository', default='.')
 @click.option('--path', type=Path(), help='Destination directory in which project should be initialised')
@@ -40,8 +36,6 @@ def init(ctx, git_repository, path):
     """
     @@ignore_check@@
     """
-
-    ctx.config = Config().conform(init_config_schema)
 
     try:
         if git_repository == '.':
@@ -64,6 +58,7 @@ def init(ctx, git_repository, path):
             except:
                 pass
 
+            print "i'm doing a dump"
             with open(ctx.config_file, 'w+') as f:
                 yaml.dump({
                     'stylist': {
@@ -90,7 +85,7 @@ def init(ctx, git_repository, path):
             from stylist.commands.cmd_profile import select
             click.get_current_context().invoke(select, name='local')
 
-            sentry.proj_init_integration(ctx, ('staging', 'uat', 'prod'))
+            sentry.proj_init_integration(ctx)
     except Exception as e:
         logger.error('Failed to create project - you may need clean it up manually. \n{}'.format(e))
         sys.exit(1)

@@ -7,7 +7,7 @@ Create an authorization token through
 `project:admin`, `project:write`, and `org:read`. Set the generated
 authentication token as a `SENTRY_AUTH_TOKEN` environment variable.
 
-### Install
+### Install stylist
 ```
 pip install git+ssh://git@github.com/ThreadsStylingLtd/stylist.git
 ```
