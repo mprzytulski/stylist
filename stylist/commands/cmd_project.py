@@ -38,7 +38,7 @@ def init(ctx, git_repository, path):
     @@ignore_check@@
     """
 
-    ctx.config = Config({'sentry': {'auth_token': str, 'org': str, 'team': str}})
+    ctx.config = Config().conform({'sentry': {'auth_token': str, 'org': str, 'team': str}})
 
     try:
         if git_repository == '.':
