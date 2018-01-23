@@ -29,6 +29,9 @@ terraform/.terraform/plugins/*
 """
 
 
+init_config_schema = {'sentry': {'auth_token': str, 'org': str, 'team': str}}
+
+
 @cli.command(help='Initialise new project')
 @click.argument('git_repository', default='.')
 @click.option('--path', type=Path(), help='Destination directory in which project should be initialised')
@@ -38,7 +41,7 @@ def init(ctx, git_repository, path):
     @@ignore_check@@
     """
 
-    ctx.config = Config().conform({'sentry': {'auth_token': str, 'org': str, 'team': str}})
+    ctx.config = Config().conform(init_config_schema)
 
     try:
         if git_repository == '.':
