@@ -23,11 +23,7 @@ class Context(object):
         self._provider = None
         self.config_filename = 'config.yml'
 
-        path = None
-        for p in [".stylist", ".git"]:
-            path = find_dotenv(filename=p, path=self.working_dir)
-            if path:
-                break
+        path = find_dotenv(filename='.git', path=self.working_dir)
 
         if path:
             self.working_dir = dirname(path)
