@@ -58,18 +58,13 @@ def init(ctx, git_repository, path):
             except:
                 pass
 
-            ctx.settings['stages'] = ['prod', 'uat', 'staging']
+            stylist_settings = {'provider': {'type': 'aws', 'prefix': str(prefix)},
+                                'stages': ['prod', 'uat', 'staging']}
+
+            ctx.settings.update(stylist_settings)
 
             with open(ctx.config_file, 'w+') as f:
-                yaml.dump({
-                    'stylist': {
-                        'provider': {
-                            'type': 'aws',
-                            'prefix': str(prefix)
-                        },
-                        'stages': ctx.settings['stages']
-                    }
-                }, f)
+                yaml.dump({'stylist': stylist_settings}, f)
 
             def deal_with_gitignore():
                 gitignore_path = os.path.join(path, '.gitignore')
