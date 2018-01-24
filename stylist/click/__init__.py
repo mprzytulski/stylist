@@ -12,7 +12,6 @@ from stylist.provider.aws import AWSProvider
 from stylist.utils import find_dotenv
 
 CONTEXT_SETTINGS = dict(auto_envvar_prefix='STYLIST')
-INIT_CONFIG_SCHEMA = {'sentry': {'auth_token': str, 'org': str, 'team': str}}
 
 
 class Context(object):
@@ -22,6 +21,7 @@ class Context(object):
         self.name = None
         self.settings = {}
         self._provider = None
+        self.config_filename = 'config.yml'
 
         path = None
         for p in [".stylist", ".git"]:
@@ -42,7 +42,7 @@ class Context(object):
 
     @property
     def config_file(self):
-        return join(self.config_dir, 'config.yml')
+        return join(self.config_dir, self.config_filename)
 
     @property
     def provider(self):
@@ -65,7 +65,7 @@ class Context(object):
             from stylist.cli import logger
             self.name = 'unknown'
 
-        self.settings = config.validate(config.get(self.config_file))
+        self.settings = config.conform(config.get(self.config_filename))
 
     def _load_provider(self):
         self._provider = AWSProvider(self)

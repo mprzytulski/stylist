@@ -9,8 +9,6 @@ from stylist.cli import logger
 from stylist.commands.cmd_profile import select
 from stylist.commands.cmd_ssm import write
 
-config = {'sentry': {'auth_token': os.environ.get('SENTRY_AUTH_TOKEN')}}
-
 
 # TODO the caller to SentryProject should handle this:
 # raise Exception('SENTRY_AUTH_TOKEN environment variable is missing. ' +
@@ -53,7 +51,6 @@ class Sentry:
 
 
 def proj_init_integration(ctx):
-    print "settings", ctx.settings
     sentry = Sentry(ctx.settings['sentry']['auth_token'],
                     ctx.settings['sentry']['org'],
                     ctx.settings['sentry']['team'])
@@ -61,7 +58,7 @@ def proj_init_integration(ctx):
     client_key = sentry.create_client_key(ctx.name)
     # bind .invoke method into ctx so that we can deepcopy ctx and use .load/.invoke
     ctx.invoke = click.get_current_context().invoke.__get__(ctx)
-    print "settings", ctx.settings
+
     for environment in ctx.settings['stages']:
         ctx_copy = copy.deepcopy(ctx)
         # I don't do a lot. Just here to pretty print the environment name
