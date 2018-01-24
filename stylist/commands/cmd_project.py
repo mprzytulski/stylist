@@ -58,7 +58,8 @@ def init(ctx, git_repository, path):
             except:
                 pass
 
-            print "i'm doing a dump"
+            ctx.settings['stages'] = ['prod', 'uat', 'staging']
+
             with open(ctx.config_file, 'w+') as f:
                 yaml.dump({
                     'stylist': {
@@ -66,7 +67,7 @@ def init(ctx, git_repository, path):
                             'type': 'aws',
                             'prefix': str(prefix)
                         },
-                        'stages': ['prod', 'uat', 'staging']
+                        'stages': ctx.settings['stages']
                     }
                 }, f)
 
