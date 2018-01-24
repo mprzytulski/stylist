@@ -54,11 +54,10 @@ def proj_init_integration(ctx):
     sentry = Sentry(ctx.settings['sentry']['auth_token'],
                     ctx.settings['sentry']['org'],
                     ctx.settings['sentry']['team'])
-    resp = sentry.create_proj(ctx.name)
+    sentry.create_proj(ctx.name)
     client_key = sentry.create_client_key(ctx.name)
     # bind .invoke method into ctx so that we can deepcopy ctx and use .load/.invoke
     ctx.invoke = click.get_current_context().invoke.__get__(ctx)
-
     for environment in ctx.settings['stages']:
         ctx_copy = copy.deepcopy(ctx)
         # I don't do a lot. Just here to pretty print the environment name
