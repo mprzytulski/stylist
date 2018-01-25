@@ -1,18 +1,12 @@
-import copy
 import json
-import os
 
 import click
 import requests
 
+import stylist.commands.cmd_ssm as cmd_ssm
+
 from stylist.cli import logger
-from stylist.commands.cmd_profile import select
-from stylist.commands.cmd_ssm import write
-
-
-# TODO the caller to SentryProject should handle this:
-# raise Exception('SENTRY_AUTH_TOKEN environment variable is missing. ' +
-#                "To create the token go to 'https://sentry.io/api/'.")
+from stylist.utils import colourize
 
 
 class Sentry:
@@ -56,13 +50,7 @@ def proj_init_integration(ctx):
                     ctx.settings['sentry']['team'])
     sentry.create_proj(ctx.name)
     client_key = sentry.create_client_key(ctx.name)
-    # bind .invoke method into ctx so that we can deepcopy ctx and use .load/.invoke
-    ctx.invoke = click.get_current_context().invoke.__get__(ctx)
     for environment in ctx.settings['stages']:
-        ctx_copy = copy.deepcopy(ctx)
-        # I don't do a lot. Just here to pretty print the environment name
-        ctx_copy.invoke(select, name=environment)
-        ctx_copy.load(environment)  # I'm the one that changes the environment
-        ctx_copy.invoke(write,
-                        parameter='sentry',
-                        value=client_key['dsn']['secret'])
+        ctx.load(environment)
+        click.secho("Selected profile: {}".format(colourize(environment)))
+        cmd_ssm.write_helper(ctx, None, True, 'sentry', client_key['dsn']['secret'])

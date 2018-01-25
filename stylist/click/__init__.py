@@ -43,7 +43,7 @@ class Context(object):
     @property
     def provider(self):
         if not self._provider:
-            self._load_provider()
+            self.set_provider(self.environment)
 
         return self._provider
 
@@ -63,11 +63,11 @@ class Context(object):
 
         self.settings = config.conform(config.get(self.config_filename))
 
-    def _load_provider(self):
+    def set_provider(self, profile):
         self._provider = AWSProvider(self)
         self._provider.load()
         self._provider.values.update({
-            'profile': self.settings.get('provider', {}).get('prefix', '') + self.environment
+            'profile': self.settings.get('provider', {}).get('prefix', '') + profile
         })
 
     def _active_environment(self):

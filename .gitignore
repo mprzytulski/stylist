@@ -101,7 +101,6 @@ ENV/
 
 # intelli-J
 .idea
-.stylist
 
 .stylist/environment
 terraform/.tfupdate
@@ -110,37 +109,3 @@ terraform/.terraform/modules
 terraform/.terraform/plugins/*
 !terraform/.terraform/plugins/*/lock.json
 
-.stylist/environment
-terraform/.tfupdate
-terraform/.terraform/environment
-terraform/.terraform/modules
-terraform/.terraform/plugins/*
-!terraform/.terraform/plugins/*/lock.json
-
-.stylist/environment
-terraform/.tfupdate
-terraform/.terraform/environment
-terraform/.terraform/modules
-terraform/.terraform/plugins/*
-!terraform/.terraform/plugins/*/lock.json
-
-.stylist/environment
-terraform/.tfupdate
-terraform/.terraform/environment
-terraform/.terraform/modules
-terraform/.terraform/plugins/*
-!terraform/.terraform/plugins/*/lock.json
-
-.stylist/environment
-terraform/.tfupdate
-terraform/.terraform/environment
-terraform/.terraform/modules
-terraform/.terraform/plugins/*
-!terraform/.terraform/plugins/*/lock.json
-
-.stylist/environment
-terraform/.tfupdate
-terraform/.terraform/environment
-terraform/.terraform/modules
-terraform/.terraform/plugins/*
-!terraform/.terraform/plugins/*/lock.json
