@@ -8,6 +8,7 @@ import git
 import yaml
 from click import Path
 
+import stylist.provider.sentry as sentry
 from stylist.cli import stylist_context, logger
 from stylist.commands import cli_prototype
 from stylist.feature import get_feature, FEATURES
@@ -35,6 +36,7 @@ def init(ctx, git_repository, path):
     """
     @@ignore_check@@
     """
+
     try:
         if git_repository == '.':
             path = os.getcwd()
@@ -56,16 +58,13 @@ def init(ctx, git_repository, path):
             except:
                 pass
 
+            stylist_settings = {'provider': {'type': 'aws', 'prefix': str(prefix)},
+                                'stages': ['prod', 'uat', 'staging']}
+
+            ctx.settings.update(stylist_settings)
+
             with open(ctx.config_file, 'w+') as f:
-                yaml.dump({
-                    'stylist': {
-                        'provider': {
-                            'type': 'aws',
-                            'prefix': str(prefix)
-                        },
-                        'stages': ['prod', 'uat', 'staging']
-                    }
-                }, f)
+                yaml.dump({'stylist': stylist_settings}, f)
 
             def deal_with_gitignore():
                 gitignore_path = os.path.join(path, '.gitignore')
@@ -81,6 +80,8 @@ def init(ctx, git_repository, path):
 
             from stylist.commands.cmd_profile import select
             click.get_current_context().invoke(select, name='local')
+
+            sentry.proj_init_integration(ctx)
     except Exception as e:
         logger.error('Failed to create project - you may need clean it up manually. \n{}'.format(e))
         sys.exit(1)

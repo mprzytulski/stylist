@@ -13,6 +13,19 @@ cli = copy(cli_prototype)
 cli.short_help = "Manage SSM parameters store"
 
 
+def write_helper(ctx, namespace, encrypt, parameter, value):
+    try:
+        namespace = namespace or "service:" + re.sub('\W', '-', ctx.name)
+
+        ctx.set_provider(ctx.environment)
+        full_name = ctx.provider.ssm.write(namespace.lower(), parameter.lower(), value, encrypt)
+    except Exception as e:
+        logger.error(e.message)
+        sys.exit(1)
+
+    click.secho("Stored '{}' under key: '{}'".format(value, full_name), fg='green')
+
+
 @cli.command(help="Write / create new parameter under SSM")
 @click.option('--namespace', help="Namespace under which parameter should be stored, for example service:name")
 @click.option('--encrypt/--no-encrypt', help="Encrypt value", default=True)
@@ -20,15 +33,7 @@ cli.short_help = "Manage SSM parameters store"
 @click.argument('value')
 @stylist_context
 def write(ctx, namespace, encrypt, parameter, value):
-    try:
-        namespace = namespace or "service:" + re.sub('\W', '-', ctx.name)
-
-        full_name = ctx.provider.ssm.write(namespace.lower(), parameter.lower(), value, encrypt)
-    except Exception as e:
-        logger.error(e.message)
-        sys.exit(1)
-
-    click.secho("Stored '{}' under key: '{}'".format(value, full_name), fg='green')
+    write_helper(ctx, namespace, encrypt, parameter, value)
 
 
 @cli.command(help="List all parameters for given service / resource SSM")
