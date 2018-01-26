@@ -4,10 +4,10 @@ import os
 import sys
 from os.path import dirname, join, abspath, isfile
 
-import yaml
 from click import MultiCommand, Group
 from git import Repo, InvalidGitRepositoryError
 
+from stylist import config
 from stylist.provider.aws import AWSProvider
 from stylist.utils import find_dotenv
 
@@ -21,12 +21,9 @@ class Context(object):
         self.name = None
         self.settings = {}
         self._provider = None
+        self.config_filename = 'config.yml'
 
-        path = None
-        for p in [".stylist", ".git"]:
-            path = find_dotenv(filename=p, path=self.working_dir)
-            if path:
-                break
+        path = find_dotenv(filename='.git', path=self.working_dir)
 
         if path:
             self.working_dir = dirname(path)
@@ -41,12 +38,12 @@ class Context(object):
 
     @property
     def config_file(self):
-        return join(self.config_dir, 'config.yml')
+        return join(self.config_dir, self.config_filename)
 
     @property
     def provider(self):
         if not self._provider:
-            self._load_provider()
+            self.set_provider(self.environment)
 
         return self._provider
 
@@ -64,18 +61,13 @@ class Context(object):
             from stylist.cli import logger
             self.name = 'unknown'
 
-        if not isfile(self.config_file):
-            return
+        self.settings = config.conform(config.get(self.config_filename))
 
-        with open(self.config_file) as f:
-            self.settings = yaml.load(f).get('stylist')
-            self.settings.get('stages', {}).append('local')
-
-    def _load_provider(self):
+    def set_provider(self, profile):
         self._provider = AWSProvider(self)
         self._provider.load()
         self._provider.values.update({
-            'profile': self.settings.get('provider', {}).get('prefix', '') + self.environment
+            'profile': self.settings.get('provider', {}).get('prefix', '') + profile
         })
 
     def _active_environment(self):
