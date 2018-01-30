@@ -1,6 +1,8 @@
 # Stylist
 
-## Install stylist
+## Install
+[Install Apex](http://apex.run/#installation) to deploy when using `stylist apex deploy`.
+
 ```
 pip install git+ssh://git@github.com/ThreadsStylingLtd/stylist.git
 ```
@@ -22,7 +24,7 @@ The `org` and `team` examples are correct at the time of writing.
 
 ## Usage
 ```
-stylist project init
+stylist --help
 ```
 
 ## Testing
