@@ -61,7 +61,7 @@ class Context(object):
             from stylist.cli import logger
             self.name = 'unknown'
 
-        self.settings = config.conform(config.get(self.config_filename))
+        self.settings = config.conform(config.get(self.config_file, self.config_filename))
 
     def set_provider(self, profile):
         self._provider = AWSProvider(self)
