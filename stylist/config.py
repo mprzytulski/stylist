@@ -22,10 +22,9 @@ schema_conformer = And(schema, Use(stylist_conformer))
 conform = Schema(schema_conformer, ignore_extra_keys=True).validate
 
 
-def get(config_file):
-    rel_path = path.join('.stylist', config_file)
-    return anyconfig.load([path.join('/etc/stylist/', config_file),
-                           path.join(path.expanduser('~'), rel_path),
-                           rel_path],
+def get(config_file, config_filename):
+    return anyconfig.load([path.join('/etc/stylist/', config_filename),
+                           path.join(path.expanduser('~'), '.stylist', config_filename),
+                           config_file],
                           ignore_missing=True,
                           ac_parser="yaml")
