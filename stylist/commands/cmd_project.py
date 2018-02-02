@@ -80,8 +80,9 @@ def init(ctx, git_repository, path):
 
             from stylist.commands.cmd_profile import select
             click.get_current_context().invoke(select, name='local')
-
-            sentry.proj_init_integration(ctx)
+            
+            if ctx.settings.get('sentry'):
+                sentry.proj_init_integration(ctx)
     except Exception as e:
         logger.error('Failed to create project - you may need clean it up manually. \n{}'.format(e))
         sys.exit(1)
