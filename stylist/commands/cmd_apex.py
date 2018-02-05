@@ -44,7 +44,7 @@ def build(ctx, native):
             args = [
                 'run', '--rm',
                 '-v', '{}:/src'.format(os.getcwd()),
-                '946211468949.dkr.ecr.eu-west-1.amazonaws.com/docker-images/python3-lambda',
+                ctx.settings['docker_images']['python3_lambda'],
                 'pip', 'install', '-r', '/src/req_all.txt', '--upgrade', '-t', '/src'
             ]
 
