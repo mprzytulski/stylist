@@ -15,7 +15,8 @@ def stylist_conformer(config):
 
 schema = {Optional('stylist'): {'provider': {'prefix': str, 'type': str},
                                 'stages': And(list, Use(stages_conformer))},
-          Optional('sentry'): {'auth_token': str, 'org': str, 'team': str}}
+          Optional('sentry'): {'auth_token': str, 'org': str, 'team': str},
+          Optional('docker_images'): {'python3_lambda': str}}
 
 
 schema_conformer = And(schema, Use(stylist_conformer))
