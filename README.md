@@ -115,6 +115,37 @@ This will be fixed very soon, to continue writing to SSM in other stages.
       # A raised exception would bubble up and get caught here with an event
       # then being sent to Sentry about the exception
 ```
+
+### "terraform" command
+
+#### "configure-module" sub-command
+Creates a terraform module file using its Apex project name and
+[one of these templates](https://github.com/ThreadsStylingLtd/templates/tree/master/terraform_modules).
+
+Say we want to create a terraform module based on the `s3_bucket` template.
+
+We have the following Apex generated `project.json`:
+```
+$ cat project.json
+{
+  "name": "my-apex-proj"
+}
+```
+Creates a terraform module file as `terraform/module.s3_bucket_my-apex-proj.tf`:
+```
+my-proj $ stylist terraform configure-module s3_bucket s3_bkt
+```
+
+##### Requirements
+`stylist apex init` was ran once in the git project. 
+
+##### Troubleshooting
+Q: Running `configure-module` throws `git.exc.InvalidGitRepositoryError`.
+
+A: Run `stylist terraform plan --force-update`
+
+#### "apply" sub-command
+
   
 ## Testing
 ```
