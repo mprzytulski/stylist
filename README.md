@@ -15,6 +15,23 @@ To configure the environment with Style, we suggest installing the AWS CLI.
 stylist --help
 ```
 
+## Config files
+Environment configuration lives in `config.yml` and `environment`.
+
+`config.yml` can be found under:
+
+`/etc/.stylist/` merged and overrided by:
+ 
+`~/.stylist/` merged and overrided by:
+
+`$PROJ_ROOT/.stylist/`
+ 
+
+A config file that does not exist in a location is just ignored.  
+
+The keys which can set in the configuration files are explained in the **commands**
+section wherever they are required.
+
 ## Stylist concepts
 
 ### Prefix
@@ -62,8 +79,8 @@ DSN secret available through AWS SSM. The DSN secret is stored in AWS SSM with
 its parameter name in following format: `/service/<git_repo>/sentry`.
 
 ###### Requirements:
-Create a configuration in `~/.stylist/config.yml` or `/etc/stylist/config.yml`
-as such:
+Create a configuration file in `~/.stylist/config.yml` or
+`/etc/stylist/config.yml` as such:
 ```yaml
 sentry:
   auth_token: 133a8ba424da4952a7e2b246de05f16618007cc346caad90a11a31889ee14c1
