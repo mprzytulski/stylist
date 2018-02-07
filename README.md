@@ -15,6 +15,16 @@ To configure the environment with Style, we suggest installing the AWS CLI.
 stylist --help
 ```
 
+## Testing
+```
+nosetests -a '!clutter' tests
+```
+
+## Functionality
+
+* [Profile management](docs/profiles.md)
+* [Serverless](docs/serverless.md)
+
 ## Config files
 Environment configuration lives in `config.yml` and `environment`.
 
@@ -66,7 +76,7 @@ stylist:
   stages: [prod, uat, staging]
 ```
 Stylist supports only one `provider:` - AWS, at the time of writing, but more
-will come!
+may come!
 
 For `prefix:` refer to **Prefix**.  
 
@@ -92,8 +102,8 @@ Create an authorization token through
 [https://sentry.io/api/](https://sentry.io/api/), with scopes of
 `project:admin`, `project:write`, and `org:read`.
 
-You should have locally configured access to all stages which will be created
-in `.stylist/config.yml` under:
+You should have locally configured credentials to all stages corresponding to
+the ones created in `.stylist/config.yml` under:
 ```
 stylist:
     stages: [...]
@@ -124,35 +134,44 @@ Creates a terraform module file using its Apex project name and
 
 Say we want to create a terraform module based on the `s3_bucket` template.
 
-We have the following Apex generated `project.json`:
+We have the following Apex generated `project.json` file:
 ```
 $ cat project.json
 {
   "name": "my-apex-proj"
 }
 ```
-Creates a terraform module file as `terraform/module.s3_bucket_my-apex-proj.tf`:
+Running
 ```
-my-proj $ stylist terraform configure-module s3_bucket s3_bkt
+my-proj $ stylist terraform configure-module s3_bucket my-apex-proj
 ```
+All the prompted questions do not need to be answered. This creates a terraform
+module file as `terraform/module.s3_bucket_my-apex-proj.tf`.
+
+The aforementioned file should be edited to be used by your app:
+```hcl
+module "s3_bucket_my_apex_proj" {
+
+
+  # Internal stylist variables - do not edit below
+  source = "git@github.com:ThreadsStylingLtd/templates.git//terraform_modules/s3_bucket"
+  context = "${var.context}"
+```
+Refer to the [Terraform documentation](https://www.terraform.io/docs/) to
+learn how to edit Terraform files.
+
+After doing all the editing run:
+```
+stylist terraform apply
+```
+to apply all the changes to the selected stage environment.
 
 ##### Requirements
 `stylist apex init` was ran once in the git project. 
 
 ##### Troubleshooting
-Q: Running `configure-module` throws `git.exc.InvalidGitRepositoryError`.
+**Issue:** Running `configure-module` throws `git.exc.InvalidGitRepositoryError`.
 
-A: Run `stylist terraform plan --force-update`
+**Fix:** Run `stylist terraform plan --force-update`
 
 #### "apply" sub-command
-
-  
-## Testing
-```
-nosetests -a '!clutter' tests
-```
-
-## Functionality
-
-* [Profile management](docs/profiles.md)
-* [Serverless](docs/serverless.md)
