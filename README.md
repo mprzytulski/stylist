@@ -20,13 +20,6 @@ stylist --help
 nosetests -a '!clutter' tests
 ```
 
-#### Usage
-When [configuring AWS named profiles](https://docs.aws.amazon.com/cli/latest/userguide/cli-multiple-profiles.html),
-the `<profile>` that should be used when running
-`aws configure --profile <profile>` is the same as a Stylist profile.
-
-Refer to **Prefix**.
-
 ## Functionality
 
 * [Stylist Concepts](docs/stylist_concepts.md)

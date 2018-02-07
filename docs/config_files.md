@@ -1,4 +1,4 @@
-## Config files
+# Config files
 Environment configuration lives in `config.yml` and `environment`.
 
 `config.yml` can be found under:
