@@ -1,3 +1,0 @@
-# Stylist Docker integration
-
-##
