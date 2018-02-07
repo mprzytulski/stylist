@@ -1,6 +1,6 @@
 # "project" command
 ## "init" sub-command
-`stylist project init` initialises a new Stylist project.
+`stylist project init` initialises a new *Stylist* project.
 
 ### Creates Stylist environment files:
 `.stylist/config.yml`:

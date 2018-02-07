@@ -17,8 +17,8 @@ Running
 ```
 my-proj $ stylist terraform configure-module s3_bucket my-apex-proj
 ```
-All the prompted questions do not need to be answered. This creates a terraform
-module file as `terraform/module.s3_bucket_my-apex-proj.tf`.
+creates a terraform module file as `terraform/module.s3_bucket_my-apex-proj.tf`.
+All the prompted questions do not need to be answered.
 
 The aforementioned file should be edited to be used by your app:
 ```hcl
@@ -29,7 +29,7 @@ module "s3_bucket_my_apex_proj" {
   source = "git@github.com:ThreadsStylingLtd/templates.git//terraform_modules/s3_bucket"
   context = "${var.context}"
 ```
-It's common to attach IAM policy resources in a Terraform template to an
+It's common to attach IAM policy resources (sourcing from a Terraform template) to an
 Apex generated IAM role as such:
 ```hcl
   iam_role_name = "parcel-lambda_lambda_function"
