@@ -47,7 +47,7 @@ def list_profiles(ctx):
     """
     click.echo("All defined environments:")
 
-    for f in ctx.settings.get('stages', []):
+    for f in ctx.settings.get('stylist', {}).get('stages', []):
         click.secho(
             ("-> " if f == ctx.environment else "   ") + colourize(f)
         )
@@ -60,7 +60,7 @@ def list_profiles(ctx):
 @stylist_context
 def sync_vars(ctx, namespaces, source, destination):
     try:
-        profiles = ctx.settings.get('stages')
+        profiles = ctx.settings.get('stylist', {}).get('stages')
         if source not in profiles:
             raise Exception('Source profile "{}" is missing'.format(source))
 

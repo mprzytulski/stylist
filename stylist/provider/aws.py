@@ -164,9 +164,10 @@ class AWSProvider(Provider):
         return boto3.Session(profile_name=profile)
 
     def get_session_for_stage(self, stage):
+        print self.ctx.settings
         return self.get_session(
             '{}{}'.format(
-                self.ctx.settings.get('provider', {}).get('prefix'),
+                self.ctx.settings.get('stylist', {}).get('provider', {}).get('prefix'),
                 stage
             )
         )

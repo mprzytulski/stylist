@@ -3,23 +3,13 @@ from os import path
 
 from schema import Schema, And, Use, Optional
 
-
-def stages_conformer(stages): return stages + ['local']
-
-
-def stylist_conformer(config):
-    config.update(config.get('stylist', {}))
-    config.pop('stylist', None)
-    return config
-
-
 schema = {Optional('stylist'): {'provider': {'prefix': str, 'type': str},
-                                'stages': And(list, Use(stages_conformer))},
+                                'stages': list,
+                                Optional('name_exclusion'): list},
           Optional('sentry'): {'auth_token': str, 'org': str, 'team': str},
           Optional('docker_images'): {'python3_lambda': str}}
 
-
-schema_conformer = And(schema, Use(stylist_conformer))
+schema_conformer = And(schema)
 
 conform = Schema(schema_conformer, ignore_extra_keys=True).validate
 

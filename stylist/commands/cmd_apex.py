@@ -44,7 +44,7 @@ def build(ctx, native):
             args = [
                 'run', '--rm',
                 '-v', '{}:/src'.format(os.getcwd()),
-                ctx.settings['docker_images']['python3_lambda'],
+                ctx.settings.get('stylist', {}).get('docker_images')['python3_lambda'],
                 'pip', 'install', '-r', '/src/req_all.txt', '--upgrade', '-t', '/src'
             ]
 

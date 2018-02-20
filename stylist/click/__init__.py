@@ -4,6 +4,8 @@ import os
 import sys
 from os.path import dirname, join, abspath, isfile
 
+import click
+import schema
 from click import MultiCommand, Group
 from git import Repo, InvalidGitRepositoryError
 
@@ -51,23 +53,30 @@ class Context(object):
         self.environment = profile or self.environment or self._active_environment() or ""
 
         try:
+            self.settings = config.conform(config.get(self.config_file, self.config_filename))
+        except schema.SchemaError as e:
+            click.secho(e.message, fg='yellow')
+            sys.exit(1)
+
+        try:
             self.name = self.name or Repo(self.working_dir) \
                 .remote('origin') \
                 .url \
                 .split('/')[-1] \
-                .replace(".git", '') \
-                .replace('***REMOVED***', '')
+                .replace(".git", '')
+
+            for _rep in self.settings.get('stylist', {}).get('name_exclusion', []):
+                self.name = self.name.replace(_rep, '')
+
         except InvalidGitRepositoryError:
             from stylist.cli import logger
             self.name = 'unknown'
-
-        self.settings = config.conform(config.get(self.config_file, self.config_filename))
 
     def set_provider(self, profile):
         self._provider = AWSProvider(self)
         self._provider.load()
         self._provider.values.update({
-            'profile': self.settings.get('provider', {}).get('prefix', '') + profile
+            'profile': self.settings.get('stylist', {}).get('provider', {}).get('prefix', '') + profile
         })
 
     def _active_environment(self):

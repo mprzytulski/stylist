@@ -61,7 +61,7 @@ def init(ctx, git_repository, path):
             stylist_settings = {'provider': {'type': 'aws', 'prefix': str(prefix)},
                                 'stages': ['prod', 'uat', 'staging']}
 
-            ctx.settings.update(stylist_settings)
+            ctx.settings.update({'stylist': stylist_settings})
 
             with open(ctx.config_file, 'w+') as f:
                 yaml.dump({'stylist': stylist_settings}, f)
