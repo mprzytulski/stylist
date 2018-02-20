@@ -59,10 +59,6 @@ class Terraform(object):
     def env_vars_file(self):
         return join(self.terraform_dir, 'env.{}.tfvars'.format(self.ctx.environment))
 
-    def setup(self):
-        if not exists(self.terraform_dir):
-            shutil.copytree(join(self.templates.destination, 'terraform'), self.terraform_dir)
-
     def plan(self, save=False, force_update=False):
         vars_file = self._ensure_env()
         self._update_modules(force_update)
@@ -173,16 +169,16 @@ class Terraform(object):
         return p.returncode
 
     def configure_module(self, module_name, alias):
-        self._update_provider()
+        self.setup()
         maped_values = {
             'name': alias
         }
 
         values = {}
         current_vars = {}
-        template = self.templates.get_template('internal/terraform/module.jinja2')
+        template = self.templates.get_template('terraform/module.jinja2')
 
-        module_dir = join(self.templates.destination, 'terraform_modules', module_name)
+        module_dir = join(self.templates.terraform_local_modules_source, module_name)
 
         if not isdir(module_dir):
             logger.error("Unable to locate '{}' module definition".format(module_name))
@@ -259,7 +255,7 @@ class Terraform(object):
             for k, v in params.items():
                 f.write("{} = \"{}\"\n".format(k, v))
 
-    def _update_provider(self):
+    def setup(self):
         provider_file = join(self.terraform_dir, 'provider.tf')
 
         if not isdir(self.terraform_dir):
@@ -268,6 +264,9 @@ class Terraform(object):
         with open(provider_file, 'w+') as f:
             template = Template(PROVIDER_TEMPLATE)
             f.write(template.render())
+
+        if not isfile(join(self.terraform_dir, 'variables.tf')):
+            open(join(self.terraform_dir, 'variables.tf'), 'a').close()
 
     def list_modules(self):
         for module in glob(self.templates.local_templates_source + '/*'):

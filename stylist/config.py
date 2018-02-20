@@ -3,8 +3,8 @@ from os import path
 import anyconfig
 from schema import Schema, And, Optional
 
-schema = {Optional('stylist'): {'provider': {'prefix': str, 'type': str},
-                                'stages': list,
+schema = {Optional('stylist'): {Optional('provider'): {'prefix': str, 'type': str},
+                                Optional('stages'): list,
                                 Optional('name_exclusion'): list},
           Optional('sentry'): {'auth_token': str, 'org': str, 'team': str},
           Optional('terraform'): {Optional('templates'): str},

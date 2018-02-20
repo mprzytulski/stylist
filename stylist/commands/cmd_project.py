@@ -90,9 +90,9 @@ def init(ctx, git_repository, path):
 
 @cli.command('add-feature')
 @click.argument('feature', type=click.Choice(FEATURES.keys()))
-@click.option('--templates-version', default='master',
-              help='Git branch / tag of templates repository which should be used for init')
 @stylist_context
-def add_feature(ctx, feature, templates_version):
-    f = get_feature(feature, templates_version)
+def add_feature(ctx, feature):
+    f = get_feature(feature, ctx)
     f.setup(ctx)
+
+    click.secho('Feature "{}" has been added to your project'.format(feature), fg='green')
