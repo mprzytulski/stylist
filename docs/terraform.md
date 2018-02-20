@@ -1,4 +1,8 @@
-# "terraform" command
+# Terraform integration
+
+One of the core features of stylist is automation of the infrastructure management with terraform.
+
+
 
 ## "configure-module" sub-command
 Creates a terraform module file using its Apex project name and
@@ -43,12 +47,4 @@ After doing all the editing run:
 stylist terraform apply
 ```
 to apply all the changes to the selected stage environment. 
-
-### Requirements
-`stylist apex init` was ran once in the git project. 
-
-### Troubleshooting
-**Issue:** Running `configure-module` throws `git.exc.InvalidGitRepositoryError`.
-
-**Fix:** Run `stylist terraform plan --force-update`
 
