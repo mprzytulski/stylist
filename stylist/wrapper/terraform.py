@@ -102,7 +102,7 @@ class Terraform(object):
 
             output = f.name
 
-        self._update_provider()
+        self.setup()
 
         return output, self._exec(args)
 
@@ -269,5 +269,12 @@ class Terraform(object):
             open(join(self.terraform_dir, 'variables.tf'), 'a').close()
 
     def list_modules(self):
-        for module in glob(self.templates.local_templates_source + '/*'):
-            print basename(module)
+        modules = {}
+
+        for module in glob(self.templates.terraform_local_modules_source + '/*'):
+            with open(join(module, 'module.tf'), 'r') as f:
+                line = f.readline().strip()
+
+            modules[basename(module)] = line.replace('## Desc:', '') if line.startswith('## Desc:') else ''
+
+        return modules

@@ -9,7 +9,7 @@ from stylist.click.types import Boolean
 from stylist.commands import cli_prototype
 from stylist.feature import Templates
 from stylist.wrapper.terraform import Terraform, TerraformException
-from stylist.utils import colourize
+from stylist.utils import colourize, table
 
 cli = copy(cli_prototype)
 cli.short_help = 'Wrapper around terraform'
@@ -78,4 +78,7 @@ def configure_module(ctx):
     templates = Templates(ctx)
 
     terraform = Terraform(ctx, templates)
-    terraform.list_modules()
+
+    click.secho(
+        table("Terraform modules", terraform.list_modules(), ["MODULE", "DESCRIPTION"]).table
+    )
