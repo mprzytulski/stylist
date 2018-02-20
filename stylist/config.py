@@ -1,12 +1,13 @@
-import anyconfig
 from os import path
 
-from schema import Schema, And, Use, Optional
+import anyconfig
+from schema import Schema, And, Optional
 
 schema = {Optional('stylist'): {'provider': {'prefix': str, 'type': str},
                                 'stages': list,
                                 Optional('name_exclusion'): list},
           Optional('sentry'): {'auth_token': str, 'org': str, 'team': str},
+          Optional('terraform'): {Optional('templates'): str},
           Optional('docker_images'): {'python3_lambda': str}}
 
 schema_conformer = And(schema)

@@ -9,7 +9,7 @@ import sys
 import tempfile
 import time
 from glob import glob
-from os.path import isfile, join, isdir, exists
+from os.path import isfile, join, isdir, exists, dirname, basename
 
 import click
 import hcl
@@ -268,3 +268,7 @@ class Terraform(object):
         with open(provider_file, 'w+') as f:
             template = Template(PROVIDER_TEMPLATE)
             f.write(template.render())
+
+    def list_modules(self):
+        for module in glob(self.templates.local_templates_source + '/*'):
+            print basename(module)

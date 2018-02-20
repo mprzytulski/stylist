@@ -1,9 +1,10 @@
 import importlib
 import os
 import pkgutil
+import re
 import tempfile
 from os import mkdir
-from os.path import exists, join
+from os.path import exists, join, dirname, abspath
 
 import click
 from click import style
@@ -14,30 +15,41 @@ from stylist.wrapper.terraform import Terraform
 
 
 class Templates(object):
-    REPOSITORY = 'git@github.com:ThreadsStylingLtd/templates.git'
+    def __init__(self, ctx):
+        self.ctx = ctx
 
-    def __init__(self, version='master'):
-        self.version = version
+        self.terraform_templates_source = abspath(ctx.settings.get('terraform', {}).get(
+            'templates',
+            join(dirname(__file__), '..', '..', '..', 'templates', 'terraform_modules')
+        ))
 
-        self.destination = join(tempfile.gettempdir(), "stylist-templates")
+        self.terraform_user_remote_source = \
+            re.match('^https?://', self.terraform_templates_source) or self.terraform_templates_source.endswith('.git')
 
-        self.env = Environment(loader=FileSystemLoader(self.destination))
-        self._init_repository()
+        if self.terraform_user_remote_source:
+            self.local_templates_source = join(tempfile.gettempdir(), "stylist-templates")
+            self._init_repository(self.terraform_templates_source, self.local_templates_source)
+        else:
+            self.local_templates_source = self.terraform_templates_source
 
-    def _init_repository(self):
-        if not exists(self.destination):
-            mkdir(self.destination)
-            Git().clone(Templates.REPOSITORY, self.destination)
+        self.env = Environment(loader=FileSystemLoader([
+            join(dirname(__file__), '..', '..', '..', 'templates', 'internal'),
+            self.local_templates_source
+        ]))
 
-        repo = Repo(self.destination)
-        repo.git.checkout(self.version)
+    def _init_repository(self, source, destination):
+        if not exists(destination):
+            mkdir(destination)
+            Git().clone(source, destination)
+
+        repo = Repo(destination)
         repo.remote("origin").pull()
 
     def get_template(self, name):
         return self.env.get_template(name)
 
     def get_module_source(self, module_name):
-        return Templates.REPOSITORY + "//terraform_modules/" + module_name
+        return self.terraform_templates_source + ("//" if self.terraform_user_remote_source else "") + module_name
 
 
 class Feature(object):

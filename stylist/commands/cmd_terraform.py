@@ -62,13 +62,20 @@ def apply(ctx):
 
 
 @cli.command(name="configure-module", help="Configure terraform module")
-@click.option("--templates-version", default="master",
-              help="Git branch / tag of templates repository which should be used for init")
 @click.argument("module_name")
 @click.argument("alias")
 @stylist_context
-def configure_module(ctx, module_name, alias, templates_version):
-    templates = Templates(templates_version)
+def configure_module(ctx, module_name, alias):
+    templates = Templates(ctx)
 
     terraform = Terraform(ctx, templates)
     terraform.configure_module(module_name, alias)
+
+
+@cli.command(name="list-modules", help="List available terraform modules")
+@stylist_context
+def configure_module(ctx):
+    templates = Templates(ctx)
+
+    terraform = Terraform(ctx, templates)
+    terraform.list_modules()
