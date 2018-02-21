@@ -54,6 +54,7 @@ Every project can have multiple profiles (staging, uat, production) to which pro
 ## Integrations
 - [Terraform](docs/terraform.md)
 - [Serverless](docs/serverless.md)
+- [Sentry](docs/sentry.md)
 - chalice
 - apex
 - docker
