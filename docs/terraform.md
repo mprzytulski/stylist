@@ -3,7 +3,8 @@
 One of the core features of stylist is automation of the infrastructure management with terraform.
 
 ## Concepts
-Currently stylist uses default terraform configuration with state files stored in local files - there is a plan to move those files into external storage to solve some security issues as well merging problems. 
+Currently stylist uses default terraform configuration with state files stored in local files - 
+there is a plan to move those files into external storage to solve some security issues as well merging problems. 
 
 Stylist will ensure that every terraform command is executed in context of current profile. 
 
@@ -32,7 +33,8 @@ Stylist will ensure that every terraform command is executed in context of curre
 - **./terraform/** - internal terraform cache directory 
 
 ### Execution stack
-Stylist by default enforce usage of newest infrastructure templates and proper stage selection, to do so every terraform command is prepended with two additional commands:
+Stylist by default enforce usage of newest infrastructure templates and proper stage selection, to do so every 
+terraform command is prepended with two additional commands:
 
 - `terraform init --upgrade=true` to enforce plugins and templates update 
 - `terraform workspace select <profile>` to select same workspace as current stylist active profile 
@@ -51,8 +53,10 @@ Those templates have been build with following assumptions:
 `stylist project add-feature terraform`
 
 ### Integration configuration
-Terraform integration relays on set of the terraform modules which are distributed by default with stylist, but it is possible to specify your own location of the modules.
-Stylist is able to work with local and remote (via git) locations and to speed things up it will keep local cache of the repository in case if git location has been provided. 
+Terraform integration relays on set of the terraform modules which are distributed by default with stylist, but it 
+is possible to specify your own location of the modules.
+Stylist is able to work with local and remote (via git) locations and to speed things up it will keep local cache of 
+the repository in case if git location has been provided. 
 
 If you like to specify your own location for terraform modules you need to add a terraform section to your stylist config file:
 
@@ -65,7 +69,9 @@ Stylist will automatically recognise if thats a local or remote location.
 
 ## Context variable
 Some of the modules relays on data which aren't exposed to terraform by default.
-In our scenario we use one main repository for shared infrastructure and we keep project specific configuration in project repository. It solves some problem and create new ones, one of the problems is that not all resources are available to terraform. To workaround that problem we pull that data in stylist and inject those as a part of context.
+In our scenario we use one main repository for shared infrastructure and we keep project specific configuration 
+in project repository. It solves some problem and create new ones, one of the problems is that not all resources are 
+available to terraform. To workaround that problem we pull that data in stylist and inject those as a part of context.
 
 ### List of variables passed as a part of context variable 
 - aws_account_id
@@ -82,7 +88,8 @@ Additionally we inject some variables with auto generated names, those includes:
 `stylist terraform list-modules`
 
 ## Configure terraform module
-Stylist is able to automatically use terraform modules and provide interactive configuration keeping naming conventions and utilising global variables for the configuration if needed.
+Stylist is able to automatically use terraform modules and provide interactive configuration keeping naming 
+conventions and utilising global variables for the configuration if needed.
 
 For example let's add S3 bucket to our project:
 
@@ -90,7 +97,8 @@ For example let's add S3 bucket to our project:
 stylist terraform configure-module s3_bucket something
 ```
 
-You will be prompted for values of the module configuration parameters. In most of the cases you may accept default values. You can edit that file later as well.
+You will be prompted for values of the module configuration parameters. In most of the cases you may accept default 
+values. You can edit that file later as well.
 
 As a result you will will have a terraform module file named `terraform/module.s3_bucket_somthing.tf`.
 
@@ -118,7 +126,9 @@ It's safe as stylist will first create a plan using `terraform plan` and will al
 Run `stylist terraform plan --force-update` or delete `terraform/.tfupdate` file to force module update
 
 ### What is `var.context`?
-It's a special variable passed to terraform plan with additional informations collected from environment and other components, it contain active profile as well as some AWS specific variables like account_id, AWS named profile etc. You can read more in context variable section
+It's a special variable passed to terraform plan with additional informations collected from environment and other 
+components, it contain active profile as well as some AWS specific variables like account_id, AWS named profile etc. 
+You can read more in context variable section
 
 ### Error: Failed to load root config module
 You probably added a new module configuration, terraform needs to download it. See: Terraform use old modules

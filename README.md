@@ -25,7 +25,8 @@ pip install git+ssh://git@github.com/ThreadsStylingLtd/stylist.git
 ```
 
 ### External dependencies
-Stylist operates as a wrapper around common tools and frameworks, to be able to use all the features you must ensure that following are installed and available in user `$PATH`:
+Stylist operates as a wrapper around common tools and frameworks, to be able to use all the features you must 
+ensure that following are installed and available in user `$PATH`:
 
 **Tools**:
 - Docker - https://www.docker.com/
