@@ -47,7 +47,7 @@ class Templates(object):
         return self.env.get_template(name)
 
     def get_module_source(self, module_name):
-        return self.terraform_modules_source + ("//" if self.terraform_user_remote_source else "") + module_name
+        return self.terraform_modules_source + ("//" if self.terraform_user_remote_source else "/") + module_name
 
 
 class Feature(object):

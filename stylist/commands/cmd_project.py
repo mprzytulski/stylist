@@ -88,7 +88,7 @@ def init(ctx, git_repository, path):
         sys.exit(1)
 
 
-@cli.command('add-feature')
+@cli.command('add-feature', help="Add new feature to current project")
 @click.argument('feature', type=click.Choice(FEATURES.keys()))
 @stylist_context
 def add_feature(ctx, feature):
