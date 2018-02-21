@@ -3,8 +3,6 @@ import json
 import click
 import requests
 
-import stylist.commands.cmd_ssm as cmd_ssm
-
 from stylist.cli import logger
 from stylist.utils import colourize
 
@@ -45,6 +43,8 @@ class Sentry:
 
 
 def proj_init_integration(ctx):
+    import stylist.commands.cmd_ssm as cmd_ssm
+
     sentry = Sentry(ctx.settings['sentry']['auth_token'],
                     ctx.settings['sentry']['org'],
                     ctx.settings['sentry']['team'])
