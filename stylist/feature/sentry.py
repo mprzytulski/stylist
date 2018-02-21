@@ -5,6 +5,10 @@ from stylist.provider.sentry import proj_init_integration
 
 
 class SentryFeature(Feature):
+    """
+    Error handling and reporting with sentry / raven.
+    """
+
     @property
     def installed(self):
         ssm = self.ctx.provider.ssm

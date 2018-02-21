@@ -8,6 +8,10 @@ from stylist.feature import Feature
 
 
 class DockerFeature(Feature):
+    """
+    Build and manage your docker containers.
+    """
+
     @property
     def installed(self):
         return isfile(join(self.ctx.working_dir, 'Dockerfile'))

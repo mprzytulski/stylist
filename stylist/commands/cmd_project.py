@@ -108,8 +108,12 @@ def add_feature(ctx, feature):
 def list_features(ctx):
     features = []
     for feature, inst in FEATURES.items():
-        features.append([feature, click.style('true', fg='green') if get_feature(feature, ctx).installed else 'false'])
+        features.append([
+            feature,
+            str(inst.__doc__ or '').strip(),
+            click.style('true', fg='green') if get_feature(feature, ctx).installed else 'false'
+        ])
 
     click.secho(
-        table("STYLIST FEATURES", features, ["FEATURE", "INSTALLED"]).table
+        table("STYLIST FEATURES", features, ["FEATURE", "DESCRIPTION", "INSTALLED"]).table
     )

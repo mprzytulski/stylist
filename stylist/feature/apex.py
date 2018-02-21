@@ -4,6 +4,10 @@ from stylist.feature import Feature
 
 
 class ApexFeature(Feature):
+    """
+    Build and deploy your AWS lambda functions with apex.
+    """
+
     @property
     def installed(self):
         return False
