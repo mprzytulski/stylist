@@ -8,7 +8,11 @@ from stylist.feature import Feature
 
 
 class DockerFeature(Feature):
-    def setup(self, ctx):
+    @property
+    def installed(self):
+        return isfile(join(self.ctx.working_dir, 'Dockerfile'))
+
+    def _do_setup(self):
         _docker = style('Docker', fg='blue')
 
         prompts = {
@@ -16,7 +20,7 @@ class DockerFeature(Feature):
         }
 
         dockerfile = "Dockerfile"
-        while isfile(join(ctx.working_dir, dockerfile)):
+        while isfile(join(self.ctx.working_dir, dockerfile)):
             dockerfile = \
                 click.prompt("{file} exits, please provide alternative name".format(file=style(dockerfile, fg="red")))
 
@@ -30,7 +34,7 @@ class DockerFeature(Feature):
         }
 
         for src, dst in templates.items():
-            dst_path = join(ctx.working_dir, dst)
+            dst_path = join(self.ctx.working_dir, dst)
             if isfile(dst_path):
                 continue
 
@@ -39,9 +43,9 @@ class DockerFeature(Feature):
                 f.write(template.render(**values))
 
         if click.prompt(_docker + ' | Enable terraform ecs_service support?', type=Boolean(), default='yes'):
-            alias = ctx.name
+            alias = self.ctx.name
 
             if dockerfile != 'Dockerfile':
                 alias += '-' + dockerfile.replace('Dockerfile.', '')
 
-            self.enable_terraform(ctx, 'ecs_service', alias)
+            self.enable_terraform(self.ctx, 'ecs_service', alias)

@@ -2,9 +2,9 @@ from stylist.feature import Feature
 
 
 class ServerlessFeature(Feature):
-    TEMPLATES = {
-        "provider.tf": ''
-    }
+    @property
+    def installed(self):
+        return False
 
-    def setup(self, ctx, templates):
+    def _do_setup(self):
         pass

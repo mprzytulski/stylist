@@ -1,14 +1,14 @@
-from os.path import join, isfile
-
-import click
 from click import style
 
-from stylist.click.types import Boolean
 from stylist.feature import Feature
 
 
 class ApexFeature(Feature):
-    def setup(self, ctx):
+    @property
+    def installed(self):
+        return False
+
+    def _do_setup(self):
         _docker = style('Apex', fg='blue')
 
         prompts = {

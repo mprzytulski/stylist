@@ -2,10 +2,13 @@ import importlib
 import os
 import pkgutil
 import re
+import sys
 import tempfile
+from abc import abstractmethod, ABCMeta
 from os import mkdir
 from os.path import exists, join, dirname, abspath
 
+import click
 from git import Git, Repo
 from jinja2 import Environment, FileSystemLoader
 
@@ -32,7 +35,6 @@ class Templates(object):
 
         self.env = Environment(loader=FileSystemLoader([
             join(dirname(__file__), '..', '..', 'templates', 'internal'),
-            # self.local_templates_source
         ]))
 
     def _init_repository(self, source, destination):
@@ -51,12 +53,35 @@ class Templates(object):
 
 
 class Feature(object):
+    __metaclass__ = ABCMeta
+
     def __init__(self, ctx):
+        self.ctx = ctx
         self.templates = Templates(ctx)
         self.terraform = Terraform(ctx, self.templates)
 
     def enable_terraform(self, ctx, module_name=None, module_alias=None):
         self.terraform.configure_module(module_name, module_alias)
+
+    @property
+    @abstractmethod
+    def installed(self):
+        pass
+
+    @abstractmethod
+    def _do_setup(self):
+        pass
+
+    def setup(self):
+        if self.installed:
+            click.secho('Feature is already installed in current project context', fg='red')
+            sys.exit(2)
+
+        return self._do_setup()
+
+
+class FeatureException(Exception):
+    pass
 
 
 FEATURES = {}
