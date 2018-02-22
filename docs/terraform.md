@@ -49,7 +49,7 @@ Those templates have been build with following assumptions:
 - When needed module will include default domain name (see Integration configuration)
 - All resources which must have globally unique name like S3 bucket or DNS domain name will include environment name included by default
 
-## Enable terraform project support
+## Enable terraform support
 `stylist project add-feature terraform`
 
 ### Integration configuration

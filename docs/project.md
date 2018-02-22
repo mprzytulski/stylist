@@ -4,7 +4,7 @@
 `stylist project init .` initialises a new *Stylist* project using a current directory as a base.
 
 After initialisation you may notice a new directory `.stylist` which contain a configuration file `config.yml` 
-- you can read more about configuration files [here](configuration_files.md).
+- you can read more about configuration files [here](configuration.md).
 Additionally there is one more file `environment` which contain name of the currently selected profile - 
 [here](profiles.md) you can find more about profiles.
 

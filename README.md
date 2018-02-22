@@ -50,13 +50,13 @@ Every project can have multiple profiles (staging, uat, production) to which pro
 - [Project](docs/project.md)
 - [AWS Integration](docs/aws.md)
 - [Profile management](docs/profiles.md)
-- [Configuration](docs/config.md)
+- [Configuration](docs/configuration.md)
 
 ## Integrations
 - [Terraform](docs/terraform.md)
 - [Serverless](docs/serverless.md)
 - [Sentry](docs/sentry.md)
-- chalice
+- [Chalice](docs/chalice.md)
 - apex
 - docker
 - DB Migrations with [yoyo](https://bitbucket.org/ollyc/yoyo)
