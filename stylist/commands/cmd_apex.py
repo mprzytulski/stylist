@@ -44,13 +44,15 @@ def build(ctx, native):
             args = [
                 'run', '--rm',
                 '-v', '{}:/src'.format(os.getcwd()),
-                ctx.settings.get('stylist', {}).get('docker_images')['python3_lambda'],
+                ctx.settings.get('docker_images')['python3_lambda'],
                 'pip', 'install', '-r', '/src/req_all.txt', '--upgrade', '-t', '/src'
             ]
 
             # @todo - login to staging repository
             try:
-                docker.do_login(docker.repositories.get_repository('docker-images/python3-lambda'))
+                docker.do_login(
+                    docker.repositories.get_repository('docker-images/python3-lambda')
+                )
             except DockerException as e:
                 logger.error(e)
             p, out, err = docker.run_docker(args, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
