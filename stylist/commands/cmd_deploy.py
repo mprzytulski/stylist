@@ -7,7 +7,6 @@ from os.path import isdir, join
 import click
 from click import style
 
-from stylist.cli import stylist_context
 from stylist.click.types import Boolean
 from stylist.wrapper.serverless import Serverless, InvalidContextException
 from stylist.utils import colourize
@@ -15,7 +14,7 @@ from stylist.utils import colourize
 
 @click.command(help="Deploy project")
 @click.option("--non-interactive", default=False, flag_value='non_interactive', help="Run in non-interactive mode")
-@stylist_context
+@click.pass_obj
 def cli(ctx, non_interactive):
     if ctx.environment in ["local", "dev", "development", "test"]:
         click.secho(

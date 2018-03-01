@@ -96,7 +96,7 @@ def _walk_to_root(path):
         last_dir, current_dir = current_dir, parent_dir
 
 
-def find_dotenv(filename='.env', raise_error_if_not_found=False, usecwd=False, path=None):
+def find_dotenv(filename='.env', raise_error_if_not_found=False, usecwd=False, path=None, limit=None):
     """
     Search in increasingly higher folders for the given file
     Returns path to the file if found, or an empty string otherwise
@@ -113,7 +113,7 @@ def find_dotenv(filename='.env', raise_error_if_not_found=False, usecwd=False, p
 
     for dirname in _walk_to_root(path):
         check_path = os.path.join(dirname, filename)
-        if os.path.exists(check_path):
+        if os.path.exists(check_path) and (not limit or check_path.startswith(limit)):
             return check_path
 
     if raise_error_if_not_found:

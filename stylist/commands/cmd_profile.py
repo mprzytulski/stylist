@@ -3,7 +3,7 @@ from os.path import isdir, join
 
 import click
 
-from stylist.cli import stylist_context, logger
+from stylist.cli import logger
 from stylist.commands import cli_prototype
 from stylist.provider.aws import SSM
 from stylist.utils import colourize
@@ -14,7 +14,7 @@ cli.short_help = 'Manage project environments'
 
 
 @cli.command(help="Show active environment for current working directory")
-@stylist_context
+@click.pass_obj
 def selected(ctx):
     """
     @type ctx: stylist.cli.Context
@@ -26,7 +26,7 @@ def selected(ctx):
 
 @cli.command(help="Activate named profile")
 @click.argument("name")
-@stylist_context
+@click.pass_obj
 def select(ctx, name, project_name=None, profile=None, working_dir=None):
     """
     @type ctx: stylist.cli.Context
@@ -40,7 +40,7 @@ def select(ctx, name, project_name=None, profile=None, working_dir=None):
 
 
 @cli.command(name="list", help="List all available profiles")
-@stylist_context
+@click.pass_obj
 def list_profiles(ctx):
     """
     @type ctx: stylist.cli.Context
@@ -57,7 +57,7 @@ def list_profiles(ctx):
 @click.option("--namespaces", help="SSM namespaces to migrate", multiple=True)
 @click.argument("source")
 @click.argument("destination")
-@stylist_context
+@click.pass_obj
 def sync_vars(ctx, namespaces, source, destination):
     try:
         profiles = ctx.settings.get('stylist', {}).get('stages')

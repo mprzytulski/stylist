@@ -1,13 +1,11 @@
+import re
 import sys
-import glob
 from copy import copy
 from datetime import datetime
-from os.path import join
 
 import click
-import re
 
-from stylist.cli import stylist_context, logger
+from stylist.cli import logger
 from stylist.commands import cli_prototype
 from stylist.utils import table
 from stylist.wrapper.docker import Docker, NotADockerProjectException, DockerException, _get_docker_files
@@ -23,7 +21,7 @@ cli.short_help = 'Docker image helper'
 @click.option('--ask', is_flag=True, help='Ask which repository to build')
 @click.option('--subproject', default=None, help='Build docker image located in named subdirectory / project')
 @click.argument('docker_args', nargs=-1, type=click.UNPROCESSED)
-@stylist_context
+@click.pass_obj
 def build(ctx, tag, ask, subproject, profile=None, project_name=None, working_dir=None, docker_args=None):
     """
     @type ctx: stylist.cli.Context
@@ -62,7 +60,7 @@ def build(ctx, tag, ask, subproject, profile=None, project_name=None, working_di
 @click.option('--tag', default='latest', help='Push given tag')
 @click.option('--subproject', default=None, help='Push given subproject')
 @click.option('--force-build', default=False, is_flag=True, help='Force build before push')
-@stylist_context
+@click.pass_obj
 def push(ctx, ask, subproject, force_build, tag):
     """
     @type ctx: stylist.cli.Context
@@ -109,7 +107,7 @@ def push(ctx, ask, subproject, force_build, tag):
 
 @cli.command(help='List current project images')
 @click.option('--subproject', default=None, help='List images for given subproject')
-@stylist_context
+@click.pass_obj
 def images(ctx, subproject):
     """
     @type ctx: stylist.cli.Context
@@ -148,7 +146,7 @@ def images(ctx, subproject):
 @click.option('--subproject', default=None, help='Run subproject container')
 @click.argument('cmd', default='/bin/bash')
 @click.argument('docker_args', nargs=-1, type=click.UNPROCESSED)
-@stylist_context
+@click.pass_obj
 def enter(ctx, subproject, tag, non_interactive, cmd, docker_args):
     try:
         docker = Docker(ctx, subproject)

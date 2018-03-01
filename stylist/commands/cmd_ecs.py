@@ -5,7 +5,7 @@ import click
 import re
 from click import style
 
-from stylist.cli import stylist_context, logger
+from stylist.cli import logger
 from stylist.click.types import Boolean
 from stylist.commands import cli_prototype
 from stylist.utils import colourize
@@ -19,7 +19,7 @@ cli.short_help = 'ECS Service management'
 @cli.command(help='Enrol given version of docker image')
 @click.option('--tag', default='latest', help='Tag which should be enrolled')
 @click.option('--subproject', help='Tag which should be enrolled')
-@stylist_context
+@click.pass_obj
 def enrol(ctx, subproject, tag):
     """
     @type ctx: stylist.cli.Context

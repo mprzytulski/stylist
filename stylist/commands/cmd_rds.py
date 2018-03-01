@@ -11,7 +11,7 @@ from pygments.formatters import get_formatter_by_name
 from pygments.lexers import get_lexer_by_name
 from stylist.helper.rds import DbContext, get_connection_credentials
 
-from stylist.cli import stylist_context, logger
+from stylist.cli import logger
 from stylist.click.types import Boolean
 from stylist.commands import cli_prototype
 
@@ -66,7 +66,7 @@ def write_parameters(ssm, instance, db, namespaces, params, tags=None):
 @click.option('--db')
 @click.option('--role', help="Create named role, create service role when '.' is provided as a name")
 @click.option('--schema')
-@stylist_context
+@click.pass_obj
 def init(ctx, instance, db, schema, role):
     if len(filter(None, [db, schema, role])) != 1:
         logger.error('You need to provide value for one option db|role|schema')
@@ -117,7 +117,7 @@ def init(ctx, instance, db, schema, role):
 @click.option('--db')
 @click.option('--schema')
 @click.option('--role')
-@stylist_context
+@click.pass_obj
 def drop(ctx, instance, db, schema, role):
     if len(filter(None, [db, schema, role])) != 1:
         logger.error('You must provide only one db|schema|role')
@@ -181,7 +181,7 @@ def drop(ctx, instance, db, schema, role):
 @click.option("--instance", default='rds-postgresql')
 @click.option("--schema", help="Schema to which access should be granted")
 @click.option('--db', required=True)
-@stylist_context
+@click.pass_obj
 def grant(ctx, instance, db, schema):
     with DbContext(ctx, instance, get_connection_credentials(ctx, instance, db)) as context:
         role_name = get_service_role_name(ctx)
@@ -223,7 +223,7 @@ def grant(ctx, instance, db, schema):
 @click.option("--instance", default='rds-postgresql')
 @click.option("--schema", help="Schema to which access should be granted")
 @click.option('--db', required=True)
-@stylist_context
+@click.pass_obj
 def revoke(ctx, instance, db, schema):
     with DbContext(ctx, instance, get_connection_credentials(ctx, instance, db)) as context:
         role_name = get_service_role_name(ctx)
@@ -244,7 +244,7 @@ def revoke(ctx, instance, db, schema):
 @click.option("--instance", default='rds-postgresql')
 @click.option('--db', help='Use db owner credentials rather than instance')
 @click.argument('command', nargs=-1, type=click.UNPROCESSED)
-@stylist_context
+@click.pass_obj
 def credentials(ctx, instance, db, command):
     credentials = {}
     with DbContext(ctx, instance, get_connection_credentials(ctx, instance, db)) as context:

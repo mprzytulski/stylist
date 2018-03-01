@@ -3,7 +3,7 @@ import json
 import click
 import requests
 
-from stylist.cli import logger
+# from stylist.cli import logger
 from stylist.utils import colourize
 
 

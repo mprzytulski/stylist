@@ -3,7 +3,7 @@ from copy import copy
 
 import click
 
-from stylist.cli import stylist_context, logger
+from stylist.cli import logger
 from stylist.commands import cli_prototype
 from stylist.utils import line_prefix
 
@@ -14,7 +14,7 @@ cli.short_help = "AWS KMS encryption helper"
 @cli.command(help="Encrypt plain text with context encryption key")
 @click.argument("plain_text")
 @click.option("--plain", default=False, flag_value='plain', help="Return encrypted value only")
-@stylist_context
+@click.pass_obj
 def encrypt(ctx, plain_text, plain):
     kms = ctx.provider.session.client("kms")
 
@@ -38,7 +38,7 @@ def encrypt(ctx, plain_text, plain):
 @cli.command(help="Encrypt plain text with context encryption key")
 @click.argument("encrypted")
 @click.option("--plain", default=False, flag_value='plain', help="Return decrypted value only")
-@stylist_context
+@click.pass_obj
 def decrypt(ctx, encrypted, plain):
     kms = ctx.provider.session.client("kms")
 

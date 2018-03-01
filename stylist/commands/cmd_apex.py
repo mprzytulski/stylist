@@ -1,17 +1,14 @@
 import glob
 import json
 import os
-from collections import OrderedDict
-from copy import copy
-
-import click
+import shutil
 import subprocess
-
+from copy import copy
 from os.path import join, isfile
 
-import shutil
+import click
 
-from stylist.cli import stylist_context, logger
+from stylist.cli import logger
 from stylist.commands import cli_prototype
 from stylist.wrapper.apex import Apex, ApexException
 from stylist.wrapper.docker import Docker, DockerException
@@ -22,7 +19,7 @@ cli.short_help = "Helper for apex lambda functions"
 
 @cli.command(help="Install function dependencies")
 @click.option('--native', is_flag=True, default=False, help="Build with native module support via docker")
-@stylist_context
+@click.pass_obj
 def build(ctx, native):
     with open('.project_files', 'w+') as f:
         json.dump(glob.glob("*"), f)
@@ -72,7 +69,7 @@ def build(ctx, native):
 
 
 @cli.command(help="Clean dependencies after build")
-@stylist_context
+@click.pass_obj
 def clean(ctx):
     with open('.project_files') as f:
         project_files = json.load(f)
@@ -92,36 +89,11 @@ def clean(ctx):
 
 @cli.command(help="Deploy apex function")
 @click.argument('apex_args', nargs=-1, type=click.UNPROCESSED)
-@stylist_context
+@click.pass_obj
 def deploy(ctx, apex_args):
     try:
         apex = Apex(ctx)
         apex.deploy(apex_args)
-    except ApexException as e:
-        logger.error(e.message)
-        logger.error(e.cmd)
-
-
-@cli.command(help="Init apex project")
-@click.option('--vpc', help="VPC name in which lambda functions should be placed")
-@click.option('--security-group', help="List of security groups")
-@click.option('--subnet', help="List of security groups")
-@click.argument('apex_args', nargs=-1, type=click.UNPROCESSED)
-@stylist_context
-def init(ctx, vpc, security_group, subnet, apex_args):
-    try:
-        apex = Apex(ctx)
-        apex.init(apex_args)
-
-        with open(join(ctx.working_dir, 'project.json'), 'r+') as f:
-            config = OrderedDict(json.load(f))
-
-            if 'hooks' not in config:
-                config['hooks'] = {'build': 'stylist apex build',
-                                   'clean': 'stylist apex clean'}
-                f.seek(0)
-                json.dump(config, f, indent=4)
-
     except ApexException as e:
         logger.error(e.message)
         logger.error(e.cmd)

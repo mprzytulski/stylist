@@ -6,5 +6,5 @@ class ServerlessFeature(Feature):
     def installed(self):
         return False
 
-    def _do_setup(self):
+    def _do_setup(self, init_args):
         pass

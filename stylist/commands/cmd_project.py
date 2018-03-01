@@ -9,15 +9,13 @@ import yaml
 from click import Path
 
 import stylist.provider.sentry as sentry
-from stylist.cli import stylist_context, logger
+from stylist.cli import logger
 from stylist.commands import cli_prototype
-from stylist.feature import get_feature, FEATURES, FeatureException
+from stylist.feature import FeatureException
 from stylist.utils import table
 
 cli = copy(cli_prototype)
 cli.short_help = 'Stylist project helper'
-
-TEMPLATES_REPO = 'git@github.com:ThreadsStylingLtd/stylist.git'
 
 GIT_IGNORE = """
 .stylist/environment
@@ -32,7 +30,7 @@ terraform/.terraform/plugins/*
 @cli.command(help='Initialise new project')
 @click.argument('git_repository', default='.')
 @click.option('--path', type=Path(), help='Destination directory in which project should be initialised')
-@stylist_context
+@click.pass_obj
 def init(ctx, git_repository, path):
     """
     @@ignore_check@@
@@ -90,12 +88,13 @@ def init(ctx, git_repository, path):
 
 
 @cli.command('add-feature', help="Add new feature to current project")
-@click.argument('feature', type=click.Choice(FEATURES.keys()))
-@stylist_context
-def add_feature(ctx, feature):
+@click.argument('feature')
+@click.argument('init_args', nargs=-1, type=click.UNPROCESSED)
+@click.pass_obj
+def add_feature(ctx, feature, init_args):
     try:
         f = get_feature(feature, ctx)
-        f.setup()
+        f.setup(init_args)
 
         click.secho('Feature "{}" has been added to your project'.format(feature), fg='green')
     except FeatureException as e:
@@ -104,7 +103,7 @@ def add_feature(ctx, feature):
 
 
 @cli.command('list-features', help="List all available features")
-@stylist_context
+@click.pass_obj
 def list_features(ctx):
     features = []
     for feature, inst in FEATURES.items():

@@ -8,7 +8,7 @@ import boto3
 import click
 import yaml
 
-from stylist.cli import stylist_context, logger
+from stylist.cli import logger
 from stylist.commands import cli_prototype
 from stylist.click.types import EventAwareFile
 from stylist.emulator import ExecutionContext
@@ -29,7 +29,7 @@ cli.short_help = 'Manage serverless functions'
 @click.option('--event', default=False, flag_value='event', help='Display event details (may increase outout size)')
 @click.argument('function_name')
 @click.argument('source', type=EventAwareFile(mode='r'))
-@stylist_context
+@click.pass_obj
 def invoke(ctx, function_name, source, mode, force, event, cleanup=False):
     try:
         sls = Serverless.from_context(ctx)
@@ -80,7 +80,7 @@ def invoke(ctx, function_name, source, mode, force, event, cleanup=False):
 
 @cli.command(help='List all named events known for given function name')
 @click.argument('function_name')
-@stylist_context
+@click.pass_obj
 def events(ctx, function_name):
     try:
         sls = Serverless.from_context(ctx)
@@ -99,7 +99,7 @@ def events(ctx, function_name):
 
 
 @cli.command(help='Deploy lambda function')
-@stylist_context
+@click.pass_obj
 def deploy(ctx):
     if not isfile('./serverless.yml'):
         raise Exception('No "serverless.yml" file in your current directory')

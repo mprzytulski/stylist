@@ -4,15 +4,17 @@ import logging
 
 import click
 import click_log
-import os
 
-from stylist.click import CONTEXT_SETTINGS, ComplexCLI, Context
+from stylist.click import ComplexCLI
+from stylist.core import Stylist
+
+CONTEXT_SETTINGS = dict(
+    auto_envvar_prefix='STYLIST',
+    obj=Stylist()
+)
 
 logger = logging.getLogger(__name__)
 click_log.basic_config(logger)
-
-stylist_context = click.make_pass_decorator(Context, ensure=True)
-os.environ['STYLIST'] = "1"
 
 
 @click.command(cls=ComplexCLI, context_settings=CONTEXT_SETTINGS)

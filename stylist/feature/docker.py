@@ -14,9 +14,9 @@ class DockerFeature(Feature):
 
     @property
     def installed(self):
-        return isfile(join(self.ctx.working_dir, 'Dockerfile'))
+        return isfile(join(self.stylist.working_dir, 'Dockerfile'))
 
-    def _do_setup(self):
+    def _do_setup(self, init_args):
         _docker = style('Docker', fg='blue')
 
         prompts = {
@@ -24,7 +24,7 @@ class DockerFeature(Feature):
         }
 
         dockerfile = "Dockerfile"
-        while isfile(join(self.ctx.working_dir, dockerfile)):
+        while isfile(join(self.stylist.working_dir, dockerfile)):
             dockerfile = \
                 click.prompt("{file} exits, please provide alternative name".format(file=style(dockerfile, fg="red")))
 
@@ -38,7 +38,7 @@ class DockerFeature(Feature):
         }
 
         for src, dst in templates.items():
-            dst_path = join(self.ctx.working_dir, dst)
+            dst_path = join(self.stylist.working_dir, dst)
             if isfile(dst_path):
                 continue
 
@@ -47,9 +47,9 @@ class DockerFeature(Feature):
                 f.write(template.render(**values))
 
         if click.prompt(_docker + ' | Enable terraform ecs_service support?', type=Boolean(), default='yes'):
-            alias = self.ctx.name
+            alias = self.stylist.name
 
             if dockerfile != 'Dockerfile':
                 alias += '-' + dockerfile.replace('Dockerfile.', '')
 
-            self.enable_terraform(self.ctx, 'ecs_service', alias)
+            self.enable_terraform(self.stylist, 'ecs_service', alias)

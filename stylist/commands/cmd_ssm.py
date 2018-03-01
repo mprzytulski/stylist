@@ -4,7 +4,7 @@ from copy import copy
 
 import click
 
-from stylist.cli import stylist_context, logger
+from stylist.cli import logger
 from stylist.click.types import Boolean
 from stylist.commands import cli_prototype
 from stylist.utils import table
@@ -31,14 +31,14 @@ def write_helper(ctx, namespace, encrypt, parameter, value):
 @click.option('--encrypt/--no-encrypt', help="Encrypt value", default=True)
 @click.argument('parameter')
 @click.argument('value')
-@stylist_context
+@click.pass_obj
 def write(ctx, namespace, encrypt, parameter, value):
     write_helper(ctx, namespace, encrypt, parameter, value)
 
 
 @cli.command(help="List all parameters for given service / resource SSM")
 @click.argument("namespace", nargs=-1)
-@stylist_context
+@click.pass_obj
 def list(ctx, namespace):
     namespace = namespace or ("service:" + re.sub('\W', '-', ctx.name),)
 
@@ -53,7 +53,7 @@ def list(ctx, namespace):
 
 @cli.command(help="Dump all parameters in key=value format")
 @click.argument("namespace", nargs=-1)
-@stylist_context
+@click.pass_obj
 def dump(ctx, namespace):
     namespace = namespace or ("service:" + re.sub('\W', '-', ctx.name),)
     _all = ctx.provider.ssm.get_full_parameters(*namespace, env=True)
@@ -65,7 +65,7 @@ def dump(ctx, namespace):
 @cli.command(help="Delete parameter with given name")
 @click.option('--namespace', help="Namespace under which parameter should be stored, for example service:name")
 @click.argument('parameter')
-@stylist_context
+@click.pass_obj
 def delete(ctx, namespace, parameter):
     namespace = namespace or "service:" + re.sub('\W', '-', ctx.name)
 

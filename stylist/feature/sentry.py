@@ -1,5 +1,3 @@
-import click
-
 from stylist.feature import Feature, FeatureException
 from stylist.provider.sentry import proj_init_integration
 
@@ -11,12 +9,12 @@ class SentryFeature(Feature):
 
     @property
     def installed(self):
-        ssm = self.ctx.provider.ssm
+        ssm = self.stylist.provider.ssm
 
-        return 'sentry' in ssm.get_short_parameters('service:{}'.format(self.ctx.name))
+        return 'sentry' in ssm.get_short_parameters('service:{}'.format(self.stylist.name))
 
-    def _do_setup(self):
+    def _do_setup(self, init_args):
         try:
-            proj_init_integration(self.ctx)
+            proj_init_integration(self.stylist)
         except KeyError:
             raise FeatureException('Failed to initialise sentry feature, please check stylist configuration.')

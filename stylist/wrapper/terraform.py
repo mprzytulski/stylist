@@ -3,20 +3,18 @@ from __future__ import absolute_import
 import json
 import os
 import re
-import shutil
 import subprocess
 import sys
 import tempfile
 import time
 from glob import glob
-from os.path import isfile, join, isdir, exists, dirname, basename
+from os.path import isfile, join, isdir, exists, basename
 
 import click
 import hcl
 from click import style, prompt
 from jinja2 import Template
 
-from stylist.cli import logger
 from stylist.commands.cmd_check import which
 from stylist.utils import compare_dicts
 
@@ -42,14 +40,18 @@ class TerraformException(Exception):
 class Terraform(object):
     STYLIST_VAR_NAMES = ('context',)
 
-    def __init__(self, ctx, templates=None):
-        self.ctx = ctx
+    def __init__(self, stylist, templates=None):
+        """
+        :param stylist: Stylist
+        :param templates:
+        """
+        self.stylist = stylist
         self.cmd = which('terraform')
         self.templates = templates
 
     @property
     def terraform_dir(self):
-        return join(self.ctx.working_dir, "terraform")
+        return join(self.stylist.working_dir, "terraform")
 
     @property
     def tfupdate_path(self):
@@ -57,7 +59,7 @@ class Terraform(object):
 
     @property
     def env_vars_file(self):
-        return join(self.terraform_dir, 'env.{}.tfvars'.format(self.ctx.environment))
+        return join(self.terraform_dir, 'env.{}.tfvars'.format(self.stylist.environment))
 
     def plan(self, save=False, force_update=False):
         vars_file = self._ensure_env()
@@ -68,15 +70,15 @@ class Terraform(object):
         if isfile(vars_file):
             args += ['-var-file', vars_file]
 
-        aws_session = self.ctx.provider.session
+        aws_session = self.stylist.provider.session
         alb = aws_session.client('elbv2')
 
         inject_vars = {
-            'aws_account_id': self.ctx.provider.account_id,
+            'aws_account_id': self.stylist.provider.account_id,
             'aws_region': aws_session.region_name,
-            'aws_profile': self.ctx.provider.profile,
-            'environment': self.ctx.environment,
-            'project_name': self.ctx.name
+            'aws_profile': self.stylist.provider.profile,
+            'environment': self.stylist.environment,
+            'project_name': self.stylist.name
         }
 
         for lb in alb.describe_load_balancers().get('LoadBalancers'):
@@ -138,15 +140,15 @@ class Terraform(object):
             return {}
 
     def _ensure_env(self):
-        vars_file = join(self.terraform_dir, 'env.{env}.tfvars'.format(env=self.ctx.environment))
+        vars_file = join(self.terraform_dir, 'env.{env}.tfvars'.format(env=self.stylist.environment))
 
-        if self.ctx.environment == 'local':
+        if self.stylist.environment == 'local':
             raise TerraformException("You can't use terraform on local env")
 
-        if not isdir(join(self.terraform_dir, 'terraform.tfstate.d', self.ctx.environment)):
-            self._exec(['workspace', 'new', self.ctx.environment])
+        if not isdir(join(self.terraform_dir, 'terraform.tfstate.d', self.stylist.environment)):
+            self._exec(['workspace', 'new', self.stylist.environment])
 
-        self._exec(['workspace', 'select', self.ctx.environment])
+        self._exec(['workspace', 'select', self.stylist.environment])
 
         return vars_file
 

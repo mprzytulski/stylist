@@ -3,7 +3,7 @@ import sys
 
 import click
 
-from stylist.cli import stylist_context, logger
+# from stylist.cli import logger
 from stylist.click import GroupWithCommandOptions
 
 _global_options = [
@@ -31,7 +31,7 @@ def ensure_project_directory(dir):
 
 @click.group(cls=GroupWithCommandOptions)
 @global_options
-@stylist_context
+@click.pass_obj
 def cli_prototype(ctx, working_dir, profile, project_name):
     working_dir = working_dir or ctx.working_dir
     try:
