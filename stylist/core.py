@@ -22,6 +22,7 @@ class Stylist(object):
         self.settings = self._get_settings()
         self.name = self._get_name()
         self.features = {}
+        self.profile = self._get_active_profile()
 
     @property
     def environment_file(self):
@@ -65,7 +66,7 @@ class Stylist(object):
 
         return name
 
-    def _active_environment(self):
+    def _get_active_profile(self):
         if not isfile(self.environment_file):
             return 'local'
 

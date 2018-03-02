@@ -5,7 +5,7 @@ import logging
 import click
 import click_log
 
-from stylist.click import ComplexCLI
+from stylist.click import StylistCli
 from stylist.core import Stylist
 
 CONTEXT_SETTINGS = dict(
@@ -17,6 +17,5 @@ logger = logging.getLogger(__name__)
 click_log.basic_config(logger)
 
 
-@click.command(cls=ComplexCLI, context_settings=CONTEXT_SETTINGS)
-def cli():
-    pass
+cli = StylistCli(context_settings=CONTEXT_SETTINGS)
+

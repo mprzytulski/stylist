@@ -1,6 +1,5 @@
 import os
 import sys
-from copy import copy
 from subprocess import call
 
 import click
@@ -10,12 +9,9 @@ from click import Path
 
 import stylist.provider.sentry as sentry
 from stylist.cli import logger
-from stylist.commands import cli_prototype
-from stylist.feature import FeatureException
-from stylist.utils import table
+from stylist.commands import GroupPrototype
 
-cli = copy(cli_prototype)
-cli.short_help = 'Stylist project helper'
+cli = GroupPrototype.create('Stylist project helper')
 
 GIT_IGNORE = """
 .stylist/environment
@@ -35,6 +31,8 @@ def init(ctx, git_repository, path):
     """
     @@ignore_check@@
     """
+
+    return
 
     try:
         if git_repository == '.':
@@ -86,33 +84,33 @@ def init(ctx, git_repository, path):
         logger.error('Failed to create project - you may need clean it up manually. \n{}'.format(e))
         sys.exit(1)
 
-
-@cli.command('add-feature', help="Add new feature to current project")
-@click.argument('feature')
-@click.argument('init_args', nargs=-1, type=click.UNPROCESSED)
-@click.pass_obj
-def add_feature(ctx, feature, init_args):
-    try:
-        f = get_feature(feature, ctx)
-        f.setup(init_args)
-
-        click.secho('Feature "{}" has been added to your project'.format(feature), fg='green')
-    except FeatureException as e:
-        click.secho(e.message, fg='red')
-        sys.exit(1)
-
-
-@cli.command('list-features', help="List all available features")
-@click.pass_obj
-def list_features(ctx):
-    features = []
-    for feature, inst in FEATURES.items():
-        features.append([
-            feature,
-            str(inst.__doc__ or '').strip(),
-            click.style('true', fg='green') if get_feature(feature, ctx).installed else 'false'
-        ])
-
-    click.secho(
-        table("STYLIST FEATURES", features, ["FEATURE", "DESCRIPTION", "INSTALLED"]).table
-    )
+#
+# @cli.command('add-feature', help="Add new feature to current project")
+# @click.argument('feature')
+# @click.argument('init_args', nargs=-1, type=click.UNPROCESSED)
+# @click.pass_obj
+# def add_feature(ctx, feature, init_args):
+#     try:
+#         f = get_feature(feature, ctx)
+#         f.setup(init_args)
+#
+#         click.secho('Feature "{}" has been added to your project'.format(feature), fg='green')
+#     except FeatureException as e:
+#         click.secho(e.message, fg='red')
+#         sys.exit(1)
+#
+#
+# @cli.command('list-features', help="List all available features")
+# @click.pass_obj
+# def list_features(stylist):
+#     features = []
+#     for feature, inst in list_features().items():
+#         features.append([
+#             feature,
+#             str(inst.__doc__ or '').strip(),
+#             click.style('true', fg='green') if feature in stylist.features else 'false'
+#         ])
+#
+#     click.secho(
+#         table("STYLIST FEATURES", features, ["FEATURE", "DESCRIPTION", "INSTALLED"]).table
+#     )
