@@ -1,17 +1,16 @@
 import os
-from copy import copy
+import sys
 
 import click
-import sys
 from click import style
+
 from stylist.cli import logger
 from stylist.click.types import Boolean
-from stylist.commands import cli_prototype
-from stylist.wrapper.terraform import Terraform, TerraformException
+from stylist.commands import GroupPrototype
 from stylist.utils import colourize, table
+from stylist.wrapper.terraform import Terraform, TerraformException
 
-cli = copy(cli_prototype)
-cli.short_help = 'Wrapper around terraform'
+cli = GroupPrototype.create('Wrapper around terraform')
 
 
 @cli.command(help="Show terraform plan for current env")

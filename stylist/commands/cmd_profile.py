@@ -1,16 +1,14 @@
-from copy import copy
 from os.path import isdir, join
 
 import click
 
 from stylist.cli import logger
-from stylist.commands import cli_prototype
+from stylist.commands import GroupPrototype
 from stylist.provider.aws import SSM
 from stylist.utils import colourize
 from stylist.wrapper.terraform import Terraform, TerraformException
 
-cli = copy(cli_prototype)
-cli.short_help = 'Manage project environments'
+cli = GroupPrototype.create('Manage project environments')
 
 
 @cli.command(help="Show active environment for current working directory")

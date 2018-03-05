@@ -1,14 +1,12 @@
 import base64
-from copy import copy
 
 import click
 
 from stylist.cli import logger
-from stylist.commands import cli_prototype
+from stylist.commands import GroupPrototype
 from stylist.utils import line_prefix
 
-cli = copy(cli_prototype)
-cli.short_help = "AWS KMS encryption helper"
+cli = GroupPrototype.create("AWS KMS encryption helper")
 
 
 @cli.command(help="Encrypt plain text with context encryption key")

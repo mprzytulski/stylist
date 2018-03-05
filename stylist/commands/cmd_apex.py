@@ -3,18 +3,16 @@ import json
 import os
 import shutil
 import subprocess
-from copy import copy
 from os.path import join, isfile
 
 import click
 
 from stylist.cli import logger
-from stylist.commands import cli_prototype
+from stylist.commands import GroupPrototype
 from stylist.wrapper.apex import Apex, ApexException
 from stylist.wrapper.docker import Docker, DockerException
 
-cli = copy(cli_prototype)
-cli.short_help = "Helper for apex lambda functions"
+cli = GroupPrototype.create("Helper for apex lambda functions")
 
 
 @cli.command(help="Install function dependencies")

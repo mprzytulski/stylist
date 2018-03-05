@@ -1,12 +1,9 @@
-from copy import copy
-
 import click
 
-from stylist.commands import cli_prototype
+from stylist.commands import GroupPrototype
 from stylist.wrapper.yoyo import Yoyo
 
-cli = copy(cli_prototype)
-cli.short_help = "Manage database migrations"
+cli = GroupPrototype.create("Manage database migrations")
 
 
 @cli.command(help="Create new database migration")

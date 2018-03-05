@@ -1,13 +1,10 @@
-from copy import copy
-
 import click
 
 from stylist.cli import logger
-from stylist.commands import cli_prototype
+from stylist.commands import GroupPrototype
 from stylist.wrapper.chalice import Chalice, ChaliceException
 
-cli = copy(cli_prototype)
-cli.short_help = "Helper for AWS chalice framework"
+cli = GroupPrototype.create("Helper for AWS chalice framework")
 
 
 @cli.command(help="Deploy chalice project")

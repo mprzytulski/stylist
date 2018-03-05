@@ -1,19 +1,17 @@
+import re
 import sys
-from copy import copy
 
 import click
-import re
 from click import style
 
 from stylist.cli import logger
 from stylist.click.types import Boolean
-from stylist.commands import cli_prototype
+from stylist.commands import GroupPrototype
 from stylist.utils import colourize
 from stylist.wrapper.docker import NotADockerProjectException, Docker, _get_docker_files
 from stylist.wrapper.terraform import Terraform, TerraformException
 
-cli = copy(cli_prototype)
-cli.short_help = 'ECS Service management'
+cli = GroupPrototype.create('ECS Service management')
 
 
 @cli.command(help='Enrol given version of docker image')

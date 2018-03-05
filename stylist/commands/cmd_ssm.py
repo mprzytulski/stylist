@@ -1,16 +1,14 @@
 import re
 import sys
-from copy import copy
 
 import click
 
 from stylist.cli import logger
 from stylist.click.types import Boolean
-from stylist.commands import cli_prototype
+from stylist.commands import GroupPrototype
 from stylist.utils import table
 
-cli = copy(cli_prototype)
-cli.short_help = "Manage SSM parameters store"
+cli = GroupPrototype.create("Manage SSM parameters store")
 
 
 def write_helper(ctx, namespace, encrypt, parameter, value):

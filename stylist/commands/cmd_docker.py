@@ -1,17 +1,15 @@
 import re
 import sys
-from copy import copy
 from datetime import datetime
 
 import click
 
 from stylist.cli import logger
-from stylist.commands import cli_prototype
+from stylist.commands import GroupPrototype
 from stylist.utils import table
 from stylist.wrapper.docker import Docker, NotADockerProjectException, DockerException, _get_docker_files
 
-cli = copy(cli_prototype)
-cli.short_help = 'Docker image helper'
+cli = GroupPrototype.create('Docker image helper')
 
 
 @cli.command(help='Build docker image using Dockerfile', context_settings=dict(

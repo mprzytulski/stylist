@@ -1,6 +1,5 @@
 import subprocess
 import sys
-from copy import copy
 from glob import glob
 from os.path import join, basename, isfile
 
@@ -9,16 +8,15 @@ import click
 import yaml
 
 from stylist.cli import logger
-from stylist.commands import cli_prototype
 from stylist.click.types import EventAwareFile
+from stylist.commands import GroupPrototype
 from stylist.emulator import ExecutionContext
 from stylist.emulator.aws import Emulator
-from stylist.wrapper.serverless import Serverless, FunctionNotFoundException, InvalidContextException
 from stylist.utils import highlight_json, display_section, table
+from stylist.wrapper.serverless import Serverless, FunctionNotFoundException, InvalidContextException
 from stylist.wrapper.virtualenv import Virtualenv
 
-cli = copy(cli_prototype)
-cli.short_help = 'Manage serverless functions'
+cli = GroupPrototype.create('Manage serverless functions')
 
 
 @cli.command(help='Invoke serverless lambda function with predefined event')

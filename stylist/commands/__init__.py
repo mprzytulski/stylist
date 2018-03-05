@@ -1,20 +1,11 @@
 import os
-import sys
 from copy import copy
 
 import click
 from click import Group
 
-from stylist.cli import logger
-from stylist.click import GroupWithCommandOptions
+from stylist.click import CustomGroup
 
-
-#
-# def global_options(func):
-#     for option in reversed(_global_options):
-#         func = option(func)
-#     return func
-#
 
 class NotProjectDirectoryException(Exception):
     pass

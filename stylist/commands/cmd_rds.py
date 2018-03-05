@@ -1,22 +1,19 @@
+import os
+import re
+import subprocess
 import sys
-from copy import copy
 
 import click
-import re
-
-import os
-import subprocess
 from pygments import highlight
 from pygments.formatters import get_formatter_by_name
 from pygments.lexers import get_lexer_by_name
-from stylist.helper.rds import DbContext, get_connection_credentials
 
 from stylist.cli import logger
 from stylist.click.types import Boolean
-from stylist.commands import cli_prototype
+from stylist.commands import GroupPrototype
+from stylist.helper.rds import DbContext, get_connection_credentials
 
-cli = copy(cli_prototype)
-cli.short_help = "Manage database creation / users / schemas"
+cli = GroupPrototype.create("Manage database creation / users / schemas")
 
 
 def get_service_role_name(ctx):
