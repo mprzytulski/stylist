@@ -5,9 +5,10 @@ from datetime import datetime
 import click
 
 from stylist.cli import logger
-from stylist.commands import GroupPrototype
-from stylist.utils import table
-from stylist.wrapper.docker import Docker, NotADockerProjectException, DockerException, _get_docker_files
+# from stylist.commands import GroupPrototype
+# from stylist.utils import table
+# from stylist.wrapper.docker import Docker, NotADockerProjectException, DockerException, _get_docker_files
+from stylist.core.click import GroupPrototype
 
 cli = GroupPrototype.create('Docker image helper')
 

@@ -1,7 +1,8 @@
 import click
 
-from stylist.commands import GroupPrototype
-from stylist.wrapper.yoyo import Yoyo
+# from stylist.commands import GroupPrototype
+# from stylist.wrapper.yoyo import Yoyo
+from stylist.core.click import GroupPrototype
 
 cli = GroupPrototype.create("Manage database migrations")
 

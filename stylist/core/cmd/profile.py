@@ -3,10 +3,10 @@ from os.path import isdir, join
 import click
 
 from stylist.cli import logger
-from stylist.commands import GroupPrototype
-from stylist.provider.aws import SSM
-from stylist.utils import colourize
-from stylist.wrapper.terraform import Terraform, TerraformException
+# from stylist.provider.aws import SSM
+# from stylist.utils import colourize
+# from stylist.wrapper.terraform import Terraform, TerraformException
+from stylist.core.click import GroupPrototype
 
 cli = GroupPrototype.create('Manage project environments')
 

@@ -9,12 +9,13 @@ import yaml
 
 from stylist.cli import logger
 from stylist.click.types import EventAwareFile
-from stylist.commands import GroupPrototype
-from stylist.emulator import ExecutionContext
-from stylist.emulator.aws import Emulator
-from stylist.utils import highlight_json, display_section, table
-from stylist.wrapper.serverless import Serverless, FunctionNotFoundException, InvalidContextException
-from stylist.wrapper.virtualenv import Virtualenv
+# from stylist.commands import GroupPrototype
+# from stylist.emulator import ExecutionContext
+# from stylist.emulator.aws import Emulator
+# from stylist.utils import highlight_json, display_section, table
+# from stylist.wrapper.serverless import Serverless, FunctionNotFoundException, InvalidContextException
+# from stylist.wrapper.virtualenv import Virtualenv
+from stylist.core.click import GroupPrototype
 
 cli = GroupPrototype.create('Manage serverless functions')
 

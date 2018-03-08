@@ -3,7 +3,7 @@ from __future__ import absolute_import
 import os
 import sys
 from genericpath import isfile
-from os.path import join
+from os.path import join, realpath
 
 import click
 from git import Repo, InvalidGitRepositoryError
@@ -17,7 +17,7 @@ class Stylist(object):
     def __init__(self):
         self.cwd = os.getcwd()
         # @todo: that should be simplified
-        self.working_dir = find_dotenv(filename='.git', path=self.cwd, limit=self.cwd) or self.cwd
+        self.working_dir = realpath(join(find_dotenv(filename='.git', path=self.cwd, limit=self.cwd), '..')) or self.cwd
         self.config_filename = 'config.yml'
         self.settings = self._get_settings()
         self.name = self._get_name()

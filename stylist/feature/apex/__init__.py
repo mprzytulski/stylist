@@ -3,7 +3,7 @@ from collections import OrderedDict
 from os.path import join, isfile
 
 from stylist.feature import Feature, FeatureSetupException
-from stylist.wrapper.apex import Apex, ApexException
+# from stylist.wrapper.apex import Apex, ApexException
 
 
 class ApexFeature(Feature):

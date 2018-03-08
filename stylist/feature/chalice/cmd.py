@@ -1,8 +1,9 @@
 import click
 
 from stylist.cli import logger
-from stylist.commands import GroupPrototype
-from stylist.wrapper.chalice import Chalice, ChaliceException
+# from stylist.commands import GroupPrototype
+# from stylist.wrapper.chalice import Chalice, ChaliceException
+from stylist.core.click import GroupPrototype
 
 cli = GroupPrototype.create("Helper for AWS chalice framework")
 

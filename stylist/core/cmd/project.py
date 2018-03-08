@@ -7,9 +7,10 @@ import git
 import yaml
 from click import Path
 
-import stylist.provider.sentry as sentry
-from stylist.cli import logger
-from stylist.commands import GroupPrototype
+# import stylist.provider.sentry as sentry
+# from stylist.cli import logger
+# from stylist.commands import GroupPrototype
+from stylist.core.click import GroupPrototype
 
 cli = GroupPrototype.create('Stylist project helper')
 

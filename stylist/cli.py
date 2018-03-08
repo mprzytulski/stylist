@@ -2,10 +2,9 @@ from __future__ import absolute_import
 
 import logging
 
-import click
 import click_log
 
-from stylist.click import StylistCli
+from stylist.core.click import StylistCli
 from stylist.core import Stylist
 
 CONTEXT_SETTINGS = dict(

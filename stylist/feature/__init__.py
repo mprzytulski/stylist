@@ -1,4 +1,14 @@
+import os
 from abc import abstractmethod, ABCMeta
+
+
+class NotProjectDirectoryException(Exception):
+    pass
+
+
+def ensure_project_directory(dir):
+    if not os.path.isdir(os.path.join(dir, '.stylist')):
+        raise NotProjectDirectoryException("Given directory is not under a stylist control")
 
 
 class Feature(object):

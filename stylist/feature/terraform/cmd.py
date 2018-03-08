@@ -6,9 +6,10 @@ from click import style
 
 from stylist.cli import logger
 from stylist.click.types import Boolean
-from stylist.commands import GroupPrototype
-from stylist.utils import colourize, table
-from stylist.wrapper.terraform import Terraform, TerraformException
+# from stylist.commands import GroupPrototype
+# from stylist.utils import colourize, table
+# from stylist.wrapper.terraform import Terraform, TerraformException
+from stylist.core.click import GroupPrototype
 
 cli = GroupPrototype.create('Wrapper around terraform')
 
