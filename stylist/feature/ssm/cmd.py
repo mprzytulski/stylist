@@ -5,7 +5,7 @@ import click
 
 from stylist.cli import logger
 from stylist.click.types import Boolean
-from stylist.commands import GroupPrototype
+from stylist.core.click import GroupPrototype
 from stylist.utils import table
 
 cli = GroupPrototype.create("Manage SSM parameters store")

@@ -3,7 +3,7 @@ import base64
 import click
 
 from stylist.cli import logger
-from stylist.commands import GroupPrototype
+from stylist.core.click import GroupPrototype
 from stylist.utils import line_prefix
 
 cli = GroupPrototype.create("AWS KMS encryption helper")

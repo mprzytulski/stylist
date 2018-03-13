@@ -2,18 +2,28 @@ from __future__ import absolute_import
 
 import os
 import sys
+import dependency_injector.containers as containers
 from genericpath import isfile
 from os.path import join, realpath
 
 import click
 from git import Repo, InvalidGitRepositoryError
+from pydispatch import Dispatcher
 
 from stylist import config
 from stylist.config import schema
+from stylist.core.providers import ConfigStorage, DockerRepositoryProvider
 from stylist.utils import find_dotenv
 
 
-class Stylist(object):
+class TaggedDynamicContainer(containers.DynamicContainer):
+    def add(self, service, tags):
+        setattr(self, *service)
+
+
+class Stylist(Dispatcher):
+    _events_ = ['configure', 'load']
+
     def __init__(self):
         self.cwd = os.getcwd()
         # @todo: that should be simplified
@@ -23,6 +33,7 @@ class Stylist(object):
         self.name = self._get_name()
         self.features = {}
         self.profile = self._get_active_profile()
+        self.container = containers.DynamicContainer()
 
     @property
     def environment_file(self):
@@ -35,20 +46,6 @@ class Stylist(object):
     @property
     def config_file(self):
         return join(self.local_config_dir, self.config_filename)
-
-    #     @property
-    #     def provider(self):
-    #         if not self._provider:
-    #             self.set_provider(self.environment)
-    #
-    #         return self._provider
-    #
-    #     def set_provider(self, profile):
-    #         self._provider = AWSProvider(self)
-    #         self._provider.load()
-    #         self._provider.values.update({
-    #             'profile': self.settings.get('stylist', {}).get('provider', {}).get('prefix', '') + profile
-    #         })
 
     def _get_name(self):
         try:

@@ -1,7 +1,13 @@
 import click
 
-from stylist.helper.rds.flavors import MySQLFlavor, PostgreSQLFlavor
+
+from stylist.feature.aws import AwsFeature
 from stylist.utils import random_password
+
+
+class RdsFeature(AwsFeature):
+    def _do_setup(self, init_args):
+        pass
 
 
 def get_connection_credentials(ctx, instance, db=None):

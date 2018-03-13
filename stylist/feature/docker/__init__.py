@@ -14,7 +14,6 @@ class DockerFeature(Feature):
 
     @property
     def installed(self):
-        print join(self.stylist.working_dir, 'Dockerfile')
         return isfile(join(self.stylist.working_dir, 'Dockerfile'))
 
     def _do_setup(self, init_args):
@@ -54,3 +53,5 @@ class DockerFeature(Feature):
                 alias += '-' + dockerfile.replace('Dockerfile.', '')
 
             self.enable_terraform(self.stylist, 'ecs_service', alias)
+
+

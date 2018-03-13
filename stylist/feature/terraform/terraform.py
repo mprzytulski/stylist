@@ -15,7 +15,7 @@ import hcl
 from click import style, prompt
 from jinja2 import Template
 
-from stylist.commands.cmd_check import which
+from stylist.lib import which
 from stylist.utils import compare_dicts
 
 PROVIDER_TEMPLATE = """

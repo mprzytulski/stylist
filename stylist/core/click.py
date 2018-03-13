@@ -21,8 +21,8 @@ def list_features():
 
             m = importlib.import_module(_module_name)
             features[_name] = getattr(m, cls)
-        except ImportError:
-            pass
+        except ImportError as e:
+            print e.message
 
     return features
 
@@ -64,6 +64,9 @@ class StylistCli(MultiCommand):
                 ctx.obj.features[name] = feature
 
         rv.sort()
+
+        ctx.obj.emit('configure', stylist=ctx.obj)
+        ctx.obj.emit('load', stylist=ctx.obj)
 
         return rv
 

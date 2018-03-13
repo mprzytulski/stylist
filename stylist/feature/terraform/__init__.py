@@ -1,8 +1,8 @@
 from os.path import isdir
 
 from stylist.feature import Feature
+from stylist.feature.terraform.terraform import Terraform
 from stylist.helper import Templates
-from stylist.wrapper.terraform import Terraform
 
 
 class TerraformFeature(Feature):

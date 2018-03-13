@@ -1,7 +1,7 @@
 from os.path import join, isdir
 
 from stylist.feature import Feature
-from stylist.wrapper.chalice import Chalice, ChaliceException
+# from stylist.wrapper.chalice import Chalice, ChaliceException
 
 
 class ChaliceFeature(Feature):

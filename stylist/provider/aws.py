@@ -1,10 +1,5 @@
-import os
-from ConfigParser import ConfigParser
-
-import boto3
 from threads_aws_utils import SSM as BaseSSM
 
-from stylist.provider import Provider
 from stylist.utils import compare_dicts
 
 
@@ -146,54 +141,3 @@ class SSM(BaseSSM):
             source.get_short_parameters(namespace),
             destination.get_short_parameters(namespace)
         )
-
-
-class AWSProvider(Provider):
-    name = "aws"
-    _account_id = None
-
-    known_params = {
-        "profile": ("AWS cli profile name for env {env_name}", {"type": str, "default": "default"})
-    }
-
-    @property
-    def session(self):
-        return self.get_session(self.profile)
-
-    def get_session(self, profile):
-        return boto3.Session(profile_name=profile)
-
-    def get_session_for_stage(self, stage):
-        return self.get_session(
-            '{}{}'.format(
-                self.ctx.settings.get('stylist', {}).get('provider', {}).get('prefix'),
-                stage
-            )
-        )
-
-    @property
-    def account_id(self):
-        if not self._account_id:
-            self._account_id = self.session.client('sts').get_caller_identity()["Account"]
-
-        return self._account_id
-
-    @property
-    def ssm(self):
-        return SSM(self.session.client('ssm'), self.ctx)
-
-    @property
-    def credentials(self):
-        config = ConfigParser()
-        config.read([os.path.expanduser('~/.aws/credentials')])
-
-        values = {
-            'AWS_ACCESS_KEY_ID': config.get(self.profile, 'aws_access_key_id'),
-            'AWS_SECRET_ACCESS_KEY': config.get(self.profile, 'aws_secret_access_key')
-        }
-
-        config = ConfigParser()
-        config.read([os.path.expanduser('~/.aws/config')])
-        values['AWS_DEFAULT_REGION'] = config.get('profile ' + self.profile, 'region')
-
-        return values

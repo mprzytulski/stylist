@@ -10,8 +10,7 @@ from pygments.lexers import get_lexer_by_name
 
 from stylist.cli import logger
 from stylist.click.types import Boolean
-from stylist.commands import GroupPrototype
-from stylist.helper.rds import DbContext, get_connection_credentials
+from stylist.core.click import GroupPrototype
 
 cli = GroupPrototype.create("Manage database creation / users / schemas")
 

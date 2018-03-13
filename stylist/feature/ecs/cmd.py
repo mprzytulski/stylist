@@ -6,10 +6,8 @@ from click import style
 
 from stylist.cli import logger
 from stylist.click.types import Boolean
-from stylist.commands import GroupPrototype
+from stylist.core.click import GroupPrototype
 from stylist.utils import colourize
-from stylist.wrapper.docker import NotADockerProjectException, Docker, _get_docker_files
-from stylist.wrapper.terraform import Terraform, TerraformException
 
 cli = GroupPrototype.create('ECS Service management')
 

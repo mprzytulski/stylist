@@ -1,3 +1,5 @@
+python-dispatch
+dependency_injector
 click==6.7
 click-log==0.2.1
 Pygments==2.2.0

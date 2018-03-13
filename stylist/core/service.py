@@ -1,0 +1,3 @@
+class UnknownServiceTypeException(Exception):
+    pass
+
