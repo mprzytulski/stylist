@@ -8,7 +8,7 @@ from copy import copy
 from os.path import dirname, join, abspath
 
 import click
-from click import MultiCommand, Group
+from click import MultiCommand, Group, Context
 
 
 def list_features():
@@ -50,23 +50,45 @@ class GroupPrototype(object):
 
 
 class StylistCli(MultiCommand):
+    def __init__(self, name=None, invoke_without_command=False, no_args_is_help=None, subcommand_metavar=None,
+                 chain=False, result_callback=None, **attrs):
+        super(StylistCli, self).__init__(name, invoke_without_command, no_args_is_help, subcommand_metavar, chain,
+                                         result_callback, **attrs)
+
+    def make_context(self, info_name, args, parent=None, **extra):
+        for key, value in self.context_settings.items():
+            if key not in extra:
+                extra[key] = value
+
+        ctx = Context(self, info_name=info_name, parent=parent, **extra)
+
+        for name, cls in list_features().items():
+            feature = cls(ctx.obj)
+            if feature.installed:
+                ctx.obj.features[name] = feature
+
+                if hasattr(feature, 'on_init'):
+                    ctx.obj.bind(init=feature.on_init)
+
+                if hasattr(feature, 'on_config'):
+                    ctx.obj.bind(config=feature.on_config)
+
+        ctx.obj.emit('init', stylist=ctx.obj)
+        ctx.obj.emit('config', stylist=ctx.obj)
+
+        with ctx.scope(cleanup=False):
+            self.parse_args(ctx, args)
+
+        return ctx
+
     def list_commands(self, ctx):
-        rv = []
+        rv = ctx.obj.features.keys()
         commands_path = abspath(join(dirname(__file__), '..', 'core', 'cmd'))
 
         for command in [f[:-3] for f in os.listdir(commands_path) if f != '__init__.py' and re.match(r'^\w+\.py$', f)]:
             rv.append(command)
 
-        for name, cls in list_features().items():
-            feature = cls(ctx.obj)
-            if feature.installed:
-                rv.append(name)
-                ctx.obj.features[name] = feature
-
         rv.sort()
-
-        ctx.obj.emit('configure', stylist=ctx.obj)
-        ctx.obj.emit('load', stylist=ctx.obj)
 
         return rv
 
@@ -78,6 +100,9 @@ class StylistCli(MultiCommand):
                 mod = importlib.import_module(pattern.format(name))
             except ImportError:
                 pass
+
+        if 'stylist.feature.' in mod.__name__ and name not in ctx.obj.features:
+            return None
 
         return mod.cli if hasattr(mod, 'cli') else None
 
@@ -108,10 +133,10 @@ class CustomGroup(Group):
                 del ctx.params[name]
 
             # call the group function with its parameters
-            params = ctx.params
-            ctx.params = ctx.obj['_params']
-            self.invoke(ctx)
-            ctx.params = params
+            # params = ctx.params
+            # ctx.params = ctx.obj['_params']
+            # self.invoke(ctx)
+            # ctx.params = params
 
             # now call (invoke) the original command
             original_invoke(ctx)

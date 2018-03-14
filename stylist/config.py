@@ -3,12 +3,33 @@ from os import path
 import anyconfig
 from schema import Schema, And, Optional
 
-schema = {Optional('stylist'): {Optional('provider'): {'prefix': str, 'type': str},
-                                Optional('stages'): list,
-                                Optional('name_exclusion'): list},
-          Optional('sentry'): {'auth_token': str, 'org': str, 'team': str},
-          Optional('terraform'): {Optional('templates'): str},
-          Optional('docker_images'): {'python3_lambda': str}}
+schema = {
+    Optional('stylist'): {
+        Optional('aws'): {
+            'prefix': str
+        },
+        Optional('stages'): list,
+        Optional('name_exclusion'): list,
+        Optional('providers'): {
+            Optional('config', default='ssm'): str,
+            Optional('docker'): {
+                Optional('repository', default='ecr')
+            },
+            Optional('error_tracker', default='sentry'): str,
+        }
+    },
+    Optional('sentry'): {
+        'auth_token': str,
+        'org': str,
+        'team': str
+    },
+    Optional('terraform'): {
+        Optional('templates'): str
+    },
+    Optional('docker_images'): {
+        'python3_lambda': str
+    }
+}
 
 schema_conformer = And(schema)
 

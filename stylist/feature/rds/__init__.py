@@ -1,11 +1,15 @@
 import click
 
-
+from stylist.feature import Feature
 from stylist.feature.aws import AwsFeature
 from stylist.utils import random_password
 
 
-class RdsFeature(AwsFeature):
+class RdsFeature(Feature):
+    @property
+    def installed(self):
+        pass
+
     def _do_setup(self, init_args):
         pass
 

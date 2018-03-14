@@ -1,19 +1,16 @@
+import dependency_injector.providers as providers
+
 from stylist.feature import Feature
 from stylist.feature.aws.provider import AWSProvider
-import dependency_injector.providers as providers
 
 
 class AwsFeature(Feature):
     @property
     def installed(self):
-        return False
+        return True
 
-    def __init__(self, stylist):
-        super(AwsFeature, self).__init__(stylist)
-        stylist.container.aws = providers.Singleton(AWSProvider)
-
-    # def configure(self, stylist):pip instal
-    #     stylist.registry(AWSProvider())
+    def on_init(self, stylist):
+        stylist.containers.get('global').aws = providers.Singleton(AWSProvider)
 
     def _do_setup(self, init_args):
         pass

@@ -26,6 +26,10 @@ class Feature(object):
     def installed(self):
         pass
 
+    def load_providers(self):
+        """Registry all services"""
+        pass
+
     @abstractmethod
     def _do_setup(self, init_args):
         pass

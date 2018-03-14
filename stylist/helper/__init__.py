@@ -11,10 +11,9 @@ class Templates(object):
     def __init__(self, ctx):
         self.ctx = ctx
 
-        self.terraform_modules_source = abspath(ctx.settings.get('terraform', {}).get(
-            'templates',
-            join(dirname(__file__), '..', '..', 'templates', 'terraform_modules')
-        ))
+        self.terraform_modules_source = abspath(
+            ctx.settings.terraform.templates or join(dirname(__file__), '..', '..', 'templates', 'terraform_modules')
+        )
 
         self.terraform_user_remote_source = \
             re.match('^https?://', self.terraform_modules_source) or self.terraform_modules_source.endswith('.git')

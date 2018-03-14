@@ -1,11 +1,11 @@
 from stylist.feature import Feature
-from stylist.feature.aws import AwsFeature
 
 
-class EcrFeature(Feature):
+class ConfigFeature(Feature):
     @property
     def installed(self):
-        pass
+        return True
 
     def _do_setup(self, init_args):
         pass
+
