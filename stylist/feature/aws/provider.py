@@ -13,8 +13,9 @@ class AwsSession(boto3.Session):
 class AWSProvider(object):
     name = "aws"
 
-    def __init__(self):
+    def __init__(self, prefix=''):
         self._sessions = {}
+        self.prefix = prefix
 
     def get_session(self, profile):
         """
@@ -23,7 +24,7 @@ class AWSProvider(object):
         :return:
         """
         if profile not in self._sessions:
-            self._sessions[profile] = AwsSession(profile_name=profile)
+            self._sessions[profile] = AwsSession(profile_name=self.prefix + profile)
 
         return self._sessions[profile]
 

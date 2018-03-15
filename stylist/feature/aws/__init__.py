@@ -10,7 +10,10 @@ class AwsFeature(Feature):
         return True
 
     def on_init(self, stylist):
-        stylist.containers.get('global').aws = providers.Singleton(AWSProvider)
+        stylist.containers.get('global').aws = providers.Singleton(
+            AWSProvider,
+            prefix=stylist.settings.stylist.aws.prefix or ''
+        )
 
     def _do_setup(self, init_args):
         pass
