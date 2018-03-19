@@ -18,6 +18,10 @@ class ConfigStorage(object):
         """Return all parameters from given namespaces"""
 
     @abstractmethod
+    def describe_parameters(self, *paths):
+        """Return all parameters from given namespaces"""
+
+    @abstractmethod
     def write(self, name, value, encrypt=True, tags=None):
         """Write value for given parameter"""
 

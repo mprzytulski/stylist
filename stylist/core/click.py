@@ -50,11 +50,6 @@ class GroupPrototype(object):
 
 
 class StylistCli(MultiCommand):
-    def __init__(self, name=None, invoke_without_command=False, no_args_is_help=None, subcommand_metavar=None,
-                 chain=False, result_callback=None, **attrs):
-        super(StylistCli, self).__init__(name, invoke_without_command, no_args_is_help, subcommand_metavar, chain,
-                                         result_callback, **attrs)
-
     def make_context(self, info_name, args, parent=None, **extra):
         for key, value in self.context_settings.items():
             if key not in extra:
@@ -63,7 +58,7 @@ class StylistCli(MultiCommand):
         ctx = Context(self, info_name=info_name, parent=parent, **extra)
 
         for name, cls in list_features().items():
-            feature = cls(ctx.obj)
+            feature = cls(ctx.obj, **ctx.obj.settings.stylist.features.get(name))
             if feature.installed:
                 ctx.obj.features[name] = feature
 

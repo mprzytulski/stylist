@@ -2,11 +2,12 @@ import dependency_injector.providers as providers
 
 from stylist.core import ConfigStorage as AbstractConfigStorage
 from stylist.feature import Feature
+from stylist.feature.kms import KMS
 from stylist.feature.ssm.lib import SSM
 
 
 class ConfigStorage(AbstractConfigStorage):
-    def __init__(self, stylist, aws):
+    def __init__(self, stylist, aws, key):
         """
         Create SSM based ConfigStorage
 
@@ -14,12 +15,17 @@ class ConfigStorage(AbstractConfigStorage):
         :type aws: stylist.feature.aws.provider.AWSProvider
         """
         super(ConfigStorage, self).__init__()
+        self.key = key
         self.aws = aws
         self.stylist = stylist
         self.ssm = None
 
     def __enter__(self, stage=None):
-        self.ssm = SSM(self.aws.get_session(stage or self.stylist.profile))
+        session = self.aws.get_session(stage or self.stylist.profile)
+        self.ssm = SSM(
+            session,
+            KMS(self.stylist, session)
+        )
         return self
 
     def __exit__(self, exc_type, exc_val, exc_tb):
@@ -33,9 +39,16 @@ class ConfigStorage(AbstractConfigStorage):
         return None
 
     def get_parameters(self, *paths):
-        parameters = []
+        parameters = {}
         for path in paths:
-            parameters += self.ssm.get_full_parameters(path)
+            parameters.update(self.ssm.get_parameters(path))
+
+        return parameters
+
+    def describe_parameters(self, *paths):
+        parameters = {}
+        for path in paths:
+            parameters.update(self.ssm.describe_parameters(path))
 
         return parameters
 
@@ -45,7 +58,13 @@ class ConfigStorage(AbstractConfigStorage):
     def delete(self, name):
         return self.ssm.delete(name)
 
+
 class SsmFeature(Feature):
+
+    def __init__(self, stylist, key='parameter_store_key'):
+        super(SsmFeature, self).__init__(stylist)
+        self.key = key
+
     @property
     def installed(self):
         return True
@@ -55,5 +74,5 @@ class SsmFeature(Feature):
 
     def on_config(self, stylist):
         stylist.containers.get('config').ssm = providers.Singleton(
-            ConfigStorage, stylist=stylist, aws=stylist.containers.get('global').aws
+            ConfigStorage, stylist=stylist, aws=stylist.containers.get('global').aws, key=self.key
         )

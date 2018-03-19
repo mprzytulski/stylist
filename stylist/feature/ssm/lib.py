@@ -3,7 +3,9 @@ class SSMException(Exception):
 
 
 class SSM(object):
-    def __init__(self, session):
+    def __init__(self, session, kms, key='parameter_store_key'):
+        self.kms = kms
+        self.key = key
         self.session = session
         self.ssm = session.client('ssm')
 
@@ -19,7 +21,7 @@ class SSM(object):
         }
 
         if encrypt:
-            args['KeyId'] = self._get_kms_key_by_name()
+            args['KeyId'] = self.kms.get_key_by_alias(self.key)
 
         self.ssm.put_parameter(**args)
 
@@ -35,79 +37,72 @@ class SSM(object):
         return name
 
     def delete(self, name):
-        return self.ssm.delete_parameter(
-            Name=name
-        )
+        return self.ssm.delete_parameter(Name=name)
 
-    def get_full_parameters(self, *args):
-        _all = []
-        for resource in list(args):
-            _all += self._fetch_all_parameters(resource)
-
-        return _all
-
-    def get_short_parameters(self, *args, **kwargs):
-        kwargs['env'] = False
-        kwargs['exclude_namespace'] = True
-        params = self.get_parameters(*args, **kwargs)
-
-        return params
-
-    def get_parameters(self, namespace, full_object=False):
-        next_token = -1
+    def get_parameters(self, namespace):
         parameters = {}
+        search_params = {'Path': namespace, 'WithDecryption': True, 'Recursive': True}
 
-        while next_token != 0:
-            search_params = {'Path': namespace, 'WithDecryption': True, 'Recursive': True}
-
-            if next_token != -1:
-                search_params['NextToken'] = next_token
-
+        while search_params.get('NextToken', -1) != 0:
             current_set = self.ssm.get_parameters_by_path(**search_params)
 
             for param in current_set.get('Parameters'):
-                parameters[param.get('Name')] = param if full_object else param.get('Value')
+                parameters[param.get('Name')] = param.get('Value')
 
-            next_token = current_set.get('NextToken', 0)
+            search_params['NextToken'] = current_set.get('NextToken', 0)
 
         return parameters
 
-    def find_by_tag(self, tag, value):
-        params = self.ssm.describe_parameters(
-            ParameterFilters=[{'Key': 'tag:{}'.format(tag), 'Option': 'Equals', 'Values': [value]}]
+    def describe_parameters(self, namespace):
+        search_params = dict(
+            ParameterFilters=[{'Key': 'Name', 'Option': 'BeginsWith', 'Values': [namespace]}],
+            MaxResults=50
         )
+        parameters = {}
 
-        return map(
-            lambda x: x.get('Name'),
-            params.get('Parameters')
-        )
+        while search_params.get('NextToken', -1) != 0:
+            current_set = self.ssm.describe_parameters(**search_params)
 
-    def find_by_tags(self, tags={}):
-        params = self.ssm.describe_parameters(
-            ParameterFilters=[
-                {'Key': 'tag:{}'.format(tag), 'Option': 'Equals', 'Values': [value]} for tag, value in tags.items()
+            for param in current_set.get('Parameters'):
+                parameters[param.get('Name')] = param
+
+            search_params['NextToken'] = current_set.get('NextToken', 0)
+
+        values = self.get_parameters(namespace)
+
+        params = {}
+        for name, param in parameters.items():
+            params[name] = [
+                name,
+                values.get(name, {}),
+                param.get('Type'),
+                param.get('LastModifiedDate'),
+                param.get('LastModifiedUser'),
             ]
-        )
 
-        return map(
-            lambda x: x.get('Name'),
-            params.get('Parameters')
-        )
+        return params
 
-    def _get_kms_key_by_name(self, name='alias/parameter_store_key'):
-        kms = self.session.client("kms")
-
-        aliases = kms.list_aliases()
-
-        key_id = (next(iter(filter(
-            lambda x: x.get('AliasName') == name,
-            aliases.get('Aliases', {})
-        ))) or {}).get('TargetKeyId')
-
-        if key_id:
-            return key_id
-
-        raise SSMException('Unable to locate KMS key with parameter_store_key alias and encryption required')
+    # def find_by_tag(self, tag, value):
+    #     params = self.ssm.describe_parameters(
+    #         ParameterFilters=[{'Key': 'tag:{}'.format(tag), 'Option': 'Equals', 'Values': [value]}]
+    #     )
+    #
+    #     return map(
+    #         lambda x: x.get('Name'),
+    #         params.get('Parameters')
+    #     )
+    #
+    # def find_by_tags(self, tags={}):
+    #     params = self.ssm.describe_parameters(
+    #         ParameterFilters=[
+    #             {'Key': 'tag:{}'.format(tag), 'Option': 'Equals', 'Values': [value]} for tag, value in tags.items()
+    #         ]
+    #     )
+    #
+    #     return map(
+    #         lambda x: x.get('Name'),
+    #         params.get('Parameters')
+    #     )
 
     def _fetch_all_parameters(self, resource):
         parameters = self.ssm.describe_parameters(
@@ -117,28 +112,28 @@ class SSM(object):
 
         values = self.get_parameters(resource, True)
 
-        params = []
+        params = {}
         for param in parameters.get('Parameters', []):
-            params.append([
-                param.get('Name'),
-                values.get(param.get('Name'), {}).get('Type'),
-                values.get(param.get('Name'), {}).get('Value'),
-                param.get('LastModifiedDate'),
-                param.get('LastModifiedUser'),
-            ])
+            params.update({
+                'Name': param.get('Name'),
+                'Type': values.get(param.get('Name'), {}).get('Type'),
+                'Value': values.get(param.get('Name'), {}).get('Value'),
+                'LastModifiedDate': param.get('LastModifiedDate'),
+                'LastModifiedUser': param.get('LastModifiedUser'),
+            })
 
         return params
 
-    @staticmethod
-    def sync_vars(source, destination, namespace):
-        """
-        Sync SSM variables between profiles
-        :type source SSM
-        :type destination SSM
-        :type namespace str
-        :return:
-        """
-        return compare_dicts(
-            source.get_short_parameters(namespace),
-            destination.get_short_parameters(namespace)
-        )
+    # @staticmethod
+    # def sync_vars(source, destination, namespace):
+    #     """
+    #     Sync SSM variables between profiles
+    #     :type source SSM
+    #     :type destination SSM
+    #     :type namespace str
+    #     :return:
+    #     """
+    #     return compare_dicts(
+    #         source.get_short_parameters(namespace),
+    #         destination.get_short_parameters(namespace)
+    #     )

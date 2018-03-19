@@ -37,13 +37,11 @@ def format_full(param):
 
 
 def format_short(param):
-    param[0] = normalise_name(param[0])
-    return param
+    return normalise_name(param)
 
 
 def format_env(param):
-    param[0] = normalise_name(param[0], True)
-    return param
+    return normalise_name(param, True)
 
 
 FORMATTER = {

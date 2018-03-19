@@ -16,7 +16,8 @@ schema = {
                 Optional('repository', default='ecr')
             },
             Optional('error_tracker', default='sentry'): str,
-        }
+        },
+        Optional('features'):  dict
     },
     Optional('sentry'): {
         'auth_token': str,
