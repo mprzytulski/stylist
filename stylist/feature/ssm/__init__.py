@@ -60,7 +60,6 @@ class ConfigStorage(AbstractConfigStorage):
 
 
 class SsmFeature(Feature):
-
     def __init__(self, stylist, key='parameter_store_key'):
         super(SsmFeature, self).__init__(stylist)
         self.key = key

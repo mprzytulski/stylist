@@ -1,56 +1,48 @@
-import base64
-
 import click
 
-from stylist.cli import logger
 from stylist.core.click import GroupPrototype
-from stylist.utils import line_prefix
+from stylist.utils import table
 
 cli = GroupPrototype.create("AWS KMS encryption helper")
 
 
-@cli.command(help="Encrypt plain text with context encryption key")
-@click.argument("plain_text")
-@click.option("--plain", default=False, flag_value='plain', help="Return encrypted value only")
+@cli.command(name="list-keys", help="List KMS aliases")
 @click.pass_obj
-def encrypt(ctx, plain_text, plain):
-    kms = ctx.provider.session.client("kms")
+def list_keys(stylist):
+    kms = stylist.containers.get('aws').kms()
 
-    key_id = ctx.provider.ssm.get_encryption_key().get('TargetKeyId')
-
-    response = kms.encrypt(
-        KeyId=key_id,
-        Plaintext=bytes(plain_text),
+    click.secho(
+        table(
+            "KMS ALIASES",
+            map(lambda x: x.values(), kms.list_aliases()),
+            ["ARN", "NAME", "KeyId"]
+        ).table
     )
 
-    encrypted = base64.b64encode(response.get("CiphertextBlob"))
+
+@cli.command(help="Encrypt plain text with context encryption key")
+@click.argument("plain_text")
+@click.option("--key-alias", help="Use given key alias instead of configured / default one.")
+@click.option("--plain", default=False, flag_value='plain', help="Return encrypted value only")
+@click.pass_obj
+def encrypt(stylist, plain_text, plain, key_alias=None):
+    kms = stylist.containers.get('aws').kms()
+    encrypted, key_id = kms.encrypt(plain_text, key_alias)
 
     if plain:
         click.echo(encrypted)
     else:
+        click.echo("Used key: {}".format(key_id))
         click.secho(
-            line_prefix(ctx) + ' ({}) '.format(key_id) + encrypted
+            'Encrypted value: "{}"'.format(encrypted)
         )
 
 
 @cli.command(help="Encrypt plain text with context encryption key")
 @click.argument("encrypted")
-@click.option("--plain", default=False, flag_value='plain', help="Return decrypted value only")
 @click.pass_obj
-def decrypt(ctx, encrypted, plain):
-    kms = ctx.provider.session.client("kms")
+def decrypt(stylist, encrypted):
+    kms = stylist.containers.get('aws').kms()
+    decrypted = kms.decrypt(encrypted)
 
-    try:
-        decrypted = kms.decrypt(
-            CiphertextBlob=base64.b64decode(encrypted)
-        ).get('Plaintext').decode("utf-8")
-
-        if plain:
-            click.echo(decrypted)
-        else:
-            click.secho(
-                line_prefix(ctx) + decrypted
-            )
-    except Exception, e:
-        logger.error(e.message)
-        return 1
+    click.echo(decrypted)
