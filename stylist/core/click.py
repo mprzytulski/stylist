@@ -8,6 +8,7 @@ from copy import copy
 from os.path import dirname, join, abspath
 
 import click
+from box import Box
 from click import MultiCommand, Group, Context
 
 

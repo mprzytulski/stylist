@@ -28,13 +28,16 @@ class Stylist(Dispatcher):
         self.config_filename = 'config.yml'
         self.settings = self._get_settings()
         self.name = self._get_name()
-        self.features = {}
+        self.features = Box({})
         self.profile = self._get_active_profile()
-        self.containers = {
-            'global': GlobalContainer(),
+        self.containers = Box({
+            'main': GlobalContainer(),
             'config': ConfigStorageContainer(),
             # 'docker_repository': ConfigStorageContainer(),
-        }
+        })
+
+    def __getattr__(self, item):
+        return self.containers.get(item)
 
     @property
     def environment_file(self):

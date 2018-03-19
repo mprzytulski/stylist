@@ -17,6 +17,6 @@ class KmsFeature(Feature):
         pass
 
     def on_config(self, stylist):
-        stylist.containers.get('aws').kms = providers.Singleton(
-            KMS, stylist=stylist, aws=stylist.containers.get('global').aws
+        stylist.aws.kms = providers.Singleton(
+            KMS, stylist=stylist, aws=stylist.main.aws
         )

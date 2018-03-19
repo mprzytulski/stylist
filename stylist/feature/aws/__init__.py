@@ -11,7 +11,7 @@ class AwsFeature(Feature):
         return True
 
     def on_init(self, stylist):
-        stylist.containers.get('global').aws = providers.Singleton(
+        stylist.main.aws = providers.Singleton(
             AWSProvider,
             prefix=stylist.settings.stylist.aws.prefix or ''
         )

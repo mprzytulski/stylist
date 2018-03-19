@@ -72,6 +72,6 @@ class SsmFeature(Feature):
         pass
 
     def on_config(self, stylist):
-        stylist.containers.get('config').ssm = providers.Singleton(
-            ConfigStorage, stylist=stylist, aws=stylist.containers.get('global').aws, key=self.key
+        stylist.config.ssm = providers.Singleton(
+            ConfigStorage, stylist=stylist, aws=stylist.main.aws, key=self.key
         )
