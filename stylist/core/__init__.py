@@ -14,7 +14,7 @@ from stylist import config
 from stylist.config import schema
 from stylist.core.containers import GlobalContainer, ConfigStorageContainer
 from stylist.core.providers import ConfigStorage, DockerRepositoryProvider
-from stylist.feature.config.lib import parametrize_name
+from stylist.feature.config.lib import parametrise_name
 from stylist.utils import find_dotenv
 
 
@@ -53,7 +53,7 @@ class Stylist(Dispatcher):
 
     @property
     def service_name(self):
-        return 'service:{}'.format(parametrize_name(self.name))
+        return 'service:{}'.format(parametrise_name(self.name))
 
     def _get_name(self):
         try:

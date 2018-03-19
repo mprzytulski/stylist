@@ -6,15 +6,6 @@ from stylist.feature.ssm.lib import SSM
 
 
 class ConfigStorage(AbstractConfigStorage):
-    def get_parameter(self, name):
-        return None
-
-    def get_parameters(self, path):
-        return []
-
-    def write(self, name, value, encrypt=True):
-        pass
-
     def __init__(self, stylist, aws):
         """
         Create SSM based ConfigStorage
@@ -38,6 +29,21 @@ class ConfigStorage(AbstractConfigStorage):
     def name(self):
         return 'ssm'
 
+    def get_parameter(self, name):
+        return None
+
+    def get_parameters(self, *paths):
+        parameters = []
+        for path in paths:
+            parameters += self.ssm.get_full_parameters(path)
+
+        return parameters
+
+    def write(self, name, value, encrypt=True, tags=None):
+        return self.ssm.write(name, value, encrypt, tags)
+
+    def delete(self, name):
+        return self.ssm.delete(name)
 
 class SsmFeature(Feature):
     @property

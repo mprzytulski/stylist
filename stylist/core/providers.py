@@ -14,12 +14,16 @@ class ConfigStorage(object):
         """Return value of the parameter for given name"""
 
     @abstractmethod
-    def get_parameters(self, path):
-        """Return all parameters from given namespace"""
+    def get_parameters(self, *paths):
+        """Return all parameters from given namespaces"""
 
     @abstractmethod
-    def write(self, name, value, encrypt=True):
+    def write(self, name, value, encrypt=True, tags=None):
         """Write value for given parameter"""
+
+    @abstractmethod
+    def delete(self, name):
+        """Delete given parameter"""
 
 
 class DockerRepositoryProvider(object):
