@@ -6,9 +6,9 @@ from stylist.utils import table
 cli = GroupPrototype.create("AWS KMS encryption helper")
 
 
-@cli.command(name="list-keys", help="List KMS aliases")
+@cli.command(name="keys", help="List KMS aliases")
 @click.pass_obj
-def list_keys(stylist):
+def keys(stylist):
     kms = stylist.containers.get('aws').kms()
 
     click.secho(
