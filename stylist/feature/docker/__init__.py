@@ -1,8 +1,8 @@
-from dependency_injector import providers
 from os.path import join, isfile
 
 import click
 from click import style
+from dependency_injector import providers
 
 from stylist.click.types import Boolean
 from stylist.feature import Feature
@@ -23,33 +23,8 @@ class DockerFeature(Feature):
             Docker, stylist=stylist
         )
 
-    def __call__(self, subproject, *args, **kwargs):
-        return self.stylist.main.docker()
-
-        # path =
-        # docker_files = glob.glob('{}/Dockerfile*'.format(path))
-        #
-        # if ask:
-        #     return _ask_about_docker_files('Which docker file would you like to build?', docker_files)
-        # else:
-        #     return docker_files
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
+    def __call__(self, project_dir, *args, **kwargs):
+        return self.stylist.main.docker(project_dir=project_dir)
 
     def _do_setup(self, init_args):
         _docker = style('Docker', fg='blue')

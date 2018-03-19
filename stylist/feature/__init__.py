@@ -34,7 +34,7 @@ class Feature(object):
     def _do_setup(self, init_args):
         pass
 
-    def setup(self, init_args):
+    def install(self, init_args):
         if self.installed:
             raise FeatureAlreadyEnabledException()
 
