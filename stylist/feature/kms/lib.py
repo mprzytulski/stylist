@@ -20,6 +20,11 @@ class KMS(object):
         self.kms = self.session.client("kms")
 
     def get_key_by_alias(self, alias=None):
+        """
+        Return KMS KeyId for give alias
+        :param alias:
+        :return:
+        """
         aliases = self.kms.list_aliases()
 
         key_id = (next(iter(filter(
@@ -43,6 +48,12 @@ class KMS(object):
         )
 
     def encrypt(self, value, key=None):
+        """
+        Encrypt plain text value using KMS service and default or named key
+        :param value: Plain text value
+        :param key: Optionally, encryption key to be used
+        :return:
+        """
         key_id = self.get_key_by_alias(key or self.key)
         response = self.kms.encrypt(
             KeyId=key_id,
@@ -52,6 +63,11 @@ class KMS(object):
         return base64.b64encode(response.get("CiphertextBlob")), key_id
 
     def decrypt(self, encrypted):
+        """
+        Decyrpt given value using AWS KMS service
+        :param encrypted: base64 encoded encrypted value
+        :return: Plain text decrypted value
+        """
         try:
             return self.kms.decrypt(
                 CiphertextBlob=base64.b64decode(encrypted)
