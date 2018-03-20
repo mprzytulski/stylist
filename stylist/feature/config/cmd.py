@@ -81,3 +81,49 @@ def config_dump(stylist, namespace):
     formatter = FORMATTER.get('env')
     for name, value in parameters.items():
         click.echo("{}={}".format(formatter(name), value))
+
+
+@cli.command(name="sync", help="Synchronise configuration variables between profiles")
+@click.option("--namespaces", help="Namespaces to migrate", multiple=True)
+@click.argument("source")
+@click.argument("destination")
+@click.pass_obj
+def sync_vars(ctx, namespaces, source, destination):
+    pass
+    # @todo: implement new logic
+
+    # try:
+    #     profiles = ctx.settings.get('stylist', {}).get('stages')
+    #     if source not in profiles:
+    #         raise Exception('Source profile "{}" is missing'.format(source))
+    #
+    #     if destination not in profiles:
+    #         raise Exception('Destination profile "{}" is missing'.format(destination))
+    #
+    #     click.secho("Migrating terraform variables", fg="blue")
+    #
+    #     if isdir(join(ctx.working_dir, 'terraform')):
+    #         try:
+    #             terraform = Terraform(ctx)
+    #             terraform.sync_vars(source, destination)
+    #         except TerraformException as e:
+    #             click.secho("No stage tfvars. Skipping terraform migration.")
+    #
+    #     namespaces = list(namespaces)
+    #     if not namespaces:
+    #         namespaces.append('service:{}'.format(ctx.name))
+    #
+    #     click.secho("Migrating ssm namespaces", fg="blue")
+    #     source_ssm = SSM(ctx.provider.get_session_for_stage(source).client('ssm'), ctx)
+    #     destination_session = ctx.provider.get_session_for_stage(destination)
+    #     destination_ssm = SSM(destination_session.client('ssm'), ctx)
+    #
+    #     for namespace in namespaces:
+    #         click.secho("Migrating '{}' from '{}' -> '{}'".format(namespace, colourize(source), colourize(destination)))
+    #         diff = SSM.sync_vars(source_ssm, destination_ssm, namespace)
+    #
+    #         for key, value in diff.items():
+    #             destination_ssm.write(namespace, key, value, session=destination_session)
+    #
+    # except Exception as e:
+    #     logger.error(e.message)

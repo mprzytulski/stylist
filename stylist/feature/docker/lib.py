@@ -228,6 +228,7 @@ class Docker(object):
         if interactive:
             args.append('-it')
 
+        # @todo: implement env var support with AWS credentials
         args += [str(name), str(cmd)]
 
         cmd = DockerCommand(cwd=self.project_dir)

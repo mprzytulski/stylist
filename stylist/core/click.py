@@ -32,13 +32,51 @@ def list_features():
     return features
 
 
+class CustomGroup(Group):
+    """ Allow application of options to group with multi command """
+
+    def add_command(self, cmd, name=None):
+        """ Hook the added command and put the group options on the command """
+        Group.add_command(self, cmd, name=name)
+
+        # add the group parameters to the command
+        for param in self.params:
+            cmd.params.append(param)
+
+        # hook the command's invoke with our own
+        cmd.invoke = self.build_command_invoke(cmd.invoke)
+
+    def build_command_invoke(self, original_invoke):
+        def command_invoke(ctx):
+            """ insert invocation of group function """
+
+            # separate the group parameters
+            params = dict(_params=dict())
+            for param in self.params:
+                name = param.name
+                params[name] = ctx.params[name]
+                del ctx.params[name]
+
+            # call the group function with its parameters
+            # params = ctx.params
+            # ctx.params = ctx.obj['_params']
+            # self.invoke(ctx)
+            # ctx.params = params
+
+            # now call (invoke) the original command
+            original_invoke(ctx)
+
+        return command_invoke
+
+
 class GroupPrototype(object):
     """
     Custom group prototype factory. Custom groups allow to easily pass global parameters to subcommands
     """
+
     @staticmethod
-    def create(help):
-        @click.group(cls=CustomGroup)
+    def create(help, cls=CustomGroup):
+        @click.group(cls=cls)
         @click.option('--working-dir', type=click.Path(exists=True, file_okay=False, resolve_path=True),
                       help='Changes the folder to operate on.')
         @click.option('--profile', help='Temporary change active profile for given command')
@@ -61,6 +99,7 @@ class StylistCli(MultiCommand):
     """
     Custom cli implementation with dynamic command loading and custom context creator.
     """
+
     def make_context(self, info_name, args, parent=None, **extra):
         """
         Custom context creator - create context and bind active features to it
@@ -120,40 +159,3 @@ class StylistCli(MultiCommand):
             return None
 
         return mod.cli if hasattr(mod, 'cli') else None
-
-
-class CustomGroup(Group):
-    """ Allow application of options to group with multi command """
-
-    def add_command(self, cmd, name=None):
-        """ Hook the added command and put the group options on the command """
-        Group.add_command(self, cmd, name=name)
-
-        # add the group parameters to the command
-        for param in self.params:
-            cmd.params.append(param)
-
-        # hook the command's invoke with our own
-        cmd.invoke = self.build_command_invoke(cmd.invoke)
-
-    def build_command_invoke(self, original_invoke):
-        def command_invoke(ctx):
-            """ insert invocation of group function """
-
-            # separate the group parameters
-            params = dict(_params=dict())
-            for param in self.params:
-                name = param.name
-                params[name] = ctx.params[name]
-                del ctx.params[name]
-
-            # call the group function with its parameters
-            # params = ctx.params
-            # ctx.params = ctx.obj['_params']
-            # self.invoke(ctx)
-            # ctx.params = params
-
-            # now call (invoke) the original command
-            original_invoke(ctx)
-
-        return command_invoke
