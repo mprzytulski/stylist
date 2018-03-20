@@ -13,6 +13,10 @@ from click import MultiCommand, Group, Context
 
 
 def list_features():
+    """
+    Return list of available features supported by stylist
+    :return:
+    """
     features = {}
     pkgpath = join(dirname(__file__), '..', 'feature')
     for x, _name, y in pkgutil.iter_modules([pkgpath]):
@@ -29,6 +33,9 @@ def list_features():
 
 
 class GroupPrototype(object):
+    """
+    Custom group prototype factory. Custom groups allow to easily pass global parameters to subcommands
+    """
     @staticmethod
     def create(help):
         @click.group(cls=CustomGroup)
@@ -51,7 +58,13 @@ class GroupPrototype(object):
 
 
 class StylistCli(MultiCommand):
+    """
+    Custom cli implementation with dynamic command loading and custom context creator.
+    """
     def make_context(self, info_name, args, parent=None, **extra):
+        """
+        Custom context creator - create context and bind active features to it
+        """
         for key, value in self.context_settings.items():
             if key not in extra:
                 extra[key] = value
@@ -78,6 +91,9 @@ class StylistCli(MultiCommand):
         return ctx
 
     def list_commands(self, ctx):
+        """
+        List available commands
+        """
         rv = ctx.obj.features.keys()
         commands_path = abspath(join(dirname(__file__), '..', 'core', 'cmd'))
 
@@ -89,6 +105,9 @@ class StylistCli(MultiCommand):
         return rv
 
     def get_command(self, ctx, name):
+        """
+        Get command using dynamic command loader
+        """
         name = name.encode('ascii', 'replace')
         mod = None
         for pattern in ['stylist.core.cmd.{}', 'stylist.feature.{}.cmd']:
@@ -97,7 +116,7 @@ class StylistCli(MultiCommand):
             except ImportError:
                 pass
 
-        if 'stylist.feature.' in mod.__name__ and name not in ctx.obj.features:
+        if not mod or 'stylist.feature.' in mod.__name__ and name not in ctx.obj.features:
             return None
 
         return mod.cli if hasattr(mod, 'cli') else None
