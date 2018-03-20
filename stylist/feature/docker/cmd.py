@@ -9,6 +9,10 @@ from stylist.utils import table
 cli = GroupPrototype.create('Docker image helper')
 
 
+def get_project_path(stylist, subproject):
+    return join(stylist.working_dir, subproject) if subproject else stylist.working_dir
+
+
 @cli.command(help='Build docker image using Dockerfile', context_settings=dict(ignore_unknown_options=True))
 @click.option('--tag', default=datetime.now().strftime('%Y%m%d_%H%M'))
 @click.option('--subproject', default=None, help='Build docker image located in named subdirectory / project')
@@ -21,7 +25,7 @@ def build(stylist, tag, subproject, docker_args=None):
     @type subproject: string
     @type docker_args: list
     """
-    path = join(stylist.working_dir, subproject) if subproject else stylist.working_dir
+    path = get_project_path(stylist, subproject)
 
     click.secho('Building docker containers', fg='blue')
     with stylist.features.docker(path) as docker:
@@ -42,7 +46,7 @@ def push(stylist, subproject, tag):
     @type stylist: stylist.core.Stylist
     @type subproject: string
     """
-    path = join(stylist.working_dir, subproject) if subproject else stylist.working_dir
+    path = get_project_path(stylist, subproject)
 
     click.secho('Pushing docker containers', fg='blue')
     repository_provider = stylist.docker_repository_provider()
@@ -63,7 +67,7 @@ def containers(stylist, subproject):
     @type stylist: stylist.core.Stylist
     @type subproject: string
     """
-    path = join(stylist.working_dir, subproject) if subproject else stylist.working_dir
+    path = get_project_path(stylist, subproject)
 
     with stylist.features.docker(path) as docker:
         click.secho(
@@ -82,7 +86,7 @@ def images(stylist, subproject):
     """
     @type stylist: stylist.core.Stylist
     """
-    path = join(stylist.working_dir, subproject) if subproject else stylist.working_dir
+    path = get_project_path(stylist, subproject)
 
     with stylist.features.docker(path) as docker:
         for name, dockerfile in docker.list_containers().items():
@@ -107,7 +111,7 @@ def images(stylist, subproject):
 @click.argument('docker_args', nargs=-1, type=click.UNPROCESSED)
 @click.pass_obj
 def enter(stylist, subproject, tag, non_interactive, cmd, docker_args, container):
-    path = join(stylist.working_dir, subproject) if subproject else stylist.working_dir
+    path = get_project_path(stylist, subproject)
 
     with stylist.features.docker(path) as docker:
         containers = docker.list_containers()
@@ -126,12 +130,6 @@ def enter(stylist, subproject, tag, non_interactive, cmd, docker_args, container
         else:
             container = next(iter(containers.items()))
 
-        for message in docker.enter(container[0] + ':' + tag, container[1], not non_interactive, cmd, docker_args, True):
+        for message in docker.enter(container[0] + ':' + tag, container[1], not non_interactive, cmd, docker_args,
+                                    True):
             click.echo(message)
-
-
-
-
-
-
-
