@@ -1,11 +1,11 @@
+
 from stylist.feature import Feature
 
 
-class ConfigFeature(Feature):
+class InitFeature(Feature):
     @property
     def installed(self):
-        return self.stylist.initialised
+        return not self.stylist.initialised
 
     def _do_setup(self, init_args):
         pass
-

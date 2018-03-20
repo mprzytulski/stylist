@@ -8,7 +8,7 @@ from stylist.feature.aws.provider import AWSProvider
 class AwsFeature(Feature):
     @property
     def installed(self):
-        return True
+        return self.stylist.initialised
 
     def on_init(self, stylist):
         stylist.main.aws = providers.Singleton(

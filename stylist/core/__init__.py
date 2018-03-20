@@ -3,7 +3,7 @@ from __future__ import absolute_import
 import os
 import sys
 from genericpath import isfile
-from os.path import join, realpath
+from os.path import join, realpath, isdir
 
 import click
 from box import Box
@@ -62,6 +62,10 @@ class Stylist(Dispatcher):
     @property
     def service_name(self):
         return 'service:{}'.format(parametrise_name(self.name))
+
+    @property
+    def initialised(self):
+        return isdir(join(self.working_dir, '.stylist'))
 
     def _get_name(self):
         try:

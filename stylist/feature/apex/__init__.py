@@ -12,7 +12,7 @@ class ApexFeature(Feature):
     """
     @property
     def installed(self):
-        return isfile(join(self.stylist.working_dir, 'project.json'))
+        return self.stylist.initialised and isfile(join(self.stylist.working_dir, 'project.json'))
 
     def _do_setup(self, init_args):
         try:

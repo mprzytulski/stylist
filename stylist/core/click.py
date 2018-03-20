@@ -134,11 +134,6 @@ class StylistCli(MultiCommand):
         List available commands
         """
         rv = ctx.obj.features.keys()
-        commands_path = abspath(join(dirname(__file__), '..', 'core', 'cmd'))
-
-        for command in [f[:-3] for f in os.listdir(commands_path) if f != '__init__.py' and re.match(r'^\w+\.py$', f)]:
-            rv.append(command)
-
         rv.sort()
 
         return rv

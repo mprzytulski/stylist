@@ -16,7 +16,7 @@ class TerraformFeature(Feature):
 
     @property
     def installed(self):
-        return isdir(self.terraform.terraform_dir)
+        return self.stylist.initialised and isdir(self.terraform.terraform_dir)
 
     def _do_setup(self, init_args):
         self.terraform.setup()

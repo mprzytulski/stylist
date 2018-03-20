@@ -1,5 +1,6 @@
 import re
 
+
 def resolve_repository_name(repository_location):
     """
     Resolve repository name from given location
@@ -10,6 +11,12 @@ def resolve_repository_name(repository_location):
 
 
 def add_to_gitignore(gitignore_path, ignored_files):
+    """
+    Add given files to .gitignore file if not there already
+    :param gitignore_path: str
+    :param ignored_files: list
+    :return:
+    """
     with open(gitignore_path, 'a+') as f:
         ignored = map(lambda x: x.strip(), f.readlines())
 

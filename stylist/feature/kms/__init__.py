@@ -11,7 +11,7 @@ class KmsFeature(Feature):
 
     @property
     def installed(self):
-        return True
+        return self.stylist.initialised
 
     def _do_setup(self, init_args):
         pass
