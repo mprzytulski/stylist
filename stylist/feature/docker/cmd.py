@@ -1,5 +1,5 @@
 from datetime import datetime
-from os.path import join
+from os.path import join, basename
 
 import click
 
@@ -94,41 +94,44 @@ def images(stylist, subproject):
                 ).table
             )
 
-# @cli.command(help='Run command in project docker container with AWS settings for given stage')
-# @click.option('--tag', default='latest', help='Run given tag')
-# @click.option('--non-interactive', default=False, is_flag=True, help='Execute command in non interactive mode')
-# @click.option('--subproject', default=None, help='Run subproject container')
-# @click.argument('cmd', default='/bin/bash')
-# @click.argument('docker_args', nargs=-1, type=click.UNPROCESSED)
-# @click.pass_obj
-# def enter(ctx, subproject, tag, non_interactive, cmd, docker_args):
-#     pass
-# try:
-#     docker = Docker(ctx, subproject)
-#     args = ['run', '--rm', '-p', '8000:8000', '-v', '{}:/app'.format(ctx.working_dir)] + list(docker_args)
-#
-#     if not non_interactive:
-#         args.append('-it')
-#
-#     for k, v in ctx.provider.credentials.items():
-#         args += ['-e', '{}={}'.format(k, v)]
-#
-#     args.append('{}:{}'.format(re.sub('\W', '-', ctx.name), tag or 'latest'))
-#     args.append(cmd)
-#
-#     docker.run_docker(args)
-# except NotADockerProjectException as e:
-#     logger.error("Unable to locate Docker file - is that a Docker project?")
-#     sys.exit(1)
-# except DockerException as e:
-#     # Exit from the container
-#     if e.errno == 130:
-#         sys.exit(130)
-#     click.secho(
-#         "Failed to run docker command with message '{message}', exit code: {errno}\nCommand: {cmd}".format(
-#             message=e.message,
-#             errno=e.errno,
-#             cmd=' '.join(e.cmd)
-#         ), fg="red"
-#     )
-#     sys.exit(1)
+
+@cli.command(
+    help='Run command in project docker container with AWS settings for given stage',
+    context_settings=dict(ignore_unknown_options=True)
+)
+@click.option('--tag', default='latest', help='Run given tag')
+@click.option('--non-interactive', default=False, is_flag=True, help='Execute command in non interactive mode')
+@click.option('--subproject', default=None, help='Run subproject container')
+@click.option('--container', default=None, help='Entern named container')
+@click.argument('cmd', default='/bin/bash')
+@click.argument('docker_args', nargs=-1, type=click.UNPROCESSED)
+@click.pass_obj
+def enter(stylist, subproject, tag, non_interactive, cmd, docker_args, container):
+    path = join(stylist.working_dir, subproject) if subproject else stylist.working_dir
+
+    with stylist.features.docker(path) as docker:
+        containers = docker.list_containers()
+        if not container and len(containers) > 1:
+            click.secho('Project contains more than one container, please select one to run')
+            selection = click.prompt(
+                "Please select container\n" + "\n".join(
+                    [
+                        '{}. {} ({})'.format(idx, container[0], basename(container[1]))
+                        for idx, container in enumerate(iter(containers.items()), 1)
+                    ]
+                ) + "\n Enter container number: ",
+                type=click.Choice(map(lambda x: str(x), range(1, len(containers.keys()) + 1)))
+            )
+            container = containers.items()[int(selection) - 1]
+        else:
+            container = next(iter(containers.items()))
+
+        for message in docker.enter(container[0] + ':' + tag, container[1], not non_interactive, cmd, docker_args, True):
+            click.echo(message)
+
+
+
+
+
+
+
