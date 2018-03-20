@@ -1,38 +1,36 @@
-from os.path import isdir, join
-
 import click
 
-from stylist.cli import logger
-# from stylist.provider.aws import SSM
-# from stylist.utils import colourize
-# from stylist.wrapper.terraform import Terraform, TerraformException
 from stylist.core.click import GroupPrototype
+from stylist.utils import colourize
 
-cli = GroupPrototype.create('Manage project environments')
+
+def get_main_group():
+    return selected
+
+
+cli = GroupPrototype.create('Manage project environments', invoke_without_command=get_main_group)
 
 
 @cli.command(help="Show active environment for current working directory")
 @click.pass_obj
-def selected(ctx):
+def selected(stylist, **kwargs):
     """
-    @type ctx: stylist.cli.Context
+    @type ctx: stylist.core.Stylist
     """
     click.secho(
-        colourize(ctx.environment)
+        colourize(stylist.profile)
     )
 
 
-@cli.command(help="Activate named profile")
+@cli.command(name="set", help="Activate named profile")
 @click.argument("name")
 @click.pass_obj
-def select(ctx, name, project_name=None, profile=None, working_dir=None):
+def select(stylist, name, **kwargs):
     """
-    @type ctx: stylist.cli.Context
+    @type stylist: stylist.core.Stylist
     """
-    with open(ctx.environment_file, 'w') as f:
+    with open(stylist.environment_file, 'w') as f:
         f.write(name)
-
-    # @todo: check if there is a aws profile matching given env, if not - call create action
 
     click.secho("Selected profile: {}".format(colourize(name)))
 
@@ -41,7 +39,7 @@ def select(ctx, name, project_name=None, profile=None, working_dir=None):
 @click.pass_obj
 def list_profiles(ctx):
     """
-    @type ctx: stylist.cli.Context
+    @type ctx: stylist.core.Stylist
     """
     click.echo("All defined environments:")
 

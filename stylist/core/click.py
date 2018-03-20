@@ -75,8 +75,8 @@ class GroupPrototype(object):
     """
 
     @staticmethod
-    def create(help, cls=CustomGroup):
-        @click.group(cls=cls)
+    def create(help, cls=CustomGroup, invoke_without_command=None):
+        @click.group(cls=cls, invoke_without_command=invoke_without_command is not None)
         @click.option('--working-dir', type=click.Path(exists=True, file_okay=False, resolve_path=True),
                       help='Changes the folder to operate on.')
         @click.option('--profile', help='Temporary change active profile for given command')
@@ -88,6 +88,9 @@ class GroupPrototype(object):
                 stylist.working_dir = working_dir or stylist.working_dir
                 stylist.profile = profile or stylist.profile
                 stylist.name = project_name or stylist.name
+
+            if invoke_without_command and current_ctx.invoked_subcommand is None:
+                current_ctx.forward(invoke_without_command())
 
         cli = copy(prototype)
         cli.short_help = help
