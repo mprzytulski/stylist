@@ -7,6 +7,7 @@ from os.path import join, realpath
 
 import click
 from box import Box
+from dependency_injector.containers import DynamicContainer
 from git import Repo, InvalidGitRepositoryError
 from pydispatch import Dispatcher
 
@@ -21,7 +22,8 @@ from stylist.utils import find_dotenv
 class Stylist(Dispatcher):
     _events_ = ['init', 'config']
 
-    def __init__(self):
+    def __init__(self, *args, **kwargs):
+        super(Stylist, self).__init__(*args, **kwargs)
         self.cwd = os.getcwd()
         # @todo: that should be simplified
         self.working_dir = realpath(join(find_dotenv(filename='.git', path=self.cwd, limit=self.cwd), '..')) or self.cwd
@@ -33,7 +35,7 @@ class Stylist(Dispatcher):
         self.containers = Box({
             'main': GlobalContainer(),
             'config': ConfigStorageContainer(),
-            # 'docker_repository': ConfigStorageContainer(),
+            'docker_repositories': DynamicContainer(),
         })
 
     def __getattr__(self, item):
@@ -52,7 +54,10 @@ class Stylist(Dispatcher):
         return join(self.local_config_dir, self.config_filename)
 
     def config_provider(self):
-        return getattr(self.containers.get('config'), self.settings.providers.config or 'ssm')()
+        return getattr(self.config, self.settings.providers.config or 'ssm')()
+
+    def docker_repository_provider(self):
+        return getattr(self.docker_repositories, self.settings.providers.docker_repository or 'ecr')()
 
     @property
     def service_name(self):

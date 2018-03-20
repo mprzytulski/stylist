@@ -1,7 +1,7 @@
 from dependency_injector import providers
 
 from stylist.feature import Feature
-from stylist.feature.ecr.lib import ECRDockerRepository
+from stylist.feature.ecr.lib import ECRDockerRepositoryProvider
 
 
 class EcrFeature(Feature):
@@ -14,5 +14,5 @@ class EcrFeature(Feature):
 
     def on_config(self, stylist):
         stylist.docker_repositories.ecr = providers.Singleton(
-            ECRDockerRepository, stylist=stylist, aws=stylist.main.aws
+            ECRDockerRepositoryProvider, stylist=stylist, aws=stylist.main.aws
         )

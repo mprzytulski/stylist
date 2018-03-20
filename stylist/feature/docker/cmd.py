@@ -28,8 +28,9 @@ def build(stylist, tag, subproject, docker_args=None):
         for name, dockerfile in docker.list_containers().items():
             click.secho('Building container: {}'.format(name), fg='blue')
             build_tag = docker.build(name, dockerfile, docker_args)
+
             click.secho('Tagging container: {} with {}'.format(build_tag, ':'.join([name, tag])), fg='blue')
-            docker.tag(build_tag, tag)
+            docker.tag(build_tag, ':'.join([name, tag]))
 
 
 @cli.command(help='Push docker containers to remote repository')
@@ -44,10 +45,14 @@ def push(stylist, subproject, tag):
     path = join(stylist.working_dir, subproject) if subproject else stylist.working_dir
 
     click.secho('Pushing docker containers', fg='blue')
+    repository_provider = stylist.docker_repository_provider()
+
     with stylist.features.docker(path) as docker:
         for name, dockerfile in docker.list_containers().items():
-            pass
-            # docker
+            repository_provider.create_repository(name, ignore_if_exists=True)
+            repository = repository_provider.get_repository(name)
+            tags = docker.push(name, repository, tag)
+            click.secho("Pushed: \n" + ("\n".join(tags)), fg='blue')
 
 
 @cli.command(help='List project containers')
@@ -68,18 +73,6 @@ def containers(stylist, subproject):
                 ["Container", "Dockerfile"]
             ).table
         )
-
-
-#
-# try:
-#     docker = Docker(ctx, subproject)
-#     for docker_file in docker_files:
-#         try:
-#             for name in docker.push(docker_file, tag):
-#                 click.secho(
-#                     'Image for container "{}" pushed from dockerfile "{}"\n'.format(name, docker_file),
-#                     fg='green'
-#                 )
 
 
 @cli.command(help='List current project images')

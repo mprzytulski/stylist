@@ -32,3 +32,5 @@ class ConfigStorage(object):
 
 class DockerRepositoryProvider(object):
     __metaclass__ = ABCMeta
+
+

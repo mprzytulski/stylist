@@ -55,6 +55,11 @@ def table(title, data, headers=None, wraped_col=1):
     if isinstance(data, dict):
         data = [[k, v] for k, v in data.items()]
 
+    data = map(
+        lambda x: x.values() if isinstance(x, dict) else x,
+        data
+    )
+
     _data = [headers] + data
 
     _table = SingleTable(_data, click.style(title, fg="blue"))
