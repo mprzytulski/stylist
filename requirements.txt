@@ -18,3 +18,5 @@ threads_aws_utils
 requests==2.18.4
 schema==0.6.7
 anyconfig==0.9.3
+
+urllib3>=1.25.9 # not directly required, pinned by Snyk to avoid a vulnerability
