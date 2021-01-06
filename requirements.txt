@@ -17,4 +17,4 @@ ply==3.10
 threads_aws_utils
 requests==2.18.4
 schema==0.6.7
-anyconfig==0.9.3
+anyconfig==0.10.0
