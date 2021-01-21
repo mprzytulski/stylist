@@ -8,7 +8,7 @@ colorama==0.3.9
 Jinja2==2.9.6
 GitPython==2.1.7
 pyhcl==0.3.9
-PyYAML==3.12
+PyYAML==5.4
 PyMySQL==0.8.0
 psycopg2==2.7.3.2
 virtualenv==15.1.0
